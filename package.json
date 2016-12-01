@@ -1,5 +1,5 @@
 {
-  "name": "bizzyapp_apis",
+ "name": "bizzyapp_apis",
   "version": "1.0.0",
   "main": "server/server.js",
   "scripts": {
@@ -28,4 +28,4 @@
   },
   "license": "UNLICENSED",
   "description": "bizzyapp_apis"
-}
+  }
