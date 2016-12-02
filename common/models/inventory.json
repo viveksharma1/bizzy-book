@@ -1,0 +1,57 @@
+{
+  "name": "Inventory",
+  "base": "PersistedModel",
+  "strict": false,
+  "idInjection": false,
+  "options": {
+    "validateUpsert": true
+  },
+  "properties": {
+    "Remarks": {
+      "type": "string"
+    },
+    "ContainerNOS": {
+      "type": "string"
+    },
+    "ParticularSheets": {
+      "type": "string"
+    },
+    "Grade": {
+      "type": "string"
+    },
+    "Finish": {
+      "type": "string"
+    },
+       "Thickness": {
+      "type": "string"
+    },
+    "Width": {
+      "type": "number"
+    },
+    "Length": {
+      "type":
+        "number"
+
+    },
+    "NetWeight": {
+      "type":
+        "string"
+
+    },
+    "GrossWeight": {
+      "type": "string"
+    },
+    "StockCount": {
+      "type":
+        "number"
+
+    },
+    "Status":{
+  "type":"string"
+}
+  },
+  "validations": [],
+  "relations": {},
+  "acls": [],
+  "methods": {}
+}

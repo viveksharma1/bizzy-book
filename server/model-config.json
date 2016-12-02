@@ -57,5 +57,10 @@
     "public": true,
     "$promise": {},
     "$resolved": true
-  }
+  },"Inventory": {
+  "dataSource": "mongo",
+  "public": true,
+  "$promise": {},
+  "$resolved": true
+}
 }
