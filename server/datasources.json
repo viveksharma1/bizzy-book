@@ -1,11 +1,5 @@
 {
-  //  "mongo": {
-  //  "host": "localhost",
-  //  "port": 27017,
-  //  "name": "mongo",
-  //  "connector": "mongodb"
-
-  //}
+ 
   "mongo": {
     "host": "ds011893.mlab.com",
     "port": 11893,
