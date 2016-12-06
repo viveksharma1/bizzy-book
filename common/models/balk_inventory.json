@@ -1,5 +1,5 @@
 {
-  "name": "userlogin",
+  "name": "balk_Inventory",
   "base": "PersistedModel",
   "strict": false,
   "idInjection": false,
@@ -7,11 +7,10 @@
     "validateUpsert": true
   },
   "properties": {
-    "email": {
-      "type": "string"
-    },
-    "role": {
-      "type": "number"
+       "Inventory": {
+      "type": [
+        "Inventory"
+      ]
     }
   },
   "validations": [],

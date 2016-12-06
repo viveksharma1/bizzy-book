@@ -1,14 +1,8 @@
 {
- 
   "mongo": {
-    "host": "ds011893.mlab.com",
-    "port": 11893,
-    "database": "db_bizzybook",
-    "password": "book123",
+    "host": "localhost",
+    "port": 27017,
     "name": "mongo",
-    "connector": "mongodb",
-    "user": "bizzy"
+    "connector": "mongodb"
   }
-   
- 
 }

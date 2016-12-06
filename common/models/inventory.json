@@ -22,33 +22,27 @@
     "Finish": {
       "type": "string"
     },
-       "Thickness": {
+    "Thickness": {
       "type": "string"
     },
     "Width": {
       "type": "number"
     },
     "Length": {
-      "type":
-        "number"
-
+      "type": "number"
     },
     "NetWeight": {
-      "type":
-        "string"
-
+      "type": "string"
     },
     "GrossWeight": {
       "type": "string"
     },
     "StockCount": {
-      "type":
-        "number"
-
+      "type": "number"
     },
-    "Status":{
-  "type":"string"
-}
+    "Status": {
+      "type": "string"
+    }
   },
   "validations": [],
   "relations": {},
