@@ -57,7 +57,7 @@ module.exports = function (Enquiry) {
         Enquiry.getDataSource().connector.connect(function (err, db) {
             var collection = db.collection('enquiry');
             collection.insert(req.body,
-         function (err, instance) {
+         function (err, instance) {;
 
 
              console.log(instance);

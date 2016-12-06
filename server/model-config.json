@@ -50,9 +50,15 @@
     "dataSource": "mongo",
     "public": true,
     "$promise": {},
-    "$resolved": true
+    "$resolved": true 
       
   },"purchaseOrder": {
+    "dataSource": "mongo",
+    "public": true,
+    "$promise": {},
+    "$resolved": true
+  },
+    "transaction": {
     "dataSource": "mongo",
     "public": true,
     "$promise": {},
