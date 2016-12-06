@@ -1,5 +1,5 @@
 {
-  "name": "enquiry",
+  "name": "Inventory",
   "base": "PersistedModel",
   "strict": false,
   "idInjection": false,
@@ -7,46 +7,40 @@
     "validateUpsert": true
   },
   "properties": {
-    "supliersName": {
+    "Remarks": {
       "type": "string"
     },
-    "email": {
+    "ContainerNOS": {
       "type": "string"
     },
-    "remarks": {
+    "ParticularSheets": {
       "type": "string"
     },
-    "currency": {
+    "Grade": {
       "type": "string"
     },
-    "billDueDate": {
+    "Finish": {
       "type": "string"
     },
-    "date": {
+    "Thickness": {
       "type": "string"
     },
-    "no": {
+    "Width": {
       "type": "number"
     },
-    "type": {
-      "type": [
-        "string"
-      ]
+    "Length": {
+      "type": "number"
     },
-    "itemDetail": {
-      "type": [
-        "object"
-      ]
-    },
-    "memo": {
+    "NetWeight": {
       "type": "string"
     },
-    "status": {
-      "type": [
-        "string"
-      ]
+    "GrossWeight": {
+      "type": "string"
     },
-    "propertyName65": {
+    "StockCount": {
+      "type": "number"
+    },
+    "Status": {
       "type": "string"
     }
   },

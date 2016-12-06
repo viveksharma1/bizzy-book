@@ -13,14 +13,13 @@
     "email": {
       "type": "string"
     },
-   
     "currency": {
       "type": "string"
     },
     "poDate": {
       "type": "string"
     },
-      "poDueDate": {
+    "poDueDate": {
       "type": "string"
     },
     "poNo": {
@@ -29,10 +28,10 @@
     "amount": {
       "type": "string"
     },
-       "miscCharge": {
+    "miscCharge": {
       "type": "string"
     },
-       "role": {
+    "role": {
       "type": "string"
     },
     "itemDetail": {
@@ -43,7 +42,6 @@
     "memo": {
       "type": "string"
     },
-    
     "propertyName65": {
       "type": "string"
     }
