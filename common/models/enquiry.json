@@ -22,7 +22,7 @@
     "billDueDate": {
       "type": "string"
     },
-       "date": {
+    "date": {
       "type": "string"
     },
     "no": {

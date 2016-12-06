@@ -33,7 +33,6 @@
     "dataSource": "mongo",
     "public": true
   },
- 
   "suppliers": {
     "dataSource": "mongo",
     "public": true,
@@ -51,16 +50,23 @@
     "public": true,
     "$promise": {},
     "$resolved": true
-      
-  },"purchaseOrder": {
+  },
+  "purchaseOrder": {
     "dataSource": "mongo",
     "public": true,
     "$promise": {},
     "$resolved": true
-  },"Inventory": {
-  "dataSource": "mongo",
-  "public": true,
-  "$promise": {},
-  "$resolved": true
-}
+  },
+  "Inventory": {
+    "dataSource": "mongo",
+    "public": true,
+    "$promise": {},
+    "$resolved": true
+  },
+  "balk_Inventory": {
+    "dataSource": "mongo",
+    "public": true,
+    "$promise": {},
+    "$resolved": true
+  }
 }
