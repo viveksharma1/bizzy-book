@@ -1,16 +1,15 @@
 var loopback = require('loopback');
 var boot = require('loopback-boot');
-var mul  = require('multer');
-var express = require('express');
+//var mul  = require('multer');
+//var express = require('express');
 var bodyParser = require('body-parser');
-var app = express();
-app.use( bodyParser.json() );
-var path = require('path');
-var http = require('http');
+//var app = express();
+//app.use( bodyParser.json() );
+//var path = require('path');
+//var http = require('http');
 //var moment = require('moment');
 var app = module.exports = loopback();
 //var mongoose = require('mongoose');
-
 //var url = 'mongodb://localhost:27017/test';
 //mongoose.connect(url);
 //var db = mongoose.connection;
@@ -35,28 +34,26 @@ app.start = function()
   });
 };
 
-var storage = mul.diskStorage({
+/*var storage = mul.diskStorage({
   destination: './uploads/',
   filename: function (req, file, cb)
    {
     cb(null, file.originalname.replace(path.extname(file.originalname)) + '-' + Date.now() + path.extname(file.originalname))
   }
-})
-var upload = mul({ storage: storage });
+})*/
+/*var upload = mul({ storage: storage });
 app.use(express.static(path.join(__dirname, 'public')));
 app.post('/ExcelUpload', upload.single('file'), function(req,res,next)
 {
     //console.log('Uploade Successful ', req.file, req.body);
     res.json({"message":"Uploade Successful"});
-});
+});*/
 
 app.post('/user', function(req, res)
 {
     console.log(req.body);
    res.json(data);
 });
-
-
 boot(app, __dirname, function(err)
 {
   if (err) throw err;
