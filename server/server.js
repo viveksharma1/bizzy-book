@@ -1,7 +1,9 @@
 var loopback = require('loopback');
 var boot = require('loopback-boot');
-var mul  = require('multer');
 var express = require('express');
+
+var path = require('path');
+var mul  = require('multer');
 var bodyParser = require('body-parser');
 var app = express();
 app.use( bodyParser.json() );
