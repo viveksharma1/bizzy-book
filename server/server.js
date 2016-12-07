@@ -2,7 +2,7 @@ var loopback = require('loopback');
 var boot = require('loopback-boot');
 //var mul  = require('multer');
 //var express = require('express');
-var bodyParser = require('body-parser');
+//var bodyParser = require('body-parser');
 //var app = express();
 //app.use( bodyParser.json() );
 //var path = require('path');
@@ -13,12 +13,12 @@ var app = module.exports = loopback();
 //var url = 'mongodb://localhost:27017/test';
 //mongoose.connect(url);
 //var db = mongoose.connection;
-app.use( bodyParser.json({limit: '50mb'}) );
-app.use(bodyParser.urlencoded({
-  limit: '50mb',
-  extended: true,
-  parameterLimit:50000
-}));
+/app.use( bodyParser.json({limit: '50mb'}) );
+//app.use(bodyParser.urlencoded({
+ // limit: '50mb',
+ // extended: true,
+  //parameterLimit:50000
+//}));
 app.start = function()
 {
   // start the web server
