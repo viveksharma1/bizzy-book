@@ -3,7 +3,7 @@
 module.exports = function (Enquiry) {
 
     var app = require('../../server/server');
-    var User = app.models.supplierscount;
+    var User = app.models.transaction;
     var DataSource = require('loopback-connector-mongodb');
 
 
@@ -11,17 +11,8 @@ module.exports = function (Enquiry) {
       
     Enquiry.getEnquiry = function (code, cb) {
         Enquiry.getDataSource().connector.connect(function (err, db) {
-            var collection = db.collection('enquiry');
-            collection.aggregate({
-                $group: {
-                    _id:  { supliersName: "$supliersName", type: "$type"  },
-
-                   
-                        count: { $sum: 1 }
-                    
-                }
-            },
-         function (err, instance) {
+            var collection = db.collection('User');
+            User.find( function (err, instance) {
 
             
              console.log(instance);

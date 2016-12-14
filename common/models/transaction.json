@@ -37,17 +37,15 @@
     },
       "status": {
       "type": [
-        "string"
+       "string"
       ]
     },
     "itemDetail": {
       "type": [
         "object"
       ]
-    },
-    "memo": {
-      "type": "string"
     }
+  
     
   },
   "validations": [],
