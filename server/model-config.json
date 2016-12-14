@@ -73,9 +73,21 @@
     "dataSource": "mongo",
     "public": true,
     "$promise": {},
-    "$resolved": true
+    "$resolved": true     
   },
     "transaction": {
+    "dataSource": "mongo",
+    "public": true,
+    "$promise": {},
+    "$resolved": true
+  },
+    "customerTransaction": {
+    "dataSource": "mongo",
+    "public": true,
+    "$promise": {},
+    "$resolved": true
+  },
+    "customer": {
     "dataSource": "mongo",
     "public": true,
     "$promise": {},
