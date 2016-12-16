@@ -87,6 +87,93 @@ module.exports = function(Transaction) {
         }
       );
     
+    
+    
+    
+     Transaction.totalpoAmount = function (ctx, req,cb) {
+         
+             //console.log(req.body);
+             
+             
+                 
+       // console.log(req.headers.tokan);
+         var tok = req.headers.tokan
+
+         var tokdata = jwt.verify(tok, "vivek",  {   
+             
+        });
+         
+         var role = tokdata.role
+         
+        // console.log(role);
+            Transaction.getDataSource().connector.connect(function (err, db) {
+            var collection = db.collection('Transaction');
+                
+            if(role == 1||role == 2) {   
+            db.collection("transaction").aggregate([
+          
+        { $match:{
+                   'ordertype':'bill'
+          }},
+       { $group: {
+                    _id: { ordertype: "$bill" },
+          
+                     total: { $sum: "$amount" },
+                     count: { $sum: 1 }
+                 }
+     }],
+
+                 function(err,instance){
+
+         
+           // console.log(instance);
+            return cb(null, instance);
+         })
+            
+             }
+                
+                else{
+                    
+                 db.collection("transaction").findOne(
+                
+                 {no:req.body.no},
+                
+
+                 function(err,instance){
+
+         
+                 //console.log(instance);
+                 return cb(null, instance);
+                    })  
+                    
+                }
+                
+               
+        
+            
+         
+            });
+         
+    
+    }
+
+
+    Transaction.remoteMethod(
+        'totalpoAmount',
+        {
+            http: { path: '/totalpoAmount', verb: 'post' },
+            accepts: [{ arg: 'ctx', type: 'object' },
+                     {
+                         arg: 'req',
+                         type: 'object',
+                         http: function (ctx) {
+                             return ctx.req;
+                         }
+                     }],
+            returns: { arg: 'code', type: 'string' }
+        }
+      );
+    
    
 
 };
