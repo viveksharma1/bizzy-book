@@ -104,10 +104,10 @@ module.exports = function(Transaction) {
             db.collection("transaction").aggregate([
           
         { $match:{
-                   'ordertype':'bill'
+                   'ordertype':'BILL'
           }},
        { $group: {
-                    _id: { ordertype: "$bill" },
+                    _id: { ordertype: "$BILL" },
           
                      total: { $sum: "$amount" },
                      count: { $sum: 1 }
