@@ -1,1 +1,4 @@
-add New file CompanyMaster
+module.exports = function(CompanyMaster)
+ {
+
+};
