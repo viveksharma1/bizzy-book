@@ -4,17 +4,7 @@ module.exports = function(server) {
 var UserModel = server.models.User;
 
 server.set('superSecret', "vivek");
-router.post('/login', function (req, res) {
 
-    console.log(req.headers);
-    
-    //parse user credentials from request body
-    const userCredentials = {
-        "email": req.body.email,
-        "password": req.body.password
-    }
-    
-    
 
    router.post('/login', function (req, res)
             {
