@@ -16,15 +16,30 @@ router.post('/login', function (req, res) {
     
     
 
+   router.post('/login', function (req, res)
+            {
+    
+     var res1;
+    console.log(req.headers);
+    
+    //parse user credentials from request body
+    const userCredentials = {
+        "email": req.body.email,
+        "password": req.body.password
+    }
+    
+    
+
    UserModel.login(userCredentials, 'user', function (err, result) {			
-			if (err) {
+			if (err)
+            {
 				//custom logger
 			
 				 res.json({message:"User Not Found"});
 				return;
 			}
  
-			
+			res1 = result;
 			
 			//transform response to only return the token and ttl
 			
@@ -62,7 +77,7 @@ router.post('/login', function (req, res) {
        
         });
     var role= tokdata.role;
-        res.json({role,token});
+        res.json({res1,token});
           //var role = tokdata.role;
         // console.log(tokdata);
          //res.json(tokdata.role,token);
@@ -74,6 +89,32 @@ router.post('/login', function (req, res) {
      
    
 		});
+
+    
+    
+});
+    
+  //logout
+    
+    router.get('/logout', function (req, res)
+                
+ {
+        
+   
+    
+if (!req.query.token1) return res.sendStatus(401); //return 401:unauthorized if accessToken is not present
+        
+  UserModel.logout(req.query.token1, function(err) {
+    if (err)return res.send('invalid');
+    res.send('logout'); //on successful logout, redirect
+  });
+    
+  
+    
+
+     
+   
+	
 
    
          
