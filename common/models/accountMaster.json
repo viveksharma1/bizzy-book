@@ -1,0 +1,21 @@
+{
+  "name": "accountMaster",
+  "base": "PersistedModel",
+  "strict": false,
+  "idInjection": false,
+  "options": {
+    "validateUpsert": true
+  },
+  "properties": {
+    "AccountType": {
+      "type": "string"
+    },
+    "taxAmount": {
+      "type": "string"
+    }
+  },
+  "validations": [],
+  "relations": {},
+  "acls": [],
+  "methods": {}
+}
