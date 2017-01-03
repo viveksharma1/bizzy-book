@@ -1,0 +1,45 @@
+{
+  "name": "CompanyMaster",
+  "base": "PersistedModel",
+  "strict": false,
+  "idInjection": false,
+  "options": {
+    "validateUpsert": true
+  },
+  "properties": {
+    "CompanyId": {
+      "type": "string"
+    },
+    "CompanyName": {
+      "type": "string"
+    },
+    "CompanyAddress": {
+      "type": "string"
+    },
+    "CompanyMobileNo": {
+      "type": "string"
+    },
+    "CompanyDetails": {
+      "type": "string"
+    },
+    "LoginRoleMapping": {
+      "type": "string"
+    },
+    "ActiveCompany": {
+      "type": "number"
+    },
+    "UnActiveCompany": {
+      "type": "number"
+    },
+    "VAT_TIN_NO": {
+      "type": "string"
+    },
+    "CST_TIN_NO": {
+      "type": "string"
+    }
+  },
+  "validations": [],
+  "relations": {},
+  "acls": [],
+  "methods": {}
+}
