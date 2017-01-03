@@ -7,40 +7,13 @@
     "validateUpsert": true
   },
   "properties": {
-    "Remarks": {
+    "Inventory": {
+      "type": "object"
+    },
+    "inventoryNo": {
       "type": "string"
     },
-    "ContainerNOS": {
-      "type": "string"
-    },
-    "ParticularSheets": {
-      "type": "string"
-    },
-    "Grade": {
-      "type": "string"
-    },
-    "Finish": {
-      "type": "string"
-    },
-    "Thickness": {
-      "type": "string"
-    },
-    "Width": {
-      "type": "number"
-    },
-    "Length": {
-      "type": "number"
-    },
-    "NetWeight": {
-      "type": "string"
-    },
-    "GrossWeight": {
-      "type": "string"
-    },
-    "StockCount": {
-      "type": "number"
-    },
-    "Status": {
+    "supliersName": {
       "type": "string"
     }
   },

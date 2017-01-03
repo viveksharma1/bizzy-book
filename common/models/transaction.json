@@ -7,8 +7,7 @@
     "validateUpsert": true
   },
   "properties": {
-      
-      "supliersName": {
+    "supliersName": {
       "type": "string"
     },
     "suplierId": {
@@ -17,27 +16,24 @@
     "email": {
       "type": "string"
     },
-    
     "currency": {
       "type": "string"
     },
     "billDueDate": {
-      "type": "string"
+      "type": "date"
     },
     "date": {
-      "type": "string"
+      "type": "date"
     },
     "no": {
       "type": "string"
     },
     "ordertype": {
       "type": "string"
-       
-      
     },
-      "status": {
+    "status": {
       "type": [
-       "string"
+        "string"
       ]
     },
     "itemDetail": {
@@ -45,8 +41,7 @@
         "object"
       ]
     }
-  
-    
+     
   },
   "validations": [],
   "relations": {},

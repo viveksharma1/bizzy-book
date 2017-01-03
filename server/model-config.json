@@ -49,11 +49,6 @@
     "dataSource": "mongo",
     "public": true,
     "$promise": {},
-
-    "$resolved": true 
-      
-  },"purchaseOrder": {
-
     "$resolved": true
   },
   "purchaseOrder": {
@@ -69,25 +64,30 @@
     "$resolved": true
   },
   "balk_Inventory": {
-
-    "dataSource": "mongo",
-    "public": true,
-    "$promise": {},
-    "$resolved": true     
-  },
-    "transaction": {
     "dataSource": "mongo",
     "public": true,
     "$promise": {},
     "$resolved": true
   },
-    "customerTransaction": {
+  "transaction": {
     "dataSource": "mongo",
     "public": true,
     "$promise": {},
     "$resolved": true
   },
-    "customer": {
+  "customerTransaction": {
+    "dataSource": "mongo",
+    "public": true,
+    "$promise": {},
+    "$resolved": true
+  },
+  "customer": {
+    "dataSource": "mongo",
+    "public": true,
+    "$promise": {},
+    "$resolved": true
+  },
+    "accountMaster": {
     "dataSource": "mongo",
     "public": true,
     "$promise": {},

@@ -1,6 +1,7 @@
 var loopback = require('loopback');
 var boot = require('loopback-boot');
 
+
 //var mul  = require('multer');
 //var express = require('express');
 //var bodyParser = require('body-parser');
@@ -8,9 +9,21 @@ var boot = require('loopback-boot');
 //app.use( bodyParser.json() );
 //var path = require('path');
 //var http = require('http');
+var app = module.exports = loopback();
+
+ var consolidate = require('consolidate');
+
+    // define the templating engine
+    app.engine('html', consolidate.swig);
+    app.set('view engine', 'html');
+    
+    // set the folder where templates can be found    
+    app.set('views', __dirname + '/views');
+  
 
 //var moment = require('moment');
-var app = module.exports = loopback();
+
+
 //var mongoose = require('mongoose');
 //var url = 'mongodb://localhost:27017/test';
 //mongoose.connect(url);
@@ -52,9 +65,12 @@ app.post('/ExcelUpload', upload.single('file'), function(req,res,next)
 });*/
 
 app.post('/user', function(req, res)
+         
+        
 {
-    console.log(req.body);
-   res.json(data);
+    
+    
+   
 });
 boot(app, __dirname, function(err)
 {

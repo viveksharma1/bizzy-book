@@ -7,7 +7,7 @@
     "validateUpsert": true
   },
   "properties": {
-       "Inventory": {
+    "Inventory": {
       "type": [
         "Inventory"
       ]

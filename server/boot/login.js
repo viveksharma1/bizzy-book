@@ -1,190 +1,135 @@
 module.exports = function(server) { 
     var jwt = require('jsonwebtoken');
-  var router = server.loopback.Router();
-var UserModel = server.models.User;
-
-server.set('superSecret', "vivek");
-    
-    
-    
-    
+    var router = server.loopback.Router();
+    var UserModel = server.models.User;
+    var mongo = require('mongodb').MongoClient;
+    var Transaction = server.models.transaction;
+    var Binary = mongo.Binary;
+    server.set('superSecret', "vivek"); 
     var nodemailer = require('nodemailer');
     var fs = require('fs');
+    var bodyParser = require('body-parser');
+    var formidable = require('formidable');
+    var path = require('path');
+    form = new formidable.IncomingForm();
 
-var bodyParser = require('body-parser');
-var formidable = require('formidable'),
-form = new formidable.IncomingForm();
+// upload file to server/boot/uploads
+    
+router.post('/upload',function (req, res) { 
+    var form = new formidable.IncomingForm();
+    var name;
+    var no = req.query.no;
+    form.multiples = true;
+    form.uploadDir = path.join(__dirname, '/uploads');
+    
+  form.on('file', function(field, file) {  
+      name = file.name;
+      console.log(name)
+      fs.rename(file.path, path.join(form.uploadDir, file.name));
+  });
+    
+  form.on('error', function(err) {
+      console.log('An error has occured: \n' + err);
+  });
 
-router.post('/email',function (req, res) { // handle the route at yourdomain.com/sayHello
-
- form.parse(req, function(err, fields, files) {
-        console.log("File received:\nName:"+files.pdf.name+"\ntype:"+files.pdf.type);
-    });
-
-    form.on('end', function() {
-        /* this.openedFiles[0].path -- object Contains the path to the file uploaded
-        ------- Use NodeMailer to process this file or attach to the mail-----------------*/
-        console.log("PDF raw data:"+ fs.readFileSync(this.openedFiles[0].path, "utf8"));
-        
-         var newPath = "./myfile.pdf";
-  fs.writeFile(newPath, fs.readFileSync(this.openedFiles[0].path, "utf8"), function (err) {
-      
-      
-          var transporter = nodemailer.createTransport({
-        service: 'Gmail',
-        auth: {
-            user: 'vkumarpatna@gmail.com', // Your email id
-            pass: 'vivek@123' // Your password
-        }
-    });
-    
-    
-    fs.readFile("./myfile.pdf", function (err, data) {
-        
-        
-    var text = 'Hello world from \n\n' 
-    
-    
-    var mailOptions = {
-    from: 'vkumarpatna@gmail.com', // sender address
-    to: 'vkumarpatna@gmail.com', // list of receivers
-    subject: 'Email Example', // Subject line
-    text: text,
-    attachments: [{'filename': 'myfile.pdf', 'content': data}]
-    
-};
-    
-    transporter.sendMail(mailOptions, function(error, info){
-    if(error){
-        console.log(error);
-        res.json({yo: 'error'});
-    }else{
-        console.log('Message sent: ' + info.response);
-        res.json({yo: info.response});
-    };
-});
+    //push file path into path array 
+  form.on('end', function() {    
+        Transaction.getDataSource().connector.connect(function (err, db) {
+          var collection = db.collection('transaction');
+            var path = 'server/boot/uploads/'+ name;
+            collection.update({no:no}, {$push:{path:path}},function (err, instance) {
+            if (err) {
+                 return;
+             }
+        })
+    })
+    res.end('success');
+  })     
+ form.parse(req);
 });
    
-  });
-        //res.status(200).send("thank you");
-    });
-    // Not the movie transporter!
-
-});
-router.post('/login', function (req, res) {
-
-    console.log(req.headers);
     
-    //parse user credentials from request body
+//get file from server/boot/uploads    
+ router.get('/getfile',function (req, res) { 
+       var filepath =  req.query.path
+       var form = new formidable.IncomingForm();  
+       fs = require('fs');
+       fs.readFile(filepath, function (err,data) {       
+    if (err) {
+        return console.log(err);     
+     } 
+        res.send(data);     
+   });   
+});
+    
+    
+   // delete file path from transaction 
+ router.get('/delete',function (req, res) {
+     Transaction.getDataSource().connector.connect(function (err, db) {
+        var collection = db.collection('transaction');
+        var filepath =  req.query.path
+        var no =  req.query.no
+        collection.update({no:no}, {$pull:{path:{$in:[filepath]}}},function (err, instance) {  
+         if (err) {    
+            return;
+        }    
+        })
+    })    
+});
+   
+     
+//login routes start here
+    
+router.post('/login', function (req, res){
+    var res1;
     const userCredentials = {
         "email": req.body.email,
         "password": req.body.password
-    }
-    
-    
-
-   UserModel.login(userCredentials, 'user', function (err, result) {			
-			if (err) {
-				//custom logger
-			
-				 res.json({message:"User Not Found"});
+       }
+UserModel.login(userCredentials, 'user', function (err, result) {
+			if (err)
+            {
+				res.json({message:"User Not Found"});
 				return;
 			}
- 
-			
-			
-			//transform response to only return the token and ttl
-			
-       
-       
-      
+			res1 = result;
        
     UserModel.find({where:{email:req.body.email}},{ fields: {email: true, role: true} },function (err, instance) {
-         
-         if (err) {
-            //custom logger
-           
+         if (err) {    
             res.status(401).json({ "error": "wrong pass" });
             return;
-        }
-         
-                            
-          var data = instance;
-         //res.json(instance);
-           /*var Credentials = {
-               
-               role:instance[0].role,
-               email:instance[0].email
-               
-           }*/
-           //res.json(Credentials);
-         
-         var token = jwt.sign({role:instance[0].role,email:instance[0].email}, server.get('superSecret'), {
-              
+        }                     
+         var data = instance;
+         var token = jwt.sign({role:instance[0].role,email:instance[0].email}, server.get('superSecret'), {     
+         });      
+         var tokdata = jwt.verify(token, server.get('superSecret'),  { 
          });
-             //res.json(token);  //console.log(token);
-         var tokdata = jwt.verify(token, server.get('superSecret'),  {
-       
-         
-       
-        });
-    var role= tokdata.role;
-        res.json({role,token});
-          //var role = tokdata.role;
-        // console.log(tokdata);
-         //res.json(tokdata.role,token);
-   
-        
-         
-    });
-       
-     
-   
-		});
-
-   
-         
-  
-    
-                      
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+         var role= tokdata.role;
+         res.json({res1,token}); 
+          });
+     });    
 });
+    
+  //logout route starts here
+    
+router.get('/logout', function (req, res){ 
+  if (!req.query.token1) return res.sendStatus(401); //return 401:unauthorized if accessToken is not present      
+    UserModel.logout(req.query.token1, function(err) {
+      if (err)return res.send('invalid');
+      res.send('logout'); //on successful logout, redirect
+   });   
+});
+    
+   //test route 
+ router.get('/user', function (req, res){          
+     res.render('index', {
+            pageTitle: 'Loopback.io tutorials',
+            reasons: [
+                'faster',
+                'more secure'
+            ]
+        });
+    
+    });
 server.use(router);
 };
