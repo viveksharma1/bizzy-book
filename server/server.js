@@ -11,15 +11,7 @@ var boot = require('loopback-boot');
 //var http = require('http');
 var app = module.exports = loopback();
 
- var consolidate = require('consolidate');
-
-    // define the templating engine
-    app.engine('html', consolidate.swig);
-    app.set('view engine', 'html');
-    
-    // set the folder where templates can be found    
-    app.set('views', __dirname + '/views');
-  
+ 
 
 //var moment = require('moment');
 
