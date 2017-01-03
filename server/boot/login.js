@@ -6,7 +6,7 @@ module.exports = function(server) {
     var Transaction = server.models.transaction;
     var Binary = mongo.Binary;
     server.set('superSecret', "vivek"); 
-    var nodemailer = require('nodemailer');
+   
     var fs = require('fs');
     var bodyParser = require('body-parser');
     var formidable = require('formidable');
