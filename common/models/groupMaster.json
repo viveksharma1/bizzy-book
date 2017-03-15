@@ -1,0 +1,22 @@
+{
+  "name": "groupMaster",
+  "base": "PersistedModel",
+  "strict": false,
+  "idInjection": false,
+  "options": {
+    "validateUpsert": true
+  },
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+     "type": {
+      "type": "string"
+    },
+
+  "validations": [],
+  "relations": {},
+  "acls": [],
+  "methods": {}
+}
+}

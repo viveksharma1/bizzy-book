@@ -1,0 +1,34 @@
+{
+  "name": "BankTransaction",
+  "base": "PersistedModel",
+  "strict": false,
+  "idInjection": true,
+  "options": {
+    "validateUpsert": true
+  },
+  "properties": {
+    "date": {
+      "type": "date"
+    },
+       
+    "remarks": {
+      "type": "string"
+    },
+    "refNo": {
+      "type": "string"
+    },
+    "paidIn": {
+      "type": "number"
+    },
+    "paidOut": {
+      "type": "number"
+    },
+    "balance": {
+      "type": "number"
+    }
+  },
+  "validations": [],
+  "relations": {},
+  "acls": [],
+  "methods": {}
+}

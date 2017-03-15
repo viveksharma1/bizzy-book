@@ -2,7 +2,7 @@
   "name": "transaction",
   "base": "PersistedModel",
   "strict": false,
-  "idInjection": false,
+  "idInjection": true,
   "options": {
     "validateUpsert": true
   },
@@ -10,6 +10,7 @@
     "supliersName": {
       "type": "string"
     },
+       
     "suplierId": {
       "type": "string"
     },
@@ -26,7 +27,7 @@
       "type": "date"
     },
     "no": {
-      "type": "string"
+      "type": "number"
     },
     "ordertype": {
       "type": "string"
@@ -40,8 +41,47 @@
       "type": [
         "object"
       ]
+    },
+    "manualLineItem": {
+      "type": [
+        "object"
+      ]
+    },
+     "adminAmount": {
+      "type": "number"
+    },
+     "adminBalance": {
+      "type": "number"
+    },
+     "amount": {
+      "type": "number"
+    },
+     "balance": {
+      "type": "number"
+    },
+    "ExchangeRate": {
+      "type": "number"
+    },
+    "supCode": {
+      "type": "string"
+    },
+     "compCode": {
+      "type": "string"
+    },
+    
+     "role": {
+      "type": "number"
+    },
+    "accountlineItem": {
+      "type": [
+        "object"
+      ]
+    },
+
+    
+     "totalWeight": {
+      "type": "number"
     }
-     
   },
   "validations": [],
   "relations": {},

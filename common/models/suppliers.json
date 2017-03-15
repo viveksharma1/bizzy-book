@@ -58,6 +58,19 @@
     },
     "notes": {
       "type": "string"
+    },
+      
+      "accountName": {
+      "type": "string"
+    },
+    "category": {
+      "type": "string"
+    },
+    "group": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string"
     }
   },
   "validations": [],

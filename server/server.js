@@ -2,6 +2,7 @@ var loopback = require('loopback');
 var boot = require('loopback-boot');
 
 
+
 //var mul  = require('multer');
 //var express = require('express');
 //var bodyParser = require('body-parser');
@@ -40,6 +41,8 @@ app.start = function()
     }
   });
 };
+
+
 
 /*var storage = mul.diskStorage({
   destination: './uploads/',

@@ -2,7 +2,7 @@
   "name": "purchaseOrder",
   "base": "PersistedModel",
   "strict": false,
-  "idInjection": false,
+  "idInjection": true,
   "options": {
     "validateUpsert": true
   },
@@ -10,6 +10,10 @@
     "supliersName": {
       "type": "string"
     },
+      "compCode": {
+    "type": "string", 
+    "id": true 
+   },
     "email": {
       "type": "string"
     },

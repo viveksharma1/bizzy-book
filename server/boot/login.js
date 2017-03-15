@@ -4,16 +4,19 @@ module.exports = function(server) {
     var UserModel = server.models.User;
     var mongo = require('mongodb').MongoClient;
     var Transaction = server.models.transaction;
+    var Account = server.models.account;
     var Binary = mongo.Binary;
     server.set('superSecret', "vivek"); 
+    
    
     var fs = require('fs');
     var bodyParser = require('body-parser');
     var formidable = require('formidable');
     var path = require('path');
     form = new formidable.IncomingForm();
+    var contexts = [];
 
-// upload file to server/boot/uploads
+// vivek  upload file to server/boot/uploads
     
 router.post('/upload',function (req, res) { 
     var form = new formidable.IncomingForm();
@@ -37,11 +40,19 @@ router.post('/upload',function (req, res) {
         Transaction.getDataSource().connector.connect(function (err, db) {
           var collection = db.collection('transaction');
             var path = 'server/boot/uploads/'+ name;
-            collection.update({no:no}, {$push:{path:path}},function (err, instance) {
+            collection.findOne({no:no,path:path},function (err, instance) {
+            if (instance) {
+                
+                 return;
+             }
+             
+         collection.update({no:no}, {$push:{path:path}},function (err, instance) {
             if (err) {
                  return;
              }
         })
+        })
+           
     })
     res.end('success');
   })     
@@ -76,6 +87,49 @@ router.post('/upload',function (req, res) {
         })
     })    
 });
+    
+    // account
+    
+    router.post('/addammount',function (req, res) {      
+         var credit = req.body.credit;
+         var debit = req.body.debit;      
+         var accountName = req.body.accountName;  
+         console.log(accountName);
+        
+     Account.getDataSource(accountName).connector.connect(function (err, db) {
+        var collection = db.collection('account');
+        if(credit!=''){
+       collection.update({accountName:accountName},{ $inc: { credit: Number(credit)} },
+           function (err, instance) { 
+            if (err) {    
+            console.log(err);
+         } 
+          
+            
+            
+         });
+          }
+         if(debit!=''){
+ 
+      collection.update({accountName:accountName},{ $inc: { debit: Number(debit) } },
+           function (err, instance) {        
+           
+             if (err) {    
+            console.log(err);
+         } 
+           
+            
+         });
+       }
+            
+            
+        
+    }) 
+     
+    res.send({"status":"200"});
+               
+     
+});
    
      
 //login routes start here
@@ -105,6 +159,7 @@ UserModel.login(userCredentials, 'user', function (err, result) {
          var tokdata = jwt.verify(token, server.get('superSecret'),  { 
          });
          var role= tokdata.role;
+       
          res.json({res1,token}); 
           });
      });    
@@ -120,16 +175,10 @@ router.get('/logout', function (req, res){
    });   
 });
     
-   //test route 
- router.get('/user', function (req, res){          
-     res.render('index', {
-            pageTitle: 'Loopback.io tutorials',
-            reasons: [
-                'faster',
-                'more secure'
-            ]
-        });
+   
     
-    });
+    
+ 
 server.use(router);
 };
+

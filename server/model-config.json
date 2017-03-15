@@ -99,5 +99,58 @@
     "public": true,
     "$promise": {},
     "$resolved": true
+  },
+     "ledger": {
+    "dataSource": "mongo",
+    "public": true,
+    "$promise": {},
+    "$resolved": true
+  },
+     "inventoryAsset": {
+    "dataSource": "mongo",
+    "public": true,
+    "$promise": {},
+    "$resolved": true
+  }
+    ,
+     "bankAccount": {
+    "dataSource": "mongo",   
+    "public": true,
+    "$promise": {},
+    "$resolved": true  
+  }
+    ,
+     "account": {
+    "dataSource": "mongo",   
+    "public": true,
+    "$promise": {},
+    "$resolved": true 
+  }
+    ,
+     "BankTransaction": {
+    "dataSource": "mongo",   
+    "public": true,
+    "$promise": {},
+    "$resolved": true
+  }
+    ,
+     "inventoryStock": {
+    "dataSource": "mongo",   
+    "public": true,
+    "$promise": {},
+    "$resolved": true
+  }
+  ,
+     "master": {
+    "dataSource": "mongo",   
+    "public": true,
+    "$promise": {},
+    "$resolved": true
+  },
+    "groupMaster": {
+    "dataSource": "mongo",   
+    "public": true,
+    "$promise": {},
+    "$resolved": true
   }
 }

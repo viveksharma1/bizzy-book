@@ -1,0 +1,33 @@
+{
+  "name": "account",
+  "base": "PersistedModel",
+  "strict": false,
+  "idInjection": false,
+  "options": {
+    "validateUpsert": true
+  },
+  "properties": {
+    "categoryName": {
+      "type": "string"
+    },
+    "group": {
+       "type": "string"
+    },
+    "type": {
+      "type": "string"
+    },
+      "discription": {
+      "type": "string"
+    },
+      "credit": {
+      "type": "number"
+    },
+       "debit": {
+      "type": "number"
+    },
+  "validations": [],
+  "relations": {},
+  "acls": [],
+  "methods": {}
+}
+}

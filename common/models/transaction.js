@@ -104,19 +104,22 @@ module.exports = function(Transaction) {
             db.collection("transaction").aggregate([
           
         { $match:{
-                   'ordertype':'BILL'
+                  ordertype:'BILL'
+                   
+                  
           }},
        { $group: {
-                    _id: { ordertype: "$BILL" },
-          
-                     total: { $sum: "$amount" },
+                   
+                      $BILL: 'BILL',
+                      
+                    
                      count: { $sum: 1 }
                  }
      }],
 
                  function(err,instance){
 
-         
+         console.log(instance);
            // console.log(instance);
             return cb(null, instance);
          })

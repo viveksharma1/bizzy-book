@@ -1,0 +1,37 @@
+{
+  "name": "inventoryStock",
+  "base": "PersistedModel",
+  "strict": false,
+  "idInjection": true,
+  "options": {
+    "validateUpsert": true
+  },
+  "properties": {
+    "grade": {
+      "type": "string"
+    },
+       
+    "finish": {
+      "type": "string"
+    },
+    "thickness": {
+      "type": "string"
+    },
+    "width": {
+      "type": "string"
+    },
+    "length": {
+      "type": "number"
+    },
+    "netweight": {
+      "type": "number"
+    },
+    "noOfsheet": {
+      "type": "number"
+    }
+  },
+  "validations": [],
+  "relations": {},
+  "acls": [],
+  "methods": {}
+}

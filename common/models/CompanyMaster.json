@@ -6,6 +6,10 @@
   "options": {
     "validateUpsert": true
   },
+    "compCode": {
+    "type": "string", 
+    "id": true 
+   },
   "properties": {
     "CompanyId": {
       "type": "string"
