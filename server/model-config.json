@@ -153,4 +153,18 @@
     "$promise": {},
     "$resolved": true
   }
+  ,
+    "voucherTransaction": {
+    "dataSource": "mongo",   
+    "public": true,
+    "$promise": {},
+    "$resolved": true
+  }
+  ,
+    "payment": {
+    "dataSource": "mongo",   
+    "public": true,
+    "$promise": {},
+    "$resolved": true
+  }
 }

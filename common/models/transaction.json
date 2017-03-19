@@ -81,6 +81,13 @@
     
      "totalWeight": {
       "type": "number"
+    },
+
+     "id": {
+      "type": "string"
+    },
+     "customData": {
+      "type": "string"
     }
   },
   "validations": [],

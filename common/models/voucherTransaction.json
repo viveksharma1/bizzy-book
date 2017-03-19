@@ -1,0 +1,46 @@
+{
+  "name": "voucherTransaction",
+  "base": "PersistedModel",
+  "strict": false,
+  "idInjection": true,
+  "options": {
+    "validateUpsert": true
+  },
+  "properties": {
+    "type": {
+      "type": "string"
+    },
+      "state": {
+      "type": "string"
+    },
+     "date": {
+      "type": "date"
+    },
+    "amount": {
+      "type": "number"
+    },
+    "isUo": {
+      "type": "number"
+    },
+     "compCode": {
+      "type": "string"
+    }, 
+     "role": {
+      "type": "number"
+    },
+
+     "refNo": {
+      "type": "string"
+    },
+    "vo_payment": {
+      "type": [
+        "payment"
+      ]
+    } 
+  },
+
+  "validations": [],
+  "relations": {},
+  "acls": [],
+  "methods": {}
+}

@@ -1,0 +1,43 @@
+{
+  "name": "payment",
+  "base": "PersistedModel",
+  "strict": false,
+  "idInjection": true,
+  "options": {
+    "validateUpsert": true
+  },
+  "properties": {
+    "bankAccount": {
+      "type": "string"
+    },
+       
+    "partyAccount": {
+      "type": "string"
+    },
+    "paymentAmount": {
+      "type": "number"
+    },
+    "currency": {
+      "type": "string"
+    },
+    "exchangeRate": {
+      "type": "number"
+    },
+    "billDetail": {
+      "type": [
+        "object"
+      ]
+    },
+    "remarks": {
+      "type": "string"
+    },
+    "attachment": {
+      "type": "string"
+    }
+    
+  },
+  "validations": [],
+  "relations": {},
+  "acls": [],
+  "methods": {}
+}

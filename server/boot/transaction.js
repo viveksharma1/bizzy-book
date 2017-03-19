@@ -21,7 +21,7 @@ module.exports = function(server) {
         var Tdata = req.body;
         console.log(Tdata);
         Ledgers.getDataSource().connector.connect(function (err, db) {   
-        var Ledger = db.collection('ledger');
+        var Ledger = db.collection('ledger')
         Ledgers.create(req.body,function (err, instance) { 
             
         if(instance){  
@@ -396,47 +396,6 @@ router.post('/updateAccount',function (req, res){
 // save bill with custom duty 
 
 
-router.post('/saveCustom',function (req, res){    
-        var billNo = req.body.billNo;
-        var manualLineItem  = req.body.manualLineItem;
-        
-Transaction.getDataSource().connector.connect(function (err, db) {   
-       
-        Transaction.update({ no:billNo },
-      {
-        manualLineItem:manualLineItem
-
-      },
-
-    function(err,instance){
-
-      Inventory.getDataSource().connector.connect(function (err, db) {   
-        var collection = db.collection('inventory');
-       // Inventory.update({no:data.no,visible:visible,isActive:true},{isActive:false},function(err, instance){
-         for(var i=0;i<req.body.manualLineItem.length;i++)
-             {        
-             req.body.manualLineItem[i].isActive  = true;
-             req.body.manualLineItem[i].visible = true;
-             req.body.manualLineItem[i].no = billNo;
-            }   
-           Inventory.update({no:billNo,visible:true,isActive:true},req.body.manualLineItem,function(err, instance){
-              if (err) {    
-                     console.log(err)
-                 }   
-                  else  {
-                     console.log("inventory updated")
-
-                 
-                  }         
-      });
-     });
-     
-       res.send({status:"200"});
-    })
-  });
-      
-  });
-
  //get expense data 
 
 
@@ -465,15 +424,13 @@ router.post('/getExpense',function (req, res){
 // Save Expense
   router.post('/saveExpense',function (req, res){    
          var ExpenseData = req.body;
-         var transactionData = req.body.transactionData;
-         var expenseAccount = req.body.expenseAccount;
-         var expenseLedger = req.body.expenseLedger;
-         var tdsAccountData = req.body.tdsAccountData;
+        
+         var itemTable = req.body.itemTable;
+         var accountTable = req.body.accountTable;     
          var tdsLedger = req.body.tdsLedger;
          var count;
-          console.log(ExpenseData);
-     
-      Transaction.count({expenseId:transactionData.expenseId}, function (err, instance) {                                    
+          console.log(ExpenseData); 
+      Transaction.count({expenseId:req.body.expenseId}, function (err, instance) {                                    
             if (err) {    
              console.log(err)
             }   
@@ -481,114 +438,83 @@ router.post('/getExpense',function (req, res){
            count = instance;
            console.log(count)
            if(count== 0){            
-            saveExpenseData();
+            saveExpenseData(ExpenseData);
             console.log("Expense Save");
-            res.send({status:"200"});
+            res.send({status:"200"}); 
+            
            }
            else{
-             console.log("Expense exist");
-             res.send({status:"500"});
+               updateExpence(ExpenseData);
+             console.log("Expense exist");   
+             res.send({status:"200"});       
            }
 
 
          }                           
         });
 
+// update expense 
 
-    function saveExpenseData() {
-      // body...
+     function updateExpence(data){
+      console.log(data);
+      var id   = data.id
+      Transaction.update({expenseId:data.expenseId},data, function(err, instance){
+              if (err) {    
+                     console.log(err)
+                 }   
+                  else  {
+                   console.log(instance); 
+                   console.log("Expense Updated");
+                    console.log(data.id);
+                      var itemTable =  data.itemTable;
+                      var accountTable =  data.accountTable;
+                      var ledger  = [];
+                      for(var i=0;i<itemTable.length;i++)
+                        {        
+                       ledger.push({accountName:itemTable[i].accountName,date:data.date,particular:data.supliersName,refNo:data.no,voType:"Expense",debit:0,credit:Number(itemTable[i].amount),voRefId:mongodb.ObjectId(id),isUo:false})
+                        } 
+                    for(var i=0;i<accountTable.length;i++)
+                        {        
+                       ledger.push({accountName:accountTable[i].accountName,date:data.date,particular:data.supliersName,refNo:data.no,voType:"Expense",debit:0,credit:Number(accountTable[i].amount),voRefId:mongodb.ObjectId(id),isUo:false})
+                        }                                              
+                        console.log(ledger);
+                        if(id != undefined){
+                       accountEntry(ledger,false,new mongodb.ObjectId(id));  
+                        }
+                        else{
 
-      Transaction.create(transactionData, function (err, instance) {                                    
+                           console.log("voRef id is indefiend");
+                        }
+                  }         
+      });
+
+
+
+     }
+    function saveExpenseData(data) {
+      Transaction.create(data, function (err, instance) {                                    
             if (err) {    
              console.log(err)
             }   
-            else{
-            console.log("Transaction Data Saved",transactionData);
+            else{     console.log("expense Created")
+                      var itemTable =  data.itemTable;
+                      var accountTable =  data.accountTable;
+                      var ledger  = [];
+                      for(var i=0;i<itemTable.length;i++)
+                        {        
+                       ledger.push({accountName:itemTable[i].accountName,date:data.date,particular:data.supliersName,refNo:data.no,voType:"Expense",debit:0,credit:Number(itemTable[i].amount),voRefId:instance.id,isUo:false})
+                        } 
+                    for(var i=0;i<accountTable.length;i++)
+                        {        
+                       ledger.push({accountName:accountTable[i].accountName,date:data.date,particular:data.supliersName,refNo:data.no,voType:"Expense",debit:0,credit:Number(accountTable[i].amount),voRefId:instance.id,isUo:false})
+                        }
+
+                        console.log("Expense Ledger Data",ledger);
+                       accountEntry(ledger,false,instance.id);
+            
          }                           
-        });
-  
-      
-    if(tdsLedger.credit != null||tdsLedger!=undefined){
-     Ledgers.create(tdsLedger, function (err, instance) {                                    
-            if (err) {    
-             console.log(err)
-            } 
-            else{
-            console.log("TdsLedger Ledger Data Saved",tdsLedger);
-         }  
-
-        });
-
-       Accounts.getDataSource().connector.connect(function (err, db) {
-           var tdsAccountCredit = tdsAccountData.credit;
-           var tdsAccountDebit = tdsAccountData.debit;      
-           var tdsAccountName = tdsAccountData.accountName;                
-           var collection = db.collection('account');
-        if(tdsAccountCredit!=''){
-       collection.update({accountName:tdsAccountName},{ $inc: { credit: Number(tdsAccountCredit)} },
-           function (err, instance) { 
-            if (err) {    
-            console.log(err);
-         }  
-         else{
-            console.log("Tds Acoount Data Saved:",tdsAccountCredit);
-         }  
-         
-         });
-          }
-         if(tdsAccountDebit!=''){
-      collection.update({accountName:tdsAccountName},{ $inc: { debit: Number(tdsAccountDebit) } },
-           function (err, instance) {        
-             if (err) {    
-            console.log(err);
-         }  else{
-            console.log("Tds Acoount Data Saved:",tdsAccountDebit);
-         }             
-         });
-       }                   
-    })  
-    }  
-      
-        Ledgers.create(expenseLedger, function (err, instance) {                                    
-            if (err) {    
-             console.log(err)
-            } 
-            else{
-            console.log("Expense Ledger Data Saved",expenseLedger);
-         }                            
-        });
-     Accounts.getDataSource().connector.connect(function (err, db) {
-           var expenseCredit = expenseAccount.credit;
-           var expenseDebit = expenseAccount.debit;      
-           var expenseAccountName = expenseAccount.accountName;              
-           var collection = db.collection('account');
-        if(expenseCredit!=''){
-       collection.update({accountName:expenseAccountName},{ $inc: { credit: Number(expenseCredit)} },
-           function (err, instance) { 
-            if (err) {    
-            console.log(err);
-         } 
-         else{
-            console.log("Expense Acoount Data Saved:",expenseCredit);
-         }               
-         });
-          }
-         if(expenseDebit!=''){
-      collection.update({accountName:expenseAccountName},{ $inc: { debit: Number(expenseDebit) } },
-           function (err, instance) {        
-             if (err) {    
-            console.log(err);
-         }   
-         else{
-            console.log("Expense Acoount Data Saved:",expenseDebit);
-         }            
-         });
-       }                   
-    }) 
-   }
-     
-     
-     
+        });    
+   }   
    });    
  //end save Expense  
 
@@ -691,11 +617,7 @@ router.post('/saveBill',function (req, res){
                       if(data.role == 2){
                       var accountData =  data.accountlineItem;
                       var purchaseAccount = 'Purchase Account' ;
-                      var ledger  = [];
-                      
-                     
-
-                      
+                      var ledger  = [];                     
                     for(var i=0;i<accountData.length;i++)
                         {        
                        ledger.push({accountName:accountData[i].accountName,date:data.date,particular:purchaseAccount,refNo:data.no,voType:"Purchase Invoice",debit:0,credit:Number(accountData[i].amount),voRefId:instance.id,isUo:false})
@@ -706,6 +628,17 @@ router.post('/saveBill',function (req, res){
                            )
                        accountEntry(ledger,false,instance.id);
                      }
+
+                     if(data.role == 3){
+                      var accountData =  data.accountlineItem;
+                      var purchaseAccount = 'Purchase Account' ;
+                      var ledger  = [];                                       
+                        ledger.push({accountName:data.supliersName,date:data.date,particular:purchaseAccount,refNo:data.no,voType:"Purchase Invoice",debit:0,creditUO:Number(data.adminAmount),voRefId:instance.id,isUo:true},
+                                    {accountName:'Inventory',date:data.date,particular:purchaseAccount,refNo:data.no,voType:"Purchase Invoice",debitUO:Number(data.adminAmount),credit:0,voRefId:instance.id,isUo:true}    
+
+                           )
+                       accountEntry(ledger,true,instance.id);
+                     }
                   }         
       });
        }
@@ -714,21 +647,16 @@ router.post('/saveBill',function (req, res){
        function createInventory(data){         
          if(data.role == 3){     
          var inventoryData  = data.itemDetail;      
-           for(var i=0;i<inventoryData.length;i++)
-             {        
-             inventoryData[i].isActive  = true;
-             inventoryData[i].visible = false;
-            }                
-         }         
-          if(data.role == 2){
-           var inventoryData  = data.manualLineItem;                 
+           Inventory.count({visible:false,isActive:true}, function(err, instance){
+           var count =  instance           
+           var inventoryData  = data.itemDetail;                 
              for(var i=0;i<inventoryData.length;i++)
              {        
                inventoryData[i].isActive  = true;
-               inventoryData[i].visible = true;
+               inventoryData[i].visible = false;
                inventoryData[i].no = data.no;
-            } 
-         }                      
+               inventoryData[i].rgNo = count + i + 1;
+            }                              
         Inventory.create(inventoryData, function(err, instance){
               if (err) {    
                      console.log(err)
@@ -738,9 +666,32 @@ router.post('/saveBill',function (req, res){
                      return instance;
                   }         
       });
+     }); 
+     }   
+          if(data.role == 2){
+       Inventory.count({visible:true,isActive:true}, function(err, instance){
+           var count =  instance           
+           var inventoryData  = data.manualLineItem;                 
+             for(var i=0;i<inventoryData.length;i++)
+             {        
+               inventoryData[i].isActive  = true;
+               inventoryData[i].visible = true;
+               inventoryData[i].no = data.no;
+               inventoryData[i].rgNo = count + i + 1;
+            }                              
+        Inventory.create(inventoryData, function(err, instance){
+              if (err) {    
+                     console.log(err)
+                 }   
+                  else  {
+                     console.log("inventory created")
+                     return instance;
+                  }         
+      });
+     });
     }
+ }
        // update Inventory
-
        function updateInventory(data){
          if(data.role == 3){
             var visible = false;
@@ -815,6 +766,22 @@ router.post('/saveBill',function (req, res){
                    
                        
                      }
+                      if(data.role == 3){
+                     console.log(data.billId);
+                     
+                      var purchaseAccount = 'Purchase Account' ;
+                      var ledger  = [];
+                   
+                        ledger.push({accountName:data.supliersName,date:data.date,particular:purchaseAccount,refNo:data.no,voType:"Purchase Invoice",debitUO:0,creditUO:Number(data.adminAmount),voRefId:new mongodb.ObjectId(data.billId),isUo:true},
+                                    {accountName:'Inventory',date:data.date,particular:purchaseAccount,refNo:data.no,voType:"Purchase Invoice",debitUO:Number(data.adminAmount),creditUO:0,voRefId:new mongodb.ObjectId(data.billId),isUo:true}    
+
+                           )
+                        console.log(ledger);
+
+                       accountEntry(ledger,true,new mongodb.ObjectId(data.billId));
+                   
+                       
+                     }
 
                   }         
       });
@@ -835,88 +802,23 @@ router.post('/saveBill',function (req, res){
                     if(count>0)
                     {      
 
-                    Ledgers.remove({voRefId:voRefId,isUo:false}, function (err, instance) {
+                    Ledgers.remove({voRefId:voRefId,isUo:isUo}, function (err, instance) {
                                console.log("ledger removed")       
-                           })        
-                   Ledgers.find({voRefId:voRefId,isUo:isUo}, function (err, instance) { 
-                      if (err) {    
-                     console.log(err)
-                       } 
-                         else {
-                           console.log(instance)
-                           console.log("instance")
-                          for(var i=0;i<instance.length;i++){ 
-                           if(instance[i].credit){
-                              console.log(instance[i].accountName)
-                              var accountName = instance[i].accountName
-                              var credit =  Number(instance[i].credit);
-                              Accounts.getDataSource().connector.connect(function (err, db) {  
-                                 var collection = db.collection('account');   
-                              collection.update({accountName:accountName},{ $inc: { credit: - Number(credit)} }, function (err, instance) { 
-                                 console.log("ledger removed")                               
-                              });
-                           });
-                           }                
-                           if(instance[i].debit){
-                               console.log(instance[i].accountName)
-                               var accountName = instance[i].accountName
-                                var debit =  Number(instance[i].debit);
-                               Accounts.getDataSource().connector.connect(function (err, db) {  
-                                 var collection = db.collection('account');   
-                              collection.update({accountName:accountName},{ $inc: { debit: - Number(debit)} }, function (err, instance) {                                 
-                              });
-                           });
-                           }
-                          }
-                           
-                         }
-                   });   
-
-
-                     }
-           
-                                           
+                           })                         
+                     }                                           
                   Ledgers.create(data, function(err, instance){
                             if (err) {    
                               console.log(err)
-                             } else{      
-                        Ledgers.getDataSource().connector.connect(function (err, db) {  
-                           var collection = db.collection('ledger');    
-                        for(var i=0;i<data.length;i++){ 
-                           if(data[i].credit != 0){
-                               var accountName = data[i].accountName
-                              var credit =  Number(data[i].credit);
-                              Accounts.update({accountName:accountName},{ $inc: { credit: Number(credit)} }, function (err, instance) {  
-                                  console.log("account Updated")
-                               console.log(instance)                                  
-                                    });
-                                 }                        
-                           if(data[i].debit!= 0){
-                               var accountName = data[i].accountName
-                                var debit =  Number(data[i].debit);
-                              Accounts.update({accountName:accountName},{ $inc: { debit: Number(debit)} }, function (err, instance) {
-                                 console.log("account Updated")
-                                  console.log(instance) 
-                                                                 
-                              });
-                           }
-
-                          }
-
-                            });
-                             
-                            }  
-                                   
-                       });
-           
-                      
-            
+                             } else{    
+                             console.log("ledger updated")                                
+                            }                                    
+                       });           
                      
                }
 });
 
  }
-
+//end of Account Entry
 router.get('/chartOfAccount',function (req, res){ 
 
 Ledgers.getDataSource().connector.connect(function (err, db) {  
@@ -934,26 +836,27 @@ Ledgers.getDataSource().connector.connect(function (err, db) {
 
         Accounts.find({},function (err, instance) { 
               var accountData = instance 
-            for(var i=0;i<ledgerData.length;i++){
+            for(var i=0;i<accountData.length;i++){
+               for(var j=0;j<ledgerData.length;j++){
 
-               if(accountData[i].accountName == ledgerData[i]._id.accountName){
-                accountData[i].credit =ledgerData.credit
-                 accountData[i].debit =ledgerData.debit
-
+               if(accountData[i].accountName == ledgerData[j]._id.accountName){
+                accountData[i].credit =ledgerData[j].credit
+                 accountData[i].debit =ledgerData[j].debit
                }
-
+              }
               } 
                res.send(accountData);   
-
-
-      });
-        
-
-
-                               
+      });                               
 });   
 });
 });
+
+
+
+// Save Expense new
+
+
+
 
   server.use(router);
 };
