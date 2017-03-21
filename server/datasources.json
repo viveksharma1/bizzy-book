@@ -2,13 +2,13 @@
 
 {
   "mongo": {
-    "host": "ds011893.mlab.com",
-    "port": 11893,
-    "database": "db_bizzybook",
-    "password": "book123",
+    "host": "ds145245.mlab.com",
+    "port": 45245,
+    "database": "codebyte",
+    "password": "bizzy",
     "name": "mongo",
     "connector": "mongodb",
-    "user": "bizzy"
+    "user": "bizzy-book-new"
   }
 
   

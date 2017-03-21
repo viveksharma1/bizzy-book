@@ -575,6 +575,10 @@ router.post('/liveSearch',function (req, res){
 
 router.post('/saveBill',function (req, res){ 
        var data = req.body;
+         console.log(data.date);
+      // data.date  = new Date(data.date);
+     //  data.billDueDate  = new Date(data.billDueDate);
+       console.log(data.date);
        console.log(data)
        Transaction.count({no:data.no}, function (err, instance) {                                    
                  if (err) {    
