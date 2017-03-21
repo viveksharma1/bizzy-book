@@ -85,8 +85,17 @@
 
      "id": {
       "type": "string"
+    }, 
+    "refNo": {
+      "type": "number"
     },
      "customData": {
+      "type": "string"
+    },
+    "customPaymentInfo": {
+      "type": "object"
+    },
+    "invoiceType": {
       "type": "string"
     }
   },

@@ -32,10 +32,13 @@
      "refNo": {
       "type": "string"
     },
+    "no": {
+      "type": "number"
+    },
     "vo_payment": {
-      "type": [
-        "payment"
-      ]
+      "type": 
+        "object"
+      
     } 
   },
 

@@ -8,6 +8,7 @@ module.exports = function(server) {
      var master = server.models.master;  
      var Inventory = server.models.Inventory;  
      var BankTransaction = server.models.BankTransaction;  
+      var voucherTransaction = server.models.voucherTransaction;
     var Accounts = server.models.account;  
      var Ledgers = server.models.ledger;  
     var supplier = server.models.suppliers;
@@ -633,8 +634,8 @@ router.post('/saveBill',function (req, res){
                       var accountData =  data.accountlineItem;
                       var purchaseAccount = 'Purchase Account' ;
                       var ledger  = [];                                       
-                        ledger.push({accountName:data.supliersName,date:data.date,particular:purchaseAccount,refNo:data.no,voType:"Purchase Invoice",debit:0,creditUO:Number(data.adminAmount),voRefId:instance.id,isUo:true},
-                                    {accountName:'Inventory',date:data.date,particular:purchaseAccount,refNo:data.no,voType:"Purchase Invoice",debitUO:Number(data.adminAmount),credit:0,voRefId:instance.id,isUo:true}    
+                        ledger.push({accountName:data.supliersName,date:data.date,particular:purchaseAccount,refNo:data.no,voType:"Purchase Invoice",debit:0,credit:Number(data.adminAmount),voRefId:instance.id,isUo:true},
+                                    {accountName:'Inventory',date:data.date,particular:purchaseAccount,refNo:data.no,voType:"Purchase Invoice",debit:Number(data.adminAmount),credit:0,voRefId:instance.id,isUo:true}    
 
                            )
                        accountEntry(ledger,true,instance.id);
@@ -772,8 +773,8 @@ router.post('/saveBill',function (req, res){
                       var purchaseAccount = 'Purchase Account' ;
                       var ledger  = [];
                    
-                        ledger.push({accountName:data.supliersName,date:data.date,particular:purchaseAccount,refNo:data.no,voType:"Purchase Invoice",debitUO:0,creditUO:Number(data.adminAmount),voRefId:new mongodb.ObjectId(data.billId),isUo:true},
-                                    {accountName:'Inventory',date:data.date,particular:purchaseAccount,refNo:data.no,voType:"Purchase Invoice",debitUO:Number(data.adminAmount),creditUO:0,voRefId:new mongodb.ObjectId(data.billId),isUo:true}    
+                        ledger.push({accountName:data.supliersName,date:data.date,particular:purchaseAccount,refNo:data.no,voType:"Purchase Invoice",debit:0,credit:Number(data.adminAmount),voRefId:new mongodb.ObjectId(data.billId),isUo:true},
+                                    {accountName:'Inventory',date:data.date,particular:purchaseAccount,refNo:data.no,voType:"Purchase Invoice",debit:Number(data.adminAmount),credit:0,voRefId:new mongodb.ObjectId(data.billId),isUo:true}    
 
                            )
                         console.log(ledger);
@@ -853,7 +854,58 @@ Ledgers.getDataSource().connector.connect(function (err, db) {
 
 
 
-// Save Expense new
+// custom Payement 
+
+router.post('/payement',function (req, res){ 
+   var data =  req.body
+    voucherTransaction.count({type:"Payment"}, function (err, instance) {                                    
+                 if (err) {    
+                     console.log(err)
+                 }   
+                  else 
+
+                     data.no = instance + 1; 
+                   var vochNo  = instance + 1; 
+                  console.log(data.paymentNo);
+voucherTransaction.getDataSource().connector.connect(function (err, db) {  
+   var collection = db.collection('voucherTransaction'); 
+   voucherTransaction.create( data,   function (err, instance) { 
+       if (err) {    
+                       console.log(err)
+                        } 
+                 else{
+
+                     console.log(instance)
+                      var customPaymentInfo ={
+                          status:"done",
+                          amount: data.data,
+                          paymentDate:data.date,
+                          bankAccount:data.vo_payment.bankAccount,
+                          partyAccount:data.vo_payment.partyAccount,
+                          voRefId:instance.id
+                      }  
+                     Transaction.update({no:data.refNo},{customPaymentInfo:customPaymentInfo} ,function (err, instance) {
+                         if (err) {    
+                       console.log(err)
+                        } 
+                 else{
+                           console.log(instance)
+                        }
+                     });
+         var ledger = [];
+         ledger.push({accountName:data.vo_payment.partyAccount,date:data.date,particular:data.vo_payment.bankAccount,refNo:vochNo,voType:"Payment",debit:Number(data.amount),credit:0,voRefId:instance.id,isUo:false},
+                     {accountName:data.vo_payment.bankAccount,date:data.date,particular:data.vo_payment.partyAccount,refNo:vochNo,voType:"Payment",debit:0,credit:Number(data.amount),voRefId:instance.id,isUo:false}
+                     )
+
+                   accountEntry(ledger,false,instance.id); 
+
+                   res.send({status:'200'});
+        }
+                              
+});   
+});
+});
+});
 
 
 
