@@ -8,9 +8,14 @@
   },
   "properties": {
     "name": {
-      "type": "string"
+      "type": "string",
+       "required": true,
+       "index": {"unique": true} 
     },
      "type": {
+      "type": "string"
+    },
+     "balanceType": {
       "type": "string"
     },
 

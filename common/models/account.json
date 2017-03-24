@@ -7,8 +7,10 @@
     "validateUpsert": true
   },
   "properties": {
-    "categoryName": {
-      "type": "string"
+    "accountName": {
+      "type": "string",
+       "required": true,
+        "index": {"unique": true} 
     },
     "group": {
        "type": "string"
@@ -28,6 +30,13 @@
     },
        "debit": {
       "type": "number"
+    },
+       "openingBalance": {
+      "type": "number"
+    },
+    
+       "balanceType": {
+      "type": "string"
     },
   "validations": [],
   "relations": {},
