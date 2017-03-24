@@ -970,11 +970,12 @@ router.post('/createAccount',function (req, res){
                     res.send({"messege":"Account All Ready exist"})
                   }
                   else{
-      groupMaster.find({name:accountData.Under}, function (err, instance) { 
+      groupMaster.find({where:{name:accountData.Under}}, function (err, instance) { 
 
                  if(instance){
                   var ancestor = instance[0].ancestor
-                  ancestor.push(accountData.Under);
+                 
+
                  
                   accountData.ancestor = ancestor;
                   console.log(ancestor)
