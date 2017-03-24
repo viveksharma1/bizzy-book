@@ -490,6 +490,9 @@ router.post('/getExpense',function (req, res){
                       var accountTable =  data.accountTable;
                       var ledger  = [];
                       if(data.role == 2){
+                        if(data.tdsAccountName){
+                           ledger.push({accountName:data.tdsAccountName,date:data.date,particular:data.supliersName,refNo:data.no,voType:"Expense",credit:data.tdsamount,voRefId:mongodb.ObjectId(id),isUo:false})
+                        }
                       for(var i=0;i<itemTable.length;i++)
                         {        
                        ledger.push({accountName:itemTable[i].accountName,date:data.date,particular:data.supliersName,refNo:data.no,voType:"Expense",credit:Number(itemTable[i].amount),voRefId:mongodb.ObjectId(id),isUo:false})
@@ -500,6 +503,9 @@ router.post('/getExpense',function (req, res){
                         } 
                       } 
                       if(data.role == 3){
+                        if(data.tdsAccountName){
+                           ledger.push({accountName:data.tdsAccountName,date:data.date,particular:data.supliersName,refNo:data.no,voType:"Expense",credit:data.tdsamount,voRefId:mongodb.ObjectId(id),isUo:false})
+                        }
                          for(var i=0;i<itemTable.length;i++)
                         {        
                        ledger.push({accountName:itemTable[i].accountName,date:data.date,particular:data.supliersName,refNo:data.no,voType:"Expense",credit:Number(itemTable[i].amount),voRefId:mongodb.ObjectId(id),isUo:true,visible:true})
@@ -534,6 +540,9 @@ router.post('/getExpense',function (req, res){
                       var accountTable =  data.accountTable;
                       var ledger  = [];
                       if(data.role == 2){
+                        if(data.tdsAccountName){
+                           ledger.push({accountName:data.tdsAccountName,date:data.date,particular:data.supliersName,refNo:data.no,voType:"Expense",credit:data.tdsamount,voRefId:instance.id,isUo:false})
+                        }
                       for(var i=0;i<itemTable.length;i++)
                         {        
                        ledger.push({accountName:itemTable[i].accountName,date:data.date,particular:data.supliersName,refNo:data.no,voType:"Expense",credit:Number(itemTable[i].amount),voRefId:instance.id,isUo:false})
@@ -544,6 +553,9 @@ router.post('/getExpense',function (req, res){
                         }
                       }
                       if(data.role == 3){
+                        if(data.tdsAccountName){
+                           ledger.push({accountName:data.tdsAccountName,date:data.date,particular:data.supliersName,refNo:data.no,voType:"Expense",credit:data.tdsamount,voRefId:instance.id,isUo:false})
+                        }
                       for(var i=0;i<itemTable.length;i++)
                         {        
                        ledger.push({accountName:itemTable[i].accountName,date:data.date,particular:data.supliersName,refNo:data.no,voType:"Expense",credit:Number(itemTable[i].amount),voRefId:instance.id,isUo:true,visible:true})
@@ -880,14 +892,11 @@ Ledgers.getDataSource().connector.connect(function (err, db) {
            debit: { $sum: "$debit" },
          }
 },   function (err, instance) { 
-
           var ledgerData = instance
-
         Accounts.find({},function (err, instance) { 
               var accountData = instance 
             for(var i=0;i<accountData.length;i++){
                for(var j=0;j<ledgerData.length;j++){
-
                if(accountData[i].accountName == ledgerData[j]._id.accountName){
                 accountData[i].credit =ledgerData[j].credit
                  accountData[i].debit =ledgerData[j].debit

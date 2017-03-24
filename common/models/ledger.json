@@ -7,33 +7,33 @@
     "validateUpsert": true
   },
   "properties": {
-    "supliersName": {
+    "accountName": {
       "type": "string"
     },
     "suplierId": {
       "type": "string"
     },
-    "email": {
+    "particular": {
       "type": "string"
     },
-      "particular": {
-      "type": "string"
-    },
-      "type": {
-      "type": "string"
-    },
-    "currency": {
-      "type": "string"
-    },
-    "date": {
+      "date": {
       "type": "date"
     },
-   
-    "no": {
+      "refNo": {
+      "type": "number"
+    },
+    "voType": {
       "type": "string"
     },
-    "amount": {
+    "credit": {
+      "type": "number"
+    },
+   
+    "voRefId": {
       "type": "string"
+    },
+    "isUo": {
+      "type": "boolean"
     },
     "balance": {
       "type": "string"
