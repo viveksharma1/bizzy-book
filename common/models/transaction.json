@@ -26,6 +26,10 @@
     "date": {
       "type": "date"
     },
+    
+    "actualDate": {
+      "type": "date"
+    },
     "no": {
       "type": "number"
     },
