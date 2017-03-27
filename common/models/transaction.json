@@ -101,6 +101,9 @@
     },
     "invoiceType": {
       "type": "string"
+    },
+    "purchaseAccount": {
+      "type": "string"
     }
   },
   "validations": [],

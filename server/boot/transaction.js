@@ -604,45 +604,43 @@ router.post('/liveSearch',function (req, res){
 // Save Bill route
 
 router.post('/saveBill',function (req, res){ 
-       var data = req.body;
-         console.log(data.date);
-      // data.date  = new Date(data.date);
-     //  data.billDueDate  = new Date(data.billDueDate);
-       console.log(data.date);
-       console.log(data)
-       Transaction.count({no:data.no}, function (err, instance) {                                    
+       var data = req.body  
+       if(data.billId){
+        var query  = {id:data.billId}
+       }
+       else{
+        query = {no:data.no}
+       }
+        Transaction.getDataSource().connector.connect(function (err, db) {   
+          var collection = db.collection('transaction');
+          Transaction.count(query, function (err, instance) {                                    
                  if (err) {    
                      console.log(err)
                  }   
                   else 
                {
                    count = instance;
-                   console.log(count)
-                if(count== 0)
+                   console.log(instance)
+                if(count == 0)
                 {            
-                   createBill(data);
-                   console.log(foo);                 
-                   createInventory(data);
+                   createBill(data);                  
                    console.log("Bill Created");
-                   res.send("foo");
-                   
-                   
+                   res.send("Bill Created");                   
                }
                 else   
                 {
-                  var foo =  updateBill(data);
-                  updateInventory(data);                  
+                   var foo =  updateBill(data);
+                   updateInventory(data);                  
                    console.log("bill updated");
-                  res.send(foo);
+                   res.send(foo);
                 }
          }                           
         });   
-       
+       });
        // Bill create Function
 
        function createBill(data){
         Transaction.create(data, function(err, instance){
-
               if (err) {    
                      console.log(err)
                  }   
@@ -655,10 +653,10 @@ router.post('/saveBill',function (req, res){
                       var ledger  = [];                     
                     for(var i=0;i<accountData.length;i++)
                         {        
-                       ledger.push({accountName:accountData[i].accountName,date:data.date,particular:purchaseAccount,refNo:data.no,voType:"Purchase Invoice",credit:Number(accountData[i].amount),voRefId:instance.id,isUo:false})
+                       ledger.push({accountName:accountData[i].accountName,date:data.date,particular:data.purchaseAccount,refNo:data.no,voType:"Purchase Invoice",credit:Number(accountData[i].amount),voRefId:instance.id,isUo:false})
                         }  
-                        ledger.push({accountName:data.supliersName,date:data.date,particular:purchaseAccount,refNo:data.no,voType:"Purchase Invoice",credit:Number(data.amount),voRefId:instance.id,isUo:false},
-                                    {accountName:'INVENTORY',date:data.date,particular:purchaseAccount,refNo:data.no,voType:"Purchase Invoice",debit:Number(data.amount),voRefId:instance.id,isUo:false}    
+                        ledger.push({accountName:data.supliersName,date:data.date,particular:data.supliersName,refNo:data.no,voType:"Purchase Invoice",credit:Number(data.amount),voRefId:instance.id,isUo:false},
+                                    {accountName:data.purchaseAccount,date:data.date,particular:data.supliersName,refNo:data.no,voType:"Purchase Invoice",debit:Number(data.amount),voRefId:instance.id,isUo:false}    
 
                            )
                        accountEntry(ledger,false,instance.id);
@@ -668,19 +666,23 @@ router.post('/saveBill',function (req, res){
                       var accountData =  data.accountlineItem;
                       var purchaseAccount = 'Purchase Account' ;
                       var ledger  = [];                                       
-                        ledger.push({accountName:data.supliersName,date:data.date,particular:purchaseAccount,refNo:data.no,voType:"Purchase Invoice",credit:Number(data.adminAmount),voRefId:instance.id,isUo:true,visible:true},
-                                    {accountName:'INVENTORY',date:data.date,particular:purchaseAccount,refNo:data.no,voType:"Purchase Invoice",debit:Number(data.adminAmount),voRefId:instance.id,isUo:true,visible:true}    
+                        ledger.push({accountName:data.supliersName,date:data.date,particular:data.purchaseAccount,refNo:data.no,voType:"Purchase Invoice",credit:Number(data.adminAmount),voRefId:instance.id,isUo:true,visible:true},
+                                    {accountName:data.purchaseAccount,date:data.date,particular:data.supliersName,refNo:data.no,voType:"Purchase Invoice",debit:Number(data.adminAmount),voRefId:instance.id,isUo:true,visible:true}    
 
                            )
                        accountEntry(ledger,true,instance.id);
                      }
-                  }         
+
+                     createInventory(data,instance.id);
+                  }   
+                 
       });
        }
     
     // create Inventory
-       function createInventory(data){         
+       function createInventory(data,billId){         
          if(data.role == 3){     
+          console.log(billId)
          var inventoryData  = data.itemDetail;      
            Inventory.count({visible:false,isActive:true}, function(err, instance){
            var count =  instance           
@@ -690,6 +692,7 @@ router.post('/saveBill',function (req, res){
                inventoryData[i].isActive  = true;
                inventoryData[i].visible = false;
                inventoryData[i].no = data.no;
+               inventoryData[i].invId = billId;
                inventoryData[i].rgNo = count + i + 1;
             }                              
         Inventory.create(inventoryData, function(err, instance){
@@ -712,6 +715,7 @@ router.post('/saveBill',function (req, res){
                inventoryData[i].isActive  = true;
                inventoryData[i].visible = true;
                inventoryData[i].no = data.no;
+               inventoryData[i].invId = billId;
                inventoryData[i].rgNo = count + i + 1;
             }                              
         Inventory.create(inventoryData, function(err, instance){
@@ -738,13 +742,13 @@ router.post('/saveBill',function (req, res){
        Inventory.getDataSource().connector.connect(function (err, db) {   
         var collection = db.collection('inventory');
        // Inventory.update({no:data.no,visible:visible,isActive:true},{isActive:false},function(err, instance){
-           Inventory.remove({no:data.no,visible:visible,isActive:true},function(err, instance){
+           Inventory.remove({invId:new mongodb.ObjectId(data.billId),visible:visible,isActive:true},function(err, instance){
               if (err) {    
                      console.log(err)
                  }   
                   else  {
                      console.log("inventory updated")
-                     createInventory(data);
+                     createInventory(data,new mongodb.ObjectId(data.billId));
                   }         
       });
      });
@@ -776,7 +780,7 @@ router.post('/saveBill',function (req, res){
          delete data.adminBalance;
          console.log(data);
         }
-        Transaction.update({no:data.no},data, function(err, instance){
+        Transaction.update({id:data.billId},data, function(err, instance){
               if (err) {    
                      console.log(err)
                  }   
@@ -789,10 +793,10 @@ router.post('/saveBill',function (req, res){
                       var ledger  = [];
                     for(var i=0;i<accountData.length;i++)
                         {        
-                       ledger.push({accountName:accountData[i].accountName,date:data.date,particular:purchaseAccount,refNo:data.no,voType:"Purchase Invoice",credit:Number(accountData[i].amount),voRefId:new mongodb.ObjectId(data.billId),isUo:false})
+                       ledger.push({accountName:accountData[i].accountName,date:data.date,particular:data.purchaseAccount,refNo:data.no,voType:"Purchase Invoice",credit:Number(accountData[i].amount),voRefId:new mongodb.ObjectId(data.billId),isUo:false})
                         }  
-                        ledger.push({accountName:data.supliersName,date:data.date,particular:purchaseAccount,refNo:data.no,voType:"Purchase Invoice",credit:Number(data.amount),voRefId:new mongodb.ObjectId(data.billId),isUo:false},
-                                    {accountName:'INVENTORY',date:data.date,particular:purchaseAccount,refNo:data.no,voType:"Purchase Invoice",debit:Number(data.amount),voRefId:new mongodb.ObjectId(data.billId),isUo:false}    
+                        ledger.push({accountName:data.supliersName,date:data.date,particular:data.purchaseAccount,refNo:data.no,voType:"Purchase Invoice",credit:Number(data.amount),voRefId:new mongodb.ObjectId(data.billId),isUo:false},
+                                    {accountName:data.purchaseAccount,date:data.date,particular:data.supliersName,refNo:data.no,voType:"Purchase Invoice",debit:Number(data.amount),voRefId:new mongodb.ObjectId(data.billId),isUo:false}    
 
                            )
                         console.log(ledger);
@@ -807,8 +811,8 @@ router.post('/saveBill',function (req, res){
                       var purchaseAccount = 'Purchase Account' ;
                       var ledger  = [];
                    
-                        ledger.push({accountName:data.supliersName,date:data.date,particular:purchaseAccount,refNo:data.no,voType:"Purchase Invoice",credit:Number(data.adminAmount),voRefId:new mongodb.ObjectId(data.billId),isUo:true,visible:true},
-                                    {accountName:'INVENTORY',date:data.date,particular:purchaseAccount,refNo:data.no,voType:"Purchase Invoice",debit:Number(data.adminAmount),voRefId:new mongodb.ObjectId(data.billId),isUo:true,visible:true}    
+                        ledger.push({accountName:data.supliersName,date:data.date,particular:data.purchaseAccount,refNo:data.no,voType:"Purchase Invoice",credit:Number(data.adminAmount),voRefId:new mongodb.ObjectId(data.billId),isUo:true,visible:true},
+                                    {accountName:data.purchaseAccount,date:data.date,particular:data.supliersName,refNo:data.no,voType:"Purchase Invoice",debit:Number(data.adminAmount),voRefId:new mongodb.ObjectId(data.billId),isUo:true,visible:true}    
 
                            )
                         console.log(ledger);
@@ -855,7 +859,6 @@ router.post('/saveBill',function (req, res){
  }
 //end of Account Entry
 router.get('/chartOfAccount',function (req, res){ 
-
 Ledgers.getDataSource().connector.connect(function (err, db) {  
    var collection = db.collection('ledger'); 
    collection.aggregate({
@@ -961,6 +964,7 @@ router.post('/createAccount',function (req, res){
 
                  
                   accountData.ancestor = ancestor;
+                   ancestor.push(accountData.Under);
                   console.log(ancestor)
                   console.log(accountData)
                  }
@@ -1003,7 +1007,7 @@ router.post('/createGroup',function (req, res){
                   console.log(instance)
                   console.log(instance[0].ancestor)
                   var ancestor = instance[0].ancestor
-                  ancestor.push(groupData.name);
+                  ancestor.push(groupData.type);
                  
                   groupData.ancestor = ancestor;
                   console.log(ancestor)
@@ -1025,6 +1029,55 @@ router.post('/createGroup',function (req, res){
                 });
             });
 
+// test 
 
+
+
+router.post('/searchAccount',function (req, res){ 
+   var name =  'CURRENT ASSETS'
+  
+      groupMaster.find({where:{ancestor: 'CURRENT ASSETS' }}, function (err, instance) { 
+
+                 if(instance){
+                   var groupData = instance; 
+             Accounts.find({where:{ancestor: 'CURRENT ASSETS' }}, function (err, instance) { 
+
+                 if(instance){
+                  var finalData  = [];
+                  finalData  = groupData;
+                   var accountData = instance; 
+                   finalData.push(accountData)
+                   calculateBalance(finalData);
+                   res.send(finalData);
+                 };
+           
+ }); 
+    
+                 }
+           
+ }); 
+                  
+    function calculateBalance(data){
+
+      var groupData =  data;
+
+       
+         Accounts.find({}, function (err, instance) { 
+                 if(instance){
+                  var accountData = instance;
+                  for(var i = 0;i<data.length;i++){
+
+                  }
+                
+                 };
+           
+ }); 
+    
+
+
+      }            
+                  
+                
+            });
   server.use(router);
 };
