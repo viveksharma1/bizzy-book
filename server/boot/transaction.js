@@ -198,22 +198,15 @@ module.exports = function(server) {
     
      router.post('/createCustomer',function (req, res){    
         var sup = req.body;
-        console.log(sup);
+     
         supplier.getDataSource().connector.connect(function (err, db) {   
       
         customer.create(req.body,function (err, instance) { 
             console.log(instance);
             
             if(instance){  
-              Accounts.create(req.body.account,function (err, instance) { 
-                if (err) {    
-                       console.log(err)
-                        } 
-                 else{
-                     console.log("account created ")
-                 }
-             });
-             customer.update({email:instance.email},{cusCode:instance.id},function (err, instance) { 
+             
+             customer.update({id:instance.id},{cusCode:instance.id},function (err, instance) { 
                 if (err) {    
                        console.log(err)
                         } 
@@ -554,14 +547,11 @@ router.post('/getExpense',function (req, res){
 
 
 router.post('/saveItem',function (req, res){    
-        var GODOWN = req.body.GODOWN;
-         var DESCRIPTION = req.body.DESCRIPTION;
-          var RRMARKS = req.body.RRMARKS;
+        //var GODOWN = req.body.GODOWN;
+         var DESCRIPTION = req.body
+          //var RRMARKS = req.body.RRMARKS;
 
-       
-        
-       
-        master.create({GODOWN},function (err, instance) { 
+        master.create(req.body,function (err, instance) { 
           if (err) {    
              console.log(err)
             } 
@@ -571,13 +561,7 @@ router.post('/saveItem',function (req, res){
           
       });
 
-        master.create(DESCRIPTION,function (err, instance) { 
-         
-      });
-
-        master.create(RRMARKS,function (err, instance) { 
-        
-      });
+       
        
        res.send({"status":"200"});
        
@@ -656,7 +640,7 @@ router.post('/saveBill',function (req, res){
                        ledger.push({accountName:accountData[i].accountName,date:data.date,particular:data.purchaseAccount,refNo:data.no,voType:"Purchase Invoice",credit:Number(accountData[i].amount),voRefId:instance.id,isUo:false})
                         }  
                         ledger.push({accountName:data.supliersName,date:data.date,particular:data.supliersName,refNo:data.no,voType:"Purchase Invoice",credit:Number(data.amount),voRefId:instance.id,isUo:false},
-                                    {accountName:data.purchaseAccount,date:data.date,particular:data.supliersName,refNo:data.no,voType:"Purchase Invoice",debit:Number(data.amount),voRefId:instance.id,isUo:false}    
+                                    {accountName:data.purchaseAccount,date:data.date,particular:data.supliersName,refNo:data.no,voType:"Purchase Invoice",debit:Number(data.purchaseAmount),voRefId:instance.id,isUo:false}    
 
                            )
                        accountEntry(ledger,false,instance.id);
@@ -667,7 +651,7 @@ router.post('/saveBill',function (req, res){
                       var purchaseAccount = 'Purchase Account' ;
                       var ledger  = [];                                       
                         ledger.push({accountName:data.supliersName,date:data.date,particular:data.purchaseAccount,refNo:data.no,voType:"Purchase Invoice",credit:Number(data.adminAmount),voRefId:instance.id,isUo:true,visible:true},
-                                    {accountName:data.purchaseAccount,date:data.date,particular:data.supliersName,refNo:data.no,voType:"Purchase Invoice",debit:Number(data.adminAmount),voRefId:instance.id,isUo:true,visible:true}    
+                                    {accountName:data.purchaseAccount,date:data.date,particular:data.supliersName,refNo:data.no,voType:"Purchase Invoice",debit:Number(data.purchaseAmount),voRefId:instance.id,isUo:true,visible:true}    
 
                            )
                        accountEntry(ledger,true,instance.id);
@@ -796,7 +780,7 @@ router.post('/saveBill',function (req, res){
                        ledger.push({accountName:accountData[i].accountName,date:data.date,particular:data.purchaseAccount,refNo:data.no,voType:"Purchase Invoice",credit:Number(accountData[i].amount),voRefId:new mongodb.ObjectId(data.billId),isUo:false})
                         }  
                         ledger.push({accountName:data.supliersName,date:data.date,particular:data.purchaseAccount,refNo:data.no,voType:"Purchase Invoice",credit:Number(data.amount),voRefId:new mongodb.ObjectId(data.billId),isUo:false},
-                                    {accountName:data.purchaseAccount,date:data.date,particular:data.supliersName,refNo:data.no,voType:"Purchase Invoice",debit:Number(data.amount),voRefId:new mongodb.ObjectId(data.billId),isUo:false}    
+                                    {accountName:data.purchaseAccount,date:data.date,particular:data.supliersName,refNo:data.no,voType:"Purchase Invoice",debit:Number(data.purchaseAmount),voRefId:new mongodb.ObjectId(data.billId),isUo:false}    
 
                            )
                         console.log(ledger);
@@ -812,7 +796,7 @@ router.post('/saveBill',function (req, res){
                       var ledger  = [];
                    
                         ledger.push({accountName:data.supliersName,date:data.date,particular:data.purchaseAccount,refNo:data.no,voType:"Purchase Invoice",credit:Number(data.adminAmount),voRefId:new mongodb.ObjectId(data.billId),isUo:true,visible:true},
-                                    {accountName:data.purchaseAccount,date:data.date,particular:data.supliersName,refNo:data.no,voType:"Purchase Invoice",debit:Number(data.adminAmount),voRefId:new mongodb.ObjectId(data.billId),isUo:true,visible:true}    
+                                    {accountName:data.purchaseAccount,date:data.date,particular:data.supliersName,refNo:data.no,voType:"Purchase Invoice",debit:Number(data.purchaseAmount),voRefId:new mongodb.ObjectId(data.billId),isUo:true,visible:true}    
 
                            )
                         console.log(ledger);
@@ -1030,7 +1014,36 @@ router.post('/createGroup',function (req, res){
             });
 
 // test 
+router.get('/getPaymentAccount',function (req, res){  
+     Accounts.find({where:{or:[{ancestor: 'BANK ACCOUNTS'},{ancestor:'CASH-IN-HAND'}]}}, function (err, instance) { 
 
+                 if(instance){                
+                   res.send(instance);
+                 };
+           
+ }); 
+  });      
+       
+
+  router.post('/payment',function (req, res){  
+
+    var paymentData = req.body.paymentData
+    Accounts.create( paymentData, function (err, instance) { 
+                 if(instance){                
+                   res.send(instance);
+                   updateTransactions();
+                 };
+
+ }); 
+      function updateTransactions(){
+     Accounts.update({id:data.id},{balance:data.amount}, function (err, instance) { 
+                 if(instance){                
+                   res.send(instance);
+                 };          
+ }); 
+     
+          
+      }  
 
 
 router.post('/searchAccount',function (req, res){ 
@@ -1056,6 +1069,7 @@ router.post('/searchAccount',function (req, res){
                  }
            
  }); 
+    });
                   
     function calculateBalance(data){
 
