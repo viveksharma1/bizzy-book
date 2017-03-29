@@ -1027,22 +1027,56 @@ router.get('/getPaymentAccount',function (req, res){
 
   router.post('/payment',function (req, res){  
 
-    var paymentData = req.body.paymentData
-    Accounts.create( paymentData, function (err, instance) { 
-                 if(instance){                
+    var data = req.body
+    voucherTransaction.create( req.body, function (err, instance) { 
+                 if(instance){   
+                 var vochID  = instance.id             
                    res.send(instance);
-                   updateTransactions();
+                   var ledger = [];
+                   if(data.role == '3'){
+                     ledger.push({accountName:data.vo_payment.partyAccount,date:data.date,particular:data.vo_payment.bankAccount,refNo:data.vochNo,voType:"Payment",debit:Number(data.amount),voRefId:instance.id,isUo:true,visible:true},
+                     {accountName:data.vo_payment.bankAccount,date:data.date,particular:data.vo_payment.partyAccount,refNo:data.vochNo,voType:"Payment",credit:Number(data.amount),voRefId:instance.id,isUo:true,visible:true}
+                     )
+                     accountEntry(ledger,true,instance.id);
+                   }
+                     if(data.role == '2'){
+         ledger.push({accountName:data.vo_payment.partyAccount,date:data.date,particular:data.vo_payment.bankAccount,refNo:data.vochNo,voType:"Payment",debit:Number(data.amount),voRefId:instance.id,isUo:false},
+                     {accountName:data.vo_payment.bankAccount,date:data.date,particular:data.vo_payment.partyAccount,refNo:data.vochNo,voType:"Payment",credit:Number(data.amount),voRefId:instance.id,isUo:false}
+                     )
+                     accountEntry(ledger,false,instance.id); 
+                   }    
+                   updateTransactions(data.vo_payment.billDetail,data.date,data.vochNo,vochID,data.role);
                  };
 
  }); 
-      function updateTransactions(){
-     Accounts.update({id:data.id},{balance:data.amount}, function (err, instance) { 
-                 if(instance){                
-                   res.send(instance);
-                 };          
- }); 
+      function updateTransactions(data,date,vochNo,vochID,role){
+       
+      Transaction.getDataSource().connector.connect(function (err, db) {   
+        var collection = db.collection('transaction');        
+        for(var i = 0;i<data.length;i++ ){
+           if(role == '3'){
+          var query1 =  {$set:{adminBalance:Number(data[i].balance)}}
+          var query2 =  {$push:{'paymentLog':{id:vochID,date:date,vochNo:vochNo,amount:data[i].amountPaid,isUo:true}}}
+        }
+         if(role == '2'){
+          var query1 =  {$set:{balance:Number(data[i].balance)}}
+          var query2 =  {$push:{'paymentLog':{id:vochID,date:date,vochNo:vochNo,amount:data[i].amountPaid,isUo:false}}}
+
+         }
+     collection.update({no:data[i].no},query1,function (err, instance) { 
+                 if(instance){     
+                 console.log(instance.result);           
+                 }               
+ });
+  collection.update({no:data[i].no},query2, function (err, instance) { 
+                 if(instance){     
+                 console.log(instance.result);           
+                 }
+                
+ });  
+      }       
      
-          
+   });       
       }  
 
 

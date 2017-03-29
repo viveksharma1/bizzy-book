@@ -104,6 +104,9 @@
     },
     "purchaseAccount": {
       "type": "string"
+    },
+     "paymentLog": {
+      "type": ["object"]
     }
   },
   "validations": [],
