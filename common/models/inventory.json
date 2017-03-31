@@ -1,8 +1,8 @@
 {
-  "name": "Inventory",
+  "name": "inventory",
   "base": "PersistedModel",
   "strict": false,
-  "idInjection": false,
+  "idInjection": true,
   "options": {
     "validateUpsert": true
   },
@@ -15,7 +15,11 @@
     },
     "supliersName": {
       "type": "string"
+    },
+     "currentStatus": {
+      "type": "string"
     }
+
   },
   "validations": [],
   "relations": {},

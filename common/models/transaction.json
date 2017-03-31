@@ -107,6 +107,9 @@
     },
      "paymentLog": {
       "type": ["object"]
+    },
+    "paymentDays": {
+      "type": "string"
     }
   },
   "validations": [],

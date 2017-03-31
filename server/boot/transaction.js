@@ -6,7 +6,7 @@ module.exports = function(server) {
     var Transaction = server.models.transaction;
      var inventoryStock = server.models.inventoryStock;  
      var master = server.models.master;  
-     var Inventory = server.models.Inventory;  
+     var Inventory = server.models.inventory;  
      var BankTransaction = server.models.BankTransaction;  
       var voucherTransaction = server.models.voucherTransaction;
     var Accounts = server.models.account;  
@@ -459,11 +459,11 @@ router.post('/getExpense',function (req, res){
                         }
                       for(var i=0;i<itemTable.length;i++)
                         {        
-                       ledger.push({accountName:itemTable[i].accountName,date:data.date,particular:data.supliersName,refNo:data.no,voType:"Expense",credit:Number(itemTable[i].amount),voRefId:mongodb.ObjectId(id),isUo:false})
+                       ledger.push({accountName:itemTable[i].accountName,date:data.date,particular:data.supliersName,refNo:data.no,voType:"Expense",debit:Number(itemTable[i].amount),voRefId:mongodb.ObjectId(id),isUo:false})
                         } 
                     for(var i=0;i<accountTable.length;i++)
                         {        
-                       ledger.push({accountName:accountTable[i].accountName,date:data.date,particular:data.supliersName,refNo:data.no,voType:"Expense",credit:Number(accountTable[i].amount),voRefId:mongodb.ObjectId(id),isUo:false})
+                       ledger.push({accountName:accountTable[i].accountName,date:data.date,particular:data.supliersName,refNo:data.no,voType:"Expense",debit:Number(accountTable[i].amount),voRefId:mongodb.ObjectId(id),isUo:false})
                         } 
                       } 
                       if(data.role == 3){
@@ -473,11 +473,11 @@ router.post('/getExpense',function (req, res){
                         }
                          for(var i=0;i<itemTable.length;i++)
                         {        
-                       ledger.push({accountName:itemTable[i].accountName,date:data.date,particular:data.supliersName,refNo:data.no,voType:"Expense",credit:Number(itemTable[i].amount),voRefId:mongodb.ObjectId(id),isUo:true,visible:true})
+                       ledger.push({accountName:itemTable[i].accountName,date:data.date,particular:data.supliersName,refNo:data.no,voType:"Expense",debit:Number(itemTable[i].amount),voRefId:mongodb.ObjectId(id),isUo:true,visible:true})
                         } 
                     for(var i=0;i<accountTable.length;i++)
                         {        
-                       ledger.push({accountName:accountTable[i].accountName,date:data.date,particular:data.supliersName,refNo:data.no,voType:"Expense",credit:Number(accountTable[i].amount),voRefId:mongodb.ObjectId(id),isUo:true,visible:true})
+                       ledger.push({accountName:accountTable[i].accountName,date:data.date,particular:data.supliersName,refNo:data.no,voType:"Expense",debit:Number(accountTable[i].amount),voRefId:mongodb.ObjectId(id),isUo:true,visible:true})
                         } 
 
                       }                                            
@@ -511,11 +511,11 @@ router.post('/getExpense',function (req, res){
                         }
                       for(var i=0;i<itemTable.length;i++)
                         {        
-                       ledger.push({accountName:itemTable[i].accountName,date:data.date,particular:data.supliersName,refNo:data.no,voType:"Expense",credit:Number(itemTable[i].amount),voRefId:instance.id,isUo:false})
+                       ledger.push({accountName:itemTable[i].accountName,date:data.date,particular:data.supliersName,refNo:data.no,voType:"Expense",debit:Number(itemTable[i].amount),voRefId:instance.id,isUo:false})
                         } 
                     for(var i=0;i<accountTable.length;i++)
                         {        
-                       ledger.push({accountName:accountTable[i].accountName,date:data.date,particular:data.supliersName,refNo:data.no,voType:"Expense",credit:Number(accountTable[i].amount),voRefId:instance.id,isUo:false})
+                       ledger.push({accountName:accountTable[i].accountName,date:data.date,particular:data.supliersName,refNo:data.no,voType:"Expense",debit:Number(accountTable[i].amount),voRefId:instance.id,isUo:false})
                         }
                       }
                       if(data.role == 3){
@@ -525,11 +525,11 @@ router.post('/getExpense',function (req, res){
                         }
                       for(var i=0;i<itemTable.length;i++)
                         {        
-                       ledger.push({accountName:itemTable[i].accountName,date:data.date,particular:data.supliersName,refNo:data.no,voType:"Expense",credit:Number(itemTable[i].amount),voRefId:instance.id,isUo:true,visible:true})
+                       ledger.push({accountName:itemTable[i].accountName,date:data.date,particular:data.supliersName,refNo:data.no,voType:"Expense",debit:Number(itemTable[i].amount),voRefId:instance.id,isUo:true,visible:true})
                         } 
                     for(var i=0;i<accountTable.length;i++)
                         {        
-                       ledger.push({accountName:accountTable[i].accountName,date:data.date,particular:data.supliersName,refNo:data.no,voType:"Expense",credit:Number(accountTable[i].amount),voRefId:instance.id,isUo:true,visible:true})
+                       ledger.push({accountName:accountTable[i].accountName,date:data.date,particular:data.supliersName,refNo:data.no,voType:"Expense",debit:Number(accountTable[i].amount),voRefId:instance.id,isUo:true,visible:true})
                         }
                       }
 
@@ -637,7 +637,7 @@ router.post('/saveBill',function (req, res){
                       var ledger  = [];                     
                     for(var i=0;i<accountData.length;i++)
                         {        
-                       ledger.push({accountName:accountData[i].accountName,date:data.date,particular:data.purchaseAccount,refNo:data.no,voType:"Purchase Invoice",credit:Number(accountData[i].amount),voRefId:instance.id,isUo:false})
+                       ledger.push({accountName:accountData[i].accountName,date:data.date,particular:data.purchaseAccount,refNo:data.no,voType:"Purchase Invoice",debit:Number(accountData[i].amount),voRefId:instance.id,isUo:false})
                         }  
                         ledger.push({accountName:data.supliersName,date:data.date,particular:data.supliersName,refNo:data.no,voType:"Purchase Invoice",credit:Number(data.amount),voRefId:instance.id,isUo:false},
                                     {accountName:data.purchaseAccount,date:data.date,particular:data.supliersName,refNo:data.no,voType:"Purchase Invoice",debit:Number(data.purchaseAmount),voRefId:instance.id,isUo:false}    
@@ -649,7 +649,11 @@ router.post('/saveBill',function (req, res){
                      if(data.role == 3){
                       var accountData =  data.accountlineItem;
                       var purchaseAccount = 'Purchase Account' ;
-                      var ledger  = [];                                       
+                      var ledger  = [];  
+                       for(var i=0;i<accountData.length;i++)
+                        {        
+                       ledger.push({accountName:accountData[i].accountName,date:data.date,particular:data.purchaseAccount,refNo:data.no,voType:"Purchase Invoice",debit:Number(accountData[i].amount),voRefId:instance.id,isUo:false})
+                        }                                       
                         ledger.push({accountName:data.supliersName,date:data.date,particular:data.purchaseAccount,refNo:data.no,voType:"Purchase Invoice",credit:Number(data.adminAmount),voRefId:instance.id,isUo:true,visible:true},
                                     {accountName:data.purchaseAccount,date:data.date,particular:data.supliersName,refNo:data.no,voType:"Purchase Invoice",debit:Number(data.purchaseAmount),voRefId:instance.id,isUo:true,visible:true}    
 
@@ -777,7 +781,7 @@ router.post('/saveBill',function (req, res){
                       var ledger  = [];
                     for(var i=0;i<accountData.length;i++)
                         {        
-                       ledger.push({accountName:accountData[i].accountName,date:data.date,particular:data.purchaseAccount,refNo:data.no,voType:"Purchase Invoice",credit:Number(accountData[i].amount),voRefId:new mongodb.ObjectId(data.billId),isUo:false})
+                       ledger.push({accountName:accountData[i].accountName,date:data.date,particular:data.purchaseAccount,refNo:data.no,voType:"Purchase Invoice",debit:Number(accountData[i].amount),voRefId:new mongodb.ObjectId(data.billId),isUo:false})
                         }  
                         ledger.push({accountName:data.supliersName,date:data.date,particular:data.purchaseAccount,refNo:data.no,voType:"Purchase Invoice",credit:Number(data.amount),voRefId:new mongodb.ObjectId(data.billId),isUo:false},
                                     {accountName:data.purchaseAccount,date:data.date,particular:data.supliersName,refNo:data.no,voType:"Purchase Invoice",debit:Number(data.purchaseAmount),voRefId:new mongodb.ObjectId(data.billId),isUo:false}    
@@ -792,9 +796,12 @@ router.post('/saveBill',function (req, res){
                       if(data.role == 3){
                      console.log(data.billId);
                      
-                      var purchaseAccount = 'Purchase Account' ;
+                     
                       var ledger  = [];
-                   
+                   for(var i=0;i<accountData.length;i++)
+                        {        
+                       ledger.push({accountName:accountData[i].accountName,date:data.date,particular:data.purchaseAccount,refNo:data.no,voType:"Purchase Invoice",debit:Number(accountData[i].amount),voRefId:new mongodb.ObjectId(data.billId),isUo:false})
+                        }  
                         ledger.push({accountName:data.supliersName,date:data.date,particular:data.purchaseAccount,refNo:data.no,voType:"Purchase Invoice",credit:Number(data.adminAmount),voRefId:new mongodb.ObjectId(data.billId),isUo:true,visible:true},
                                     {accountName:data.purchaseAccount,date:data.date,particular:data.supliersName,refNo:data.no,voType:"Purchase Invoice",debit:Number(data.purchaseAmount),voRefId:new mongodb.ObjectId(data.billId),isUo:true,visible:true}    
 
@@ -1127,5 +1134,49 @@ router.post('/searchAccount',function (req, res){
                   
                 
             });
+
+
+   "Rest Api For Update Status"
+     router.post('/updateInventoryStatus', function (req, res) {
+       
+             var data = req.body
+             console.log(data.id)
+             var log = { status: data.status, dt: data.dt, remarks: data.remarks };
+             var objectId = new mongodb.ObjectId(data.id);
+             console.log(objectId)
+              
+              
+             Inventory.getDataSource().connector.connect(function (err, db) {
+                 var collection = db.collection('inventory');
+
+
+                 //Inventory.find()
+                var query1 =  {$set:{currentStatus:data.status}}
+                var query  = {$push:{'statusTransaction':{dt:data.dt,status:data.status,remarks:data.remarks}}}
+                 collection.update({_id:objectId},query,function (err, instance) {
+                     if (err)
+                         console.log(err)
+                     else {
+                         console.log("staus updated");
+                         console.log(instance.result);
+
+                     }
+                 });
+                 collection.update({_id:objectId},query1,function (err, instance) {
+                     if (err)
+                         console.log(err)
+                     else {
+                         console.log("staus updated");
+                         console.log(instance.result);
+
+                     }
+                 });
+
+
+
+     });
+             res.send({status:'200'});
+           });
+
   server.use(router);
 };
