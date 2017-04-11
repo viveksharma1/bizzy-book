@@ -7,7 +7,7 @@
     "validateUpsert": true
   },
   "properties": {
-    "supliersName": {
+    "supliersId": {
       "type": "string"
     },
        
@@ -102,7 +102,7 @@
     "invoiceType": {
       "type": "string"
     },
-    "purchaseAccount": {
+    "purchaseAccountId": {
       "type": "string"
     },
      "paymentLog": {

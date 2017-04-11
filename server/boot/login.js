@@ -13,22 +13,49 @@ module.exports = function(server) {
     var bodyParser = require('body-parser');
     var formidable = require('formidable');
     var path = require('path');
+  var azure = require('azure-storage');
+  var uuid = require('node-uuid');
+  var accessKey = 'MUibwEVXc21tA4lTza7EQttRsIh+Jk+CWGBRwVZzex32ybNp7fg7No0ARNVNF9+0mg/j+BWe4kJ+m3MtH0zbMw==';
+    var storageAccount = 'bizzycrmcdn';
+    var containerName = 'bizzy-book';
     form = new formidable.IncomingForm();
     var contexts = [];
 
 // vivek  upload file to server/boot/uploads
     
-router.post('/upload',function (req, res) { 
+router.post('/upload',function (req, res) {   
+    //console.log(req);
     var form = new formidable.IncomingForm();
-    var name;
+    //var name;
     var no = req.query.no;
     form.multiples = true;
     form.uploadDir = path.join(__dirname, '/uploads');
-    
+    var blobService = azure.createBlobService(storageAccount, accessKey);
   form.on('file', function(field, file) {  
-      name = file.name;
-      console.log(name)
-      fs.rename(file.path, path.join(form.uploadDir, file.name));
+      //name = file.name;
+      //console.log(name);
+    //console.log(file);
+      //fs.rename(file.path, path.join(form.uploadDir, file.name));
+    blobService.createContainerIfNotExists(containerName, function(error, result, response){
+    if(!error){
+      // Container exists and is private
+    var fileName=file.name;
+    var file_ext = fileName.substr((Math.max(0, fileName.lastIndexOf(".")) || Infinity) + 1);
+    
+      var newFileName = uuid.v4()+ '.' + file_ext;
+      //var newFileName = getRandomSalt() + '.' + file_ext;
+    blobService.createBlockBlobFromLocalFile(containerName, newFileName, file.path, function (error,result,response) {
+                if (error) {
+                      res.send(' Blob create: error ');
+                }else{
+        //console.log(result);
+        console.log(response);
+        fs.unlinkSync(file.path);
+        res.send(result);
+        }
+            });
+    }
+  });
   });
     
   form.on('error', function(err) {
@@ -36,41 +63,56 @@ router.post('/upload',function (req, res) {
   });
 
     //push file path into path array 
-  form.on('end', function() {    
-        Transaction.getDataSource().connector.connect(function (err, db) {
-          var collection = db.collection('transaction');
-            var path = 'server/boot/uploads/'+ name;
-            collection.findOne({no:no,path:path},function (err, instance) {
-            if (instance) {
+  // form.on('end', function() {    
+        // Transaction.getDataSource().connector.connect(function (err, db) {
+          // var collection = db.collection('transaction');
+            // var path = 'server/boot/uploads/'+ name;
+            // collection.findOne({no:no,path:path},function (err, instance) {
+            // if (instance) {
                 
-                 return;
-             }
+                 // return;
+             // }
              
-         collection.update({no:no}, {$push:{path:path}},function (err, instance) {
-            if (err) {
-                 return;
-             }
-        })
-        })
+         // collection.update({no:no}, {$push:{path:path}},function (err, instance) {
+            // if (err) {
+                 // return;
+             // }
+        // })
+        // })
            
-    })
-    res.end('success');
-  })     
+    // })
+  //  res.end('success');
+  //})     
  form.parse(req);
+ 
 });
    
     
 //get file from server/boot/uploads    
  router.get('/getfile',function (req, res) { 
        var filepath =  req.query.path
-       var form = new formidable.IncomingForm();  
-       fs = require('fs');
-       fs.readFile(filepath, function (err,data) {       
-    if (err) {
-        return console.log(err);     
-     } 
-        res.send(data);     
-   });   
+       // var form = new formidable.IncomingForm();  
+       // fs = require('fs');
+       // fs.readFile(filepath, function (err,data) {       
+    // if (err) {
+        // return console.log(err);     
+     // } 
+        // res.send(data);     
+   // });   
+   var blobService = azure.createBlobService(storageAccount, accessKey);
+   blobService.getBlobToStream(containerName, filepath, res, function(error){
+        if(!error){
+      
+            //res.writeHead(200, {'Content-Type': 'application/octet-stream'});
+            //res.end();
+        }
+        else
+        {
+            //console.log('error');
+            console.log(error);
+            res.send(error);
+        }
+    });
 });
     
     
@@ -141,12 +183,12 @@ router.post('/login', function (req, res){
         "password": req.body.password
        }
 UserModel.login(userCredentials, 'user', function (err, result) {
-			if (err)
+      if (err)
             {
-				res.json({message:"User Not Found"});
-				return;
-			}
-			res1 = result;
+        res.json({message:"User Not Found"});
+        return;
+      }
+      res1 = result;
        
     UserModel.find({where:{email:req.body.email}},{ fields: {email: true, role: true} },function (err, instance) {
          if (err) {    
