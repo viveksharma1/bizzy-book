@@ -849,19 +849,23 @@ router.post('/saveBill',function (req, res){
 
  }
 //end of Account Entry
-router.get('/chartOfAccount',function (req, res){ 
+router.get('/chartOfAccount/:compCode',function (req, res){
+var compCode = req.params.compCode  
 Ledgers.getDataSource().connector.connect(function (err, db) {  
    var collection = db.collection('ledger'); 
-   collection.aggregate({
-      $group:
+   collection.aggregate(
+
+    {$match:{compCode:compCode}},
+     { $group:
          {
            _id: {accountName:"$accountName"},          
            credit: { $sum: "$credit" },
-           debit: { $sum: "$debit" },
+           debit: { $sum: "$debit" }
          }
-},   function (err, instance) { 
+    }
+,   function (err, instance) { 
           var ledgerData = instance
-        Accounts.find({},function (err, instance) { 
+        Accounts.find({where:{compCode:compCode}},function (err, instance) { 
               var accountData = instance 
             for(var i=0;i<accountData.length;i++){
                for(var j=0;j<ledgerData.length;j++){
@@ -1216,14 +1220,14 @@ router.get('/getPaymentAccount/:compCode',function (req, res){
                    res.send(instance);
                    var ledger = [];
                    if(data.role == '3'){
-                     ledger.push({accountName:data.vo_payment.partyAccount,date:data.date,particular:data.vo_payment.bankAccount,refNo:data.vochNo,voType:"Payment",debit:Number(data.amount),voRefId:instance.id,isUo:true,visible:true},
-                     {accountName:data.vo_payment.bankAccount,date:data.date,particular:data.vo_payment.partyAccount,refNo:data.vochNo,voType:"Payment",credit:Number(data.amount),voRefId:instance.id,isUo:true,visible:true}
+                     ledger.push({accountName:data.vo_payment.partyAccountId,date:data.date,particular:data.vo_payment.bankAccountId,refNo:data.vochNo,voType:"Payment",debit:Number(data.amount),voRefId:instance.id,isUo:true,visible:true},
+                     {accountName:data.vo_payment.bankAccountId,date:data.date,particular:data.vo_payment.partyAccountId,refNo:data.vochNo,voType:"Payment",credit:Number(data.amount),voRefId:instance.id,isUo:true,visible:true}
                      )
                      accountEntry(ledger,true,instance.id);
                    }
                      if(data.role == '2'){
-         ledger.push({accountName:data.vo_payment.partyAccount,date:data.date,particular:data.vo_payment.bankAccount,refNo:data.vochNo,voType:"Payment",debit:Number(data.amount),voRefId:instance.id,isUo:false},
-                     {accountName:data.vo_payment.bankAccount,date:data.date,particular:data.vo_payment.partyAccount,refNo:data.vochNo,voType:"Payment",credit:Number(data.amount),voRefId:instance.id,isUo:false}
+         ledger.push({accountName:data.vo_payment.partyAccountId,date:data.date,particular:data.vo_payment.bankAccountId,refNo:data.vochNo,voType:"Payment",debit:Number(data.amount),voRefId:instance.id,isUo:false},
+                     {accountName:data.vo_payment.bankAccountId,date:data.date,particular:data.vo_payment.partyAccountId,refNo:data.vochNo,voType:"Payment",credit:Number(data.amount),voRefId:instance.id,isUo:false}
                      )
                      accountEntry(ledger,false,instance.id); 
                    }    
