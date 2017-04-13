@@ -6,13 +6,13 @@
   
 
 "mongo": {
-    "host": "ds145355.mlab.com",
-    "port": 45355,
-    "database": "vivek",
-    "password": "vikash123",
+    "host": "ds145245.mlab.com",
+    "port": 45245,
+    "database": "codebyte",
+    "password": "bizzy",
     "name": "mongo",
     "connector": "mongodb",
-    "user": "vikash"
+    "user": "bizzy-book-new"
   }
 
 
