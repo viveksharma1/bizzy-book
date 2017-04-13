@@ -14,6 +14,8 @@ module.exports = function(server) {
     var supplier = server.models.suppliers;
     var groupMaster = server.models.groupMaster;
     var customer = server.models.customer;
+    var MongoClient = require('mongodb').MongoClient;
+    var assert = require('assert');
 
     var cron = require('node-cron');
     
@@ -550,20 +552,30 @@ router.post('/saveItem',function (req, res){
         //var GODOWN = req.body.GODOWN;
          var DESCRIPTION = req.body
           //var RRMARKS = req.body.RRMARKS;
+  master.count({name:req.body.name},function (err, instance) { 
+    if(instance){
+        if(instance>0){
+          res.send("item exist")
 
+        }
+
+    }
+    else{
         master.create(req.body,function (err, instance) { 
           if (err) {    
              console.log(err)
             } 
             else{
             console.log("item Data Saved");
+            res.send({"status":"200"});
          }         
-          
+          })
+      }
       });
 
        
        
-       res.send({"status":"200"});
+       
        
   });
 
@@ -963,17 +975,8 @@ router.post('/createAccount',function (req, res){
            });  
     }
     else{ 
-      Accounts.count({accountName:accountData.accountName}, function (err, instance) {                                    
-                 if (err) {    
-                     console.log(err)
-                 }   
-                 else{
-
-                  if(instance>0){
-                    console.log("account All Ready exist")
-                    res.send({"messege":"Account All Ready exist"})
-                  }
-                  else{
+     
+                 
            Accounts.create(accountData, function (err, instance) { 
              if (err) {    
                      console.log(err)
@@ -983,15 +986,33 @@ router.post('/createAccount',function (req, res){
 
                  }
            });  
-         }
+         
        }
-     });
-   }
+     
+   
  }); 
   }); 
             
                  
-                  
+     "update account"
+  router.post('/updateAccount/:id',function (req, res){ 
+      var id = req.params.id 
+      var accountData = req.body
+      Accounts.getDataSource().connector.connect(function (err, db) {
+       var collection = db.collection('account');       
+        collection.update({_id:new mongodb.ObjectId(id)},{$push:{'compCode':accountData.compCode}},function (err, instance) { 
+            
+            if(instance){
+            console.log("account updated ");
+            console.log(instance.result);
+            res.send({status:"200"});
+            }
+            else{
+              console.log(err);
+            }      
+      });     
+  });
+  });             
                 
 
   
@@ -1700,22 +1721,23 @@ router.post('/saveVoucher', function (req, res) {
 
 
 
-router.get('/dateWiseAccountDetail',function (req, res){ 
+router.get('/dateWiseAccountDetail/:compCode',function (req, res){ 
+
+  var compCode = req.params.compCode
+  var toDate = new Date(req.query.date);
+  console.log(toDate)
+  console.log(compCode)
 Ledgers.getDataSource().connector.connect(function (err, db) {  
    var collection = db.collection('ledger'); 
-
-   console.log(new Date("04/12/2017").toISOString())
-   var from = "ISODate("+ "'" + new Date("04/11/2017").toISOString()+  "'" + ")"
-   var to = "ISODate("+"'" + new Date("04/23/2018").toISOString()+"'"+")"
-   console.log(from)
-    console.log(to)
+  
    collection.aggregate(
    { $match : {
-
       date: {
-      "$gte":  from, "$lte": to
+      $lte: toDate
         
-    }}}, 
+    },
+    compCode:compCode
+  }}, 
      { $group:
          {
            _id: {accountName:"$accountName"},          
@@ -1723,29 +1745,86 @@ Ledgers.getDataSource().connector.connect(function (err, db) {
            debit: { $sum: "$debit" }
          }
        }
-,   function (err, instance) { 
-          var ledgerData = instance
-
+,   function (err, instance) {
+          var ledgerDatalessThan = instance 
+          var ledgerDatagreaterThan = instance
           console.log(instance);
-        Accounts.find({},function (err, instance) { 
-              var accountData = instance 
+        Accounts.find({where:{compCode:compCode}},function (err, instance) { 
+          var accountData = instance    
+          ledgerData = ledgerDatalessThan            
             for(var i=0;i<accountData.length;i++){
                for(var j=0;j<ledgerData.length;j++){
-              
-               if(accountData[i].id == ledgerData[j]._id.accountName){
-                accountData[i].credit =ledgerData[j].credit
-             
-                 accountData[i].debit =ledgerData[j].debit
-
-
-               }
+               if(accountData[i].id == ledgerDatalessThan[j]._id.accountName){    
+                   accountData[i].credit =ledgerDatalessThan[j].credit
+                   accountData[i].debit = ledgerDatalessThan[j].debit 
+                   accountData[i].openingBalance = (ledgerDatalessThan[j].credit - ledgerDatalessThan[j].debit) 
+                                                   
+                }   
               }
-              } 
+            } 
                res.send(accountData);   
-      });                               
+         });   
+     });                            
+  });   
+});
+
+
+router.get('/getOpeningBalnce/:accountName',function (req, res){
+
+var compCode = req.query.compCode  
+var fromDate  = new Date(req.query.date) 
+var toDate  = new Date(req.query.todate)
+
+console.log(fromDate);
+console.log(toDate)
+
+var accountName = req.params.accountName
+console.log(accountName)
+ var openingBalnce = function(db, callback) {
+   var collection = db.collection('ledger');
+   var cursor =   collection.aggregate([
+                  { $match : {
+                            date: { $lte: fromDate },                                        
+                            accountName:accountName,
+                            compCode:compCode         
+                            }
+                  }, 
+                { $group:
+                           {
+                           _id: {accountName:"$accountName"},          
+                            credit: { $sum: "$credit" },
+                            debit: { $sum: "$debit" }
+                          }
+                }
+]).toArray(function(err, result) {;
+                assert.equal(err, null);
+                console.log(result);
+                callback(result);
+     });
+}
+      var getLedgerData = function(db, callback) {
+        var ledger;
+        var collection = db.collection('ledger');
+             var cursor = collection.find({"accountName":accountName,compCode:compCode, date:{$gte:fromDate,$lte:toDate}}).toArray(function(err, result) {;
+                assert.equal(err, null);
+                console.log(result);
+                callback(result);
+        });                                        
+     }
+       Ledgers.getDataSource().connector.connect(function (err, db) {  
+                var collection = db.collection('ledger');               
+                openingBalnce(db, function(data) {
+                  var ledgerOpeningBalnce = data[0].credit - data[0].debit
+                  console.log(ledgerOpeningBalnce)
+                   getLedgerData(db, function(data) {
+                     res.send({openingBalance:ledgerOpeningBalnce,ledgerData:data})               
+                });                
+              });
+
+    });                                
 });   
-});
-});
+
+
 
 
 
