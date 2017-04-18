@@ -2054,17 +2054,17 @@ router.post('/saveExpensetest/:expenseId',function (req, res){
 
   router.post('/saveBillTest/:billId',function (req, res){
    var data = req.body;
-   console.log(data)
    var compCode = data.compCode
    var billId = req.params.billId;
-   console.log(billId);
    var query;
-   if(billId != 'null'){
+   if(billId != 'null')
+   {
         var query  = {_id:new mongodb.ObjectId(billId)}
-       }
-       else{
+   }
+   else
+   {
         query = {no:data.no}
-       }
+   }
  voucherTransaction.getDataSource().connector.connect(function (err, db) {  
                 var collection = db.collection('voucherTransaction');               
                 isBillExist(db, function(result) {
@@ -2102,16 +2102,14 @@ router.post('/saveExpensetest/:expenseId',function (req, res){
                                  if(result){
                                  console.log("inventory created",result)
                                  res.status(200).send(billId);                                
-                              }
+                                  }
                         });
-
-                     });
-                              
-                           }                 
-                      });
-                        }
-                    });
-                  }
+                     });             
+                   }                 
+               });
+             }
+          });
+        }
                 
                   else{
                     createBill(db, data, function(result) {   
@@ -2160,8 +2158,7 @@ router.post('/saveExpensetest/:expenseId',function (req, res){
       "check if bill exist or not"    
      var isBillExist = function(db, callback) {
         var collection = db.collection('voucherTransaction');
-        console.log("query in is ",query)
-        var cursor = collection.count(query,function(err, result) {;
+        var cursor = collection.count(query,function(err, result) {
                   assert.equal(err, null);
                   callback(result);
         });
@@ -2169,7 +2166,7 @@ router.post('/saveExpensetest/:expenseId',function (req, res){
     "get inventory count of visible item"
      var isInventoryExist = function(db, callback) {
         var collection = db.collection('inventory');
-        var cursor = collection.count({visible:true,isActive:true},function(err, result) {;
+        var cursor = collection.count({visible:true,isActive:true},function(err, result) {
                   assert.equal(err, null);
                   callback(result);
         });
@@ -2177,15 +2174,21 @@ router.post('/saveExpensetest/:expenseId',function (req, res){
     "update bill"
       var updateBill = function(db, billData,callback) {
         var collection = db.collection('voucherTransaction');
-              var cursor = collection.update(query,billData, function(err, result) {;
+        var cursor = collection.findOne(query, function(err, instance) {
+           assert.equal(err, null);
+           if(instance){     
+               var tdata = generateTransaction(billData,instance,billData.role)               
+             }
+               var cursor = collection.update(query,tdata, function(err, result) {
                   assert.equal(err, null);
                   callback(result);
-        });                                        
+        });  
+      });                                       
      }
      "create bill"
       var createBill = function(db, billData,callback) {
         var collection = db.collection('voucherTransaction');
-             var cursor = collection.insert(billData, function(err, result) {;
+             var cursor = collection.insert(billData, function(err, result) {
                  assert.equal(err, null);
                  callback(result);
         });                                        
@@ -2193,7 +2196,7 @@ router.post('/saveExpensetest/:expenseId',function (req, res){
       "create inventory"
       var createInventory = function(db, inventoryData,callback) {
         var collection = db.collection('inventory');
-             var cursor = collection.insert(inventoryData, function(err, result) {;
+             var cursor = collection.insert(inventoryData, function(err, result) {
                  assert.equal(err, null);
                  callback(result);
         });                                        
@@ -2219,6 +2222,21 @@ router.post('/saveExpensetest/:expenseId',function (req, res){
                data[i].rgNo = count + i + 1;
                data[i].compCode = compCode;
             }  
+            return data;
+       }
+       function generateTransaction(data ,data1,role){
+            if(role == 'O'){
+              data.transactionData.adminAmount = data1.transactionData.adminAmount
+              data.transactionData.adminBalance = data1.transactionData.adminBalance
+              data.transactionData.itemDetail = data1.transactionData.itemDetail
+            }
+            if(role == 'UO'){
+              data.transactionData.amount = data.data1.amount
+              data.transactionData.balance = data.data1.balance
+               data.transactionData.balance2 = data.data1.balance
+              data.transactionData.manualLineItem = data.data1.manualLineItem
+            }
+            
             return data;
        }
        "create ledger json"
@@ -2259,24 +2277,34 @@ router.post('/saveExpensetest/:expenseId',function (req, res){
 
    router.get('/getTransactionData/:compCode',function (req, res){
     var compCode = req.params.compCode;
+    var role = req.query.role;
      voucherTransaction.getDataSource().connector.connect(function (err, db) {  
-              getData(db, function(result) {          
+              getData(db, role,function(result) {          
                   if(result){
                      res.status(200).send(result);
                   }
               });
             });
 
-    var getData = function(db, callback) {
+    var getData = function(db, role,callback) {
         var collection = db.collection('voucherTransaction');
+            if(role == 'O'){
+              var amount = "$transactionData.amount"
+              var balance = "$transactionData.balance"
+            }
+            if(role == 'UO'){
+              var amount = "$transactionData.adminAmount"
+              var balance = "$transactionData.adminBalance"
+            }
+
         var cursor = collection.aggregate( 
                 {$match:{compCode,compCode}},
                 {$project : 
                 { type : "$type",
                   invoiceNo:"$no",
                   date:"$date",
-                  amount:"$amount",
-                  balance:"$amount",
+                  amount:amount,
+                  balance:balance,
                   supplier:"$transactionData.supliersId",
                   compCode:"$compCode",
                   id:"$_id"
