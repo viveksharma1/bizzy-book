@@ -454,7 +454,7 @@ router.post('/getExpense',function (req, res){
                       var itemTable =  data.itemTable;
                       var accountTable =  data.accountTable;
                       var ledger  = [];
-                      if(data.role == 2){
+                      if(data.role == 'O'){
                          ledger.push({accountName:data.supliersId,date:data.date,particular:itemTable[0].accountId,refNo:data.no,voType:"Expense",credit:data.amount,voRefId:mongodb.ObjectId(id),isUo:false,visible:true,compCode:data.compCode})
                         if(data.tdsAccountId){
                            ledger.push({accountName:data.tdsAccountId,date:data.date,particular:data.supliersId,refNo:data.no,voType:"Expense",credit:data.tdsamount,voRefId:mongodb.ObjectId(id),isUo:false,visible:true,compCode:data.compCode})
@@ -468,7 +468,7 @@ router.post('/getExpense',function (req, res){
                        ledger.push({accountName:accountTable[i].accountId,date:data.date,particular:data.supliersId,refNo:data.no,voType:"Expense",debit:Number(accountTable[i].amount),voRefId:mongodb.ObjectId(id),isUo:false,visible:true,compCode:data.compCode})
                         } 
                       } 
-                      if(data.role == 3){
+                      if(data.role == 'UO'){
                          ledger.push({accountName:data.supliersId,date:data.date,particular:itemTable[0].accountId,refNo:data.no,voType:"Expense",credit:data.amount,voRefId:mongodb.ObjectId(id),isUo:true,visible:true,compCode:data.compCode})
                         if(data.tdsAccountName){
                            ledger.push({accountName:data.tdsAccountId,date:data.date,particular:data.supliersId,refNo:data.no,voType:"Expense",credit:data.tdsamount,voRefId:mongodb.ObjectId(id),isUo:true,visible:true,compCode:data.compCode})
@@ -506,7 +506,7 @@ router.post('/getExpense',function (req, res){
                       var itemTable =  data.itemTable;
                       var accountTable =  data.accountTable;
                       var ledger  = [];
-                      if(data.role == 2){
+                      if(data.role == 'O'){
                          ledger.push({accountName:data.supliersId,date:data.date,particular:itemTable[0].accountId,refNo:data.no,voType:"Expense",credit:data.amount,voRefId:instance.id,isUo:false,visible:true,compCode:data.compCode})
                         if(data.tdsAccountName){
                            ledger.push({accountName:data.tdsAccountId,date:data.date,particular:data.supliersId,refNo:data.no,voType:"Expense",credit:data.tdsamount,voRefId:instance.id,isUo:false,visible:true,compCode:data.compCode})
@@ -520,7 +520,7 @@ router.post('/getExpense',function (req, res){
                        ledger.push({accountName:accountTable[i].accountId,date:data.date,particular:data.supliersId,refNo:data.no,voType:"Expense",debit:Number(accountTable[i].amount),voRefId:instance.id,isUo:false,visible:true,compCode:data.compCode})
                         }
                       }
-                      if(data.role == 3){
+                      if(data.role == 'UO'){
                          ledger.push({accountName:data.supliersId,date:data.date,particular:itemTable[0].accountId,refNo:data.no,voType:"Expense",credit:data.amount,voRefId:instance.id,isUo:true,visible:true,compCode:data.compCode})
                         if(data.tdsAccountName){
                            ledger.push({accountName:data.tdsAccountId,date:data.date,particular:data.supliersId,refNo:data.no,voType:"Expense",credit:data.tdsamount,voRefId:instance.id,isUo:true,visible:true,compCode:data.compCode})
@@ -643,7 +643,7 @@ router.post('/saveBill',function (req, res){
                   else  {
                       console.log("bill created")
                       console.log(instance)
-                      if(data.role == 2){
+                      if(data.role == 'O'){
                       var accountData =  data.accountlineItem;
                       var purchaseAccount = 'Purchase Account' ;
                       var ledger  = [];                     
@@ -658,7 +658,7 @@ router.post('/saveBill',function (req, res){
                        accountEntry(ledger,false,instance.id);
                      }
 
-                     if(data.role == 3){
+                     if(data.role == 'UO'){
                       var accountData =  data.accountlineItem;
                       var purchaseAccount = 'Purchase Account' ;
                       var ledger  = [];  
@@ -681,7 +681,7 @@ router.post('/saveBill',function (req, res){
     
     // create Inventory
        function createInventory(data,billId){         
-         if(data.role == 3){     
+         if(data.role == 'UO'){     
           console.log(billId)
          var inventoryData  = data.itemDetail;      
            Inventory.count({visible:false,isActive:true}, function(err, instance){
@@ -706,7 +706,7 @@ router.post('/saveBill',function (req, res){
       });
      }); 
      }   
-          if(data.role == 2){
+          if(data.role == 'O'){
        Inventory.count({visible:true,isActive:true}, function(err, instance){
            var count =  instance           
            var inventoryData  = data.manualLineItem;                 
@@ -732,10 +732,10 @@ router.post('/saveBill',function (req, res){
  }
        // update Inventory
        function updateInventory(data){
-         if(data.role == 3){
+         if(data.role == 'UO'){
             var visible = false;
          }
-          if(data.role == 2){
+          if(data.role == 'O'){
             var visible = true;
          }
 
@@ -765,7 +765,7 @@ router.post('/saveBill',function (req, res){
       // Bill update Function
        function updateBill(data){
 
-          if(data.role == 3){
+          if(data.role == 'UO'){
 
          delete data.manualLineItem;
          delete data.totalWeight;
@@ -773,7 +773,7 @@ router.post('/saveBill',function (req, res){
          delete data.balance;
          console.log(data);
         }
-         if(data.role == 2){
+         if(data.role == 'O'){
 
          delete data.itemDetail;
          delete data.adminAmount;
@@ -786,7 +786,7 @@ router.post('/saveBill',function (req, res){
                  }   
                   else  {
                    console.log(instance);
-                     if(data.role == 2){
+                     if(data.role == 'O'){
                      console.log(data.billId);
                       var accountData =  data.accountlineItem;
                       var purchaseAccount = 'Purchase Account' ;
@@ -805,7 +805,7 @@ router.post('/saveBill',function (req, res){
                    
                        
                      }
-                      if(data.role == 3){
+                      if(data.role == 'UO'){
                      console.log(data.billId);
                      
                      
@@ -925,11 +925,11 @@ voucherTransaction.getDataSource().connector.connect(function (err, db) {
                           status:"done",
                           amount: data.data,
                           paymentDate:data.date,
-                          bankAccount:data.vo_payment.bankAccount,
-                          partyAccount:data.vo_payment.partyAccount,
+                          bankAccount:data.vo_payment.bankAccountId,
+                          partyAccount:data.vo_payment.partyAccountId,
                           voRefId:instance.id
                       }  
-                     Transaction.update({no:data.refNo},{customPaymentInfo:customPaymentInfo} ,function (err, instance) {
+                     voucherTransaction.update({no:data.refNo},{'billData.customPaymentInfo':customPaymentInfo} ,function (err, instance) {
                          if (err) {    
                        console.log(err)
                         } 
@@ -938,8 +938,8 @@ voucherTransaction.getDataSource().connector.connect(function (err, db) {
                         }
                      });
          var ledger = [];
-         ledger.push({accountName:data.vo_payment.partyAccount,date:data.date,particular:data.vo_payment.bankAccount,refNo:vochNo,voType:"Payment",debit:Number(data.amount),voRefId:instance.id,isUo:false},
-                     {accountName:data.vo_payment.bankAccount,date:data.date,particular:data.vo_payment.partyAccount,refNo:vochNo,voType:"Payment",credit:Number(data.amount),voRefId:instance.id,isUo:false}
+         ledger.push({accountName:data.vo_payment.partyAccountId,date:data.date,particular:data.vo_payment.bankAccountId,refNo:vochNo,voType:"Payment",debit:Number(data.amount),voRefId:instance.id,isUo:false},
+                     {accountName:data.vo_payment.bankAccountId,date:data.date,particular:data.vo_payment.partyAccountId,refNo:vochNo,voType:"Payment",credit:Number(data.amount),voRefId:instance.id,isUo:false}
                      )
 
                    accountEntry(ledger,false,instance.id); 
@@ -1092,7 +1092,9 @@ router.get('/getPartytAccount/:compCode',function (req, res){
      var compCode = req.params.compCode 
      Accounts.find({where:{compCode:compCode,ancestor: 'SUNDRY DEBTORS'}}, function (err, instance) { 
 
-                 if(instance){                
+                 if(instance){   
+
+                 //console.log(instance)             
                    res.send(instance);
                  };
            
@@ -1107,29 +1109,92 @@ router.get('/getPaymentAccount/:compCode',function (req, res){
                  };
            
  }); 
-  });      
+  }); 
+
+  router.get('/getExpenseAccount/:compCode',function (req, res){ 
+  var compCode = req.params.compCode  
+     Accounts.find({where:{compCode:compCode,or:[{ancestor: 'DIRECT EXPENSES'},{ancestor:'INDIRECT EXPENSES'}]}}, function (err, instance) { 
+
+                 if(instance){                
+                   res.send(instance);
+                 };
+           
+ }); 
+  });     
      
 
      "Receive Payment"
 
+router.post('/saveBadlaVoucher',function (req, res){  
+        var id = req.query.id
+        var data = req.body;
+        console.log(req.body);
+    var data=req.body[0];
+    var dataBadla=req.body[1];
+        if (id != 'null' ) {
+            var query = { id: id }
+            console.log(id);
+            updatePayment(req.body,id);
+            //res.send({status:'200'});
+      voucherTransaction.update({_id:new mongodb.ObjectId(id)}, dataBadla, function (err, instance) { 
+            if(err)
+              console.log(err);
+            else {
+               var ledger = [];
+                 if(dataBadla.role == 'UO'){
+          ledger.push({accountName:dataBadla.vo_badla.badlaAccountId,compCode:dataBadla.compCode,date:dataBadla.date,particular:dataBadla.vo_badla.partyAccountId, remarks:" badla for Inv No("+dataBadla.vo_badla.billDetail[0].vochNo+")" ,refNo:dataBadla.vochNo,voType:"Badla",credit:Number(dataBadla.amount),voRefId:instance.id,isUo:true,visible:true});
+          accountEntry(ledger,true,instance.id);
+                   }
+                 else if(dataBadla.role == 'O'){
 
+           ledger.push({accountName:dataBadla.vo_badla.badlaAccountId,compCode:dataBadla.compCode,date:dataBadla.date,particular:dataBadla.vo_badla.partyAccountId,remarks:" badla for Inv No("+dataBadla.vo_badla.billDetail[0].vochNo+")" ,refNo:dataBadla.vochNo,voType:"Badla",credit:Number(dataBadla.amount),voRefId:instance.id,isUo:false});
+           accountEntry(ledger,false,instance.id); 
+                   }
+                 res.send({status:'200'});
+                }  
+           });
+        }
+        else {
+         createPayment(data);
+               voucherTransaction.create(dataBadla, function (err, instance) { 
+               if(err){
+                console.log(err);
+               }else{
+                   var vochID  = instance.id                              
+                   var ledger = [];
+                 if(dataBadla.role == 'UO'){
+           ledger.push({accountName:dataBadla.vo_badla.badlaAccountId,compCode:dataBadla.compCode,date:dataBadla.date,particular:dataBadla.vo_badla.partyAccountId,remarks:" badla for Inv No("+dataBadla.vo_badla.billDetail[0].vochNo+")" ,refNo:dataBadla.vochNo,voType:"Badla",credit:Number(dataBadla.amount),voRefId:instance.id,isUo:true,visible:true});
+           console.log(ledger);
+                     accountEntry(ledger,true,instance.id);
+                   }
+                 else if(dataBadla.role == 'O'){
+          
+          ledger.push({accountName:dataBadla.vo_badla.badlaAccountId,compCode:dataBadla.compCode,date:dataBadla.date,particular:dataBadla.vo_badla.partyAccountId,remarks:" badla for Inv No("+dataBadla.vo_badla.billDetail[0].vochNo+")" ,refNo:dataBadla.vochNo,voType:"Badla",credit:Number(dataBadla.amount),voRefId:instance.id,isUo:false});
+           console.log(ledger);
+                     accountEntry(ledger,false,instance.id); 
+                   }    
+                   //updateTransactions(data.vo_payment.billDetail,data.date,data.vochNo,vochID,data.role);
+           res.send({status:'200'});
+         }
+                 });
+           
+        }
+   });     
+   
+   "Receive Payment"
    router.post('/receivePayment',function (req, res){  
         var id = req.query.id
         var data = req.body;
         console.log(req.body);
         if (id != 'null' ) {
-            var query = { id: id }
-            updatePayment(req.body,id);
+           var query = { id: id }
+           updatePayment(req.body,id);
            res.send({status:'200'});
         }
         else {
            createPayment(data);
-
            res.send({status:'200'});
         }
-
-         
-
    });     
        function updatePayment(data,id){
         console.log(id);
@@ -1138,13 +1203,13 @@ router.get('/getPaymentAccount/:compCode',function (req, res){
               console.log(err);
             else {
                var ledger = [];
-                 if(data.role == '3'){
+                 if(data.role == 'UO'){
                      ledger.push({accountName:data.vo_payment.partyAccountId,compCode:data.compCode,date:data.date,particular:data.vo_payment.bankAccountId,refNo:data.vochNo,voType:"Receive Payment",credit:Number(data.amount),voRefId:id,isUo:true,visible:true},
                      {accountName:data.vo_payment.bankAccountId,compCode:data.compCode,date:data.date,particular:data.vo_payment.partyAccountId,refNo:data.vochNo,voType:"Receive Payment",credit:Number(data.amount),voRefId:id,isUo:true,visible:true}
                      )
                      accountEntry(ledger,true,instance.id);
                    }
-                 if(data.role == '2'){
+                 else if(data.role == 'O'){
 
          ledger.push({accountName:data.vo_payment.partyAccountId,date:data.date,compCode:data.compCode,particular:data.vo_payment.bankAccountId,refNo:data.vochNo,voType:"Receive Payment",credit:Number(data.amount),voRefId:id,isUo:false},
                      {accountName:data.vo_payment.bankAccountId,date:data.date,compCode:data.compCode,particular:data.vo_payment.partyAccountId,refNo:data.vochNo,voType:"Receive Payment",debit:Number(data.amount),voRefId:id,isUo:false}
@@ -1163,20 +1228,50 @@ router.get('/getPaymentAccount/:compCode',function (req, res){
                }
                    var vochID  = instance.id                              
                    var ledger = [];
-                 if(data.role == '3'){
+                 if(data.role == 'UO'){
+           for(var m=0;m<data.vo_payment.billDetail.length;m++){
+             var bill=data.vo_payment.billDetail[m];
+             if(bill.interest)
+               if(bill.interest>0){
+                ledger.push(
+                {accountName:data.vo_payment.partyAccountId,compCode:data.compCode,date:data.date,particular:data.vo_payment.bankAccountId,refNo:data.vochNo,voType:"Interest Receivable",credit:Math.abs(Number(bill.interest)),voRefId:instance.id,isUo:true,visible:true},
+                {accountName:data.vo_payment.bankAccountId,compCode:data.compCode,date:data.date,particular:data.vo_payment.partyAccountId,refNo:data.vochNo,voType:"Interest Receivable",debit:Math.abs(Number(bill.interest)),voRefId:instance.id,isUo:true,visible:true});
+               }else if(bill.interest<0) {
+                 ledger.push(
+                 {accountName:data.vo_payment.partyAccountId,compCode:data.compCode,date:data.date,particular:data.vo_payment.bankAccountId,refNo:data.vochNo,voType:"Interest Payable",credit:Math.abs(Number(bill.interest)),voRefId:instance.id,isUo:true,visible:true},
+                               {accountName:data.vo_payment.bankAccountId,compCode:data.compCode,date:data.date,particular:data.vo_payment.partyAccountId,refNo:data.vochNo,voType:"Interest Payable",debit:Math.abs(Number(bill.interest)),voRefId:instance.id,isUo:true,visible:true});
+               }
+               //accountEntry(ledger,true,instance.id);
+           }
                      ledger.push({accountName:data.vo_payment.partyAccountId,compCode:data.compCode,date:data.date,particular:data.vo_payment.bankAccountId,refNo:data.vochNo,voType:"Receive Payment",credit:Number(data.amount),voRefId:instance.id,isUo:true,visible:true},
-                     {accountName:data.vo_payment.bankAccountId,compCode:data.compCode,date:data.date,particular:data.vo_payment.partyAccountId,refNo:data.vochNo,voType:"Receive Payment",credit:Number(data.amount),voRefId:instance.id,isUo:true,visible:true}
+                     {accountName:data.vo_payment.bankAccountId,compCode:data.compCode,date:data.date,particular:data.vo_payment.partyAccountId,refNo:data.vochNo,voType:"Receive Payment",debit:Number(data.amount),voRefId:instance.id,isUo:true,visible:true}
                      )
+           console.log(ledger);
                      accountEntry(ledger,true,instance.id);
                    }
-                 if(data.role == '2'){
+                 else if(data.role == 'O'){
+           for(var m=0;m<data.vo_payment.billDetail.length;m++){
+             var bill=data.vo_payment.billDetail[m];
+             if(bill.interest)
+                if(bill.interest>0){
+                ledger.push(
+                {accountName:data.vo_payment.partyAccountId,compCode:data.compCode,date:data.date,particular:data.vo_payment.bankAccountId,refNo:data.vochNo,voType:"Interest Receivable",credit:Math.abs(Number(bill.interest)),voRefId:instance.id,isUo:false},
+                {accountName:data.vo_payment.bankAccountId,compCode:data.compCode,date:data.date,particular:data.vo_payment.partyAccountId,refNo:data.vochNo,voType:"Interest Receivable",debit:Math.abs(Number(bill.interest)),voRefId:instance.id,isUo:false});
+               }else if(bill.interest<0) {
+                 ledger.push(
+                 {accountName:data.vo_payment.partyAccountId,compCode:data.compCode,date:data.date,particular:data.vo_payment.bankAccountId,refNo:data.vochNo,voType:"Interest Payable",credit:Math.abs(Number(bill.interest)),voRefId:instance.id,isUo:false},
+                               {accountName:data.vo_payment.bankAccountId,compCode:data.compCode,date:data.date,particular:data.vo_payment.partyAccountId,refNo:data.vochNo,voType:"Interest Payable",debit:Math.abs(Number(bill.interest)),voRefId:instance.id,isUo:false});
+               }
+           }
 
          ledger.push({accountName:data.vo_payment.partyAccountId,date:data.date,compCode:data.compCode,particular:data.vo_payment.bankAccountId,refNo:data.vochNo,voType:"Receive Payment",credit:Number(data.amount),voRefId:instance.id,isUo:false},
                      {accountName:data.vo_payment.bankAccountId,date:data.date,compCode:data.compCode,particular:data.vo_payment.partyAccountId,refNo:data.vochNo,voType:"Receive Payment",debit:Number(data.amount),voRefId:instance.id,isUo:false}
                      )
+           console.log(ledger);
                      accountEntry(ledger,false,instance.id); 
                    }    
                    updateTransactions(data.vo_payment.billDetail,data.date,data.vochNo,vochID,data.role);
+           
                  });
            
       }  
@@ -1206,11 +1301,11 @@ router.get('/getPaymentAccount/:compCode',function (req, res){
       voucherTransaction.getDataSource().connector.connect(function (err, db) {   
         var collection = db.collection('voucherTransaction');        
            for(var i = 0;i<data.length;i++ ){
-              if(role == '3'){
+              if(role == 'UO'){
                 var query1 =  {$set:{adminBalance:Number(data[i].balance)}}
                 var query2 =  {$push:{'paymentLog':{id:vochID,date:date,vochNo:vochNo,amount:data[i].amountPaid,isUo:true}}}
          }
-          if(role == '2'){
+          if(role == 'O'){
             var query1 =  {$set:{balance:Number(data[i].balance)}}
             var query2 =  {$push:{'paymentLog':{id:vochID,date:date,vochNo:vochNo,amount:data[i].amountPaid,isUo:false}}}
 
@@ -1240,13 +1335,13 @@ router.get('/getPaymentAccount/:compCode',function (req, res){
                  var vochID  = instance.id             
                    res.send(instance);
                    var ledger = [];
-                   if(data.role == '3'){
+                   if(data.role == 'UO'){
                      ledger.push({accountName:data.vo_payment.partyAccountId,date:data.date,particular:data.vo_payment.bankAccountId,refNo:data.vochNo,voType:"Payment",debit:Number(data.amount),voRefId:instance.id,isUo:true,visible:true},
                      {accountName:data.vo_payment.bankAccountId,date:data.date,particular:data.vo_payment.partyAccountId,refNo:data.vochNo,voType:"Payment",credit:Number(data.amount),voRefId:instance.id,isUo:true,visible:true}
                      )
                      accountEntry(ledger,true,instance.id);
                    }
-                     if(data.role == '2'){
+                     if(data.role == 'O'){
          ledger.push({accountName:data.vo_payment.partyAccountId,date:data.date,particular:data.vo_payment.bankAccountId,refNo:data.vochNo,voType:"Payment",debit:Number(data.amount),voRefId:instance.id,isUo:false},
                      {accountName:data.vo_payment.bankAccountId,date:data.date,particular:data.vo_payment.partyAccountId,refNo:data.vochNo,voType:"Payment",credit:Number(data.amount),voRefId:instance.id,isUo:false}
                      )
@@ -1261,11 +1356,11 @@ router.get('/getPaymentAccount/:compCode',function (req, res){
       Transaction.getDataSource().connector.connect(function (err, db) {   
         var collection = db.collection('transaction');        
         for(var i = 0;i<data.length;i++ ){
-           if(role == '3'){
+           if(role == 'UO'){
           var query1 =  {$set:{adminBalance:Number(data[i].balance)}}
           var query2 =  {$push:{'paymentLog':{id:vochID,date:date,vochNo:vochNo,amount:data[i].amountPaid,isUo:true}}}
         }
-         if(role == '2'){
+         if(role == 'O'){
           var query1 =  {$set:{balance:Number(data[i].balance)}}
           var query2 =  {$push:{'paymentLog':{id:vochID,date:date,vochNo:vochNo,amount:data[i].amountPaid,isUo:false}}}
 
@@ -1468,13 +1563,13 @@ router.post('/saveVoucher', function (req, res) {
                     console.log(instance)
                     if (count == 0) {
                         createVoucher(data);
-                        console.log("voucher Created");
-                        res.send("voucher Created");
+                        //console.log("voucher Created");
+                        //res.send("voucher Created");
                     }
                     else {
-                        var foo = updateVoucher(data,id);
-                        console.log("voucher updated");
-                        res.send(foo);
+                        updateVoucher(data,id);
+                        //console.log("voucher updated");
+                        //res.send(foo);
                     }
                 }
             });
@@ -1489,7 +1584,7 @@ router.post('/saveVoucher', function (req, res) {
                 else {
                     console.log("voucher created")
                     console.log(instance)
-                    if (data.role == 2) {
+                    if (data.role == 'O') {
                         var invData = data.invoiceData.billData;
                         var vochNo = data.vochNo
                         var date = data.date
@@ -1510,7 +1605,7 @@ router.post('/saveVoucher', function (req, res) {
                         updateInventoryValue(invData,id,date,vochNo);
                     }
 
-                    if (data.role == 3) {
+                    if (data.role == 'UO') {
                         var accountData = data.invoiceData.accountlineItem;
 
                         var ledger = [];
@@ -1526,7 +1621,8 @@ router.post('/saveVoucher', function (req, res) {
                         accountEntry(ledger, true, instance.id);
                     }
 
-                   
+                   console.log({"message":"voucher Created","id":instance.id});
+                   res.send({"message":"voucher Created","id":instance.id});
                 }
 
             });
@@ -1549,7 +1645,7 @@ router.post('/saveVoucher', function (req, res) {
                 }
                 else {
                     console.log(instance);
-                    if (data.role == 2) {
+                    if (data.role == 'O') {
                        
                         var invDataSales = data.invoiceData.billData;
                         var vochNo = data.vochNo
@@ -1574,7 +1670,7 @@ router.post('/saveVoucher', function (req, res) {
                         updateInventorySales(invDataSales,id,date,vochNo);
                         
                     }
-                    if (data.role == 3) {
+                    if (data.role == 'UO') {
                          var invDataSales = data.invoiceData.billData;
                         var vochNo = data.vochNo
                         var date = data.date
@@ -1593,7 +1689,8 @@ router.post('/saveVoucher', function (req, res) {
                         accountEntry(ledger, true, objectId);
                            updateInventorySales(invDataSales,id,date,vochNo);
                     }
-
+                    console.log({"message":"voucher Updated","id":id});
+                    res.send({"message":"voucher Updated","id":id});
                 }
             });
         }
@@ -1661,13 +1758,13 @@ router.post('/saveVoucher', function (req, res) {
 
 
          "Get outstanding voucher detail by customer name "
-
-        router.get('/getVoucherData', function (req, res) {  
-           var customerName  = req.query.customerName
+router.get('/getVoucherData', function (req, res) {  
+           var customerId  = req.query.customerId
+       console.log(customerId);
            voucherTransaction.getDataSource().connector.connect(function (err, db) {   
               var collection = db.collection('voucherTransaction');  
               collection.aggregate(
-                   {$match :{customerName:customerName}},
+                   {$match :{customerId:customerId}},
                    {$match:{balance:{$gt:0}}},
                    {$project :{
                       date: "$date",
@@ -1676,6 +1773,7 @@ router.post('/saveVoucher', function (req, res) {
                       vochNo: "$vochNo",
                       type: "$type",
                       balance:"$balance",
+            invoiceData:"$invoiceData",
                       id:"$_id"                   
                    }
                  }
@@ -1687,7 +1785,7 @@ router.post('/saveVoucher', function (req, res) {
                   console.log(err);
               });
             });   
-        });   
+        });     
 
 
 
@@ -1825,15 +1923,409 @@ console.log(accountName)
 });   
 
 
+       //create Expense and save Expense
+router.post('/saveExpensetest/:expenseId',function (req, res){
+   var data = req.body;
+   console.log(data)
+
+   var expenseId = req.params.expenseId;
+   console.log(expenseId);
+   var query;
+   if(expenseId != 'null'){
+        var query  = {_id:new mongodb.ObjectId(expenseId)}
+       }
+       else{
+        query = {no:data.transactionData.no}
+       }
+       console.log(query)
+ voucherTransaction.getDataSource().connector.connect(function (err, db) {  
+                var collection = db.collection('voucherTransaction');               
+                isExpenseExist(db, function(result) {
+                  console.log(result)
+                  console.log(query)
+                  if(result>0){
+                    updateExpence(db, data, function(result) {
+                      if(result){
+                         console.log("Expense Updated")
+                         var ledger = createLedgerJson(data.transactionData,expenseId);
+                         accountEntry(ledger,false,new mongodb.ObjectId(expenseId));
+                         res.status(200).send(expenseId);                  
+                      }
+                    });
+                  }
+                  else{
+                    createExpence(db, data, function(result) {
+                      console.log(result.ops[0]._id);
+                      if(result){
+                         console.log("Expense Created")
+                         var ledger = createLedgerJson(data.transactionData,result.ops[0]._id);
+                         accountEntry(ledger,false,new mongodb.ObjectId(result.ops[0]._id));
+                         res.status(200).send(result.ops[0]._id);
+                       }
+                    });
+                  }
+                                
+              });
+
+    });      
+     var isExpenseExist = function(db, callback) {
+        var collection = db.collection('voucherTransaction');
+        console.log("query in is ",query)
+        var cursor = collection.count(query,function(err, result) {;
+                  assert.equal(err, null);
+                  console.log(result);
+                  callback(result);
+        });
+    }
+      var updateExpence = function(db, expenseData,callback) {
+        var collection = db.collection('voucherTransaction');
+              var cursor = collection.update(query,expenseData, function(err, result) {;
+                  assert.equal(err, null);
+                  callback(result);
+        });                                        
+     }
+      var createExpence = function(db, expenseData,callback) {
+        var collection = db.collection('voucherTransaction');
+             var cursor = collection.insert(expenseData, function(err, result) {;
+                 assert.equal(err, null);
+                 callback(result);
+        });                                        
+      }
+                                   
+});   
+
+       function createLedgerJson(data,id)
+       {    
+           console.log(data);
+           console.log(data.accountTable)
+            console.log(data.itemTable)
+           var accountTable = data.accountTable
+           var itemTable = data.itemTable
+           console.log()           
+           var ledger  = [];
+                if(data.role == 'O')
+                {   if(data.itemTable != "[]"){
+                    ledger.push({accountName:data.supliersId,date:data.date,particular:itemTable[0].accountId,refNo:data.no,voType:"Expense",credit:data.amount,voRefId:id,isUo:false,visible:true,compCode:data.compCode})
+                  }
+                      if(data.tdsAccountId){
+                           ledger.push({accountName:data.tdsAccountId,date:data.date,particular:data.supliersId,refNo:data.no,voType:"Expense",credit:data.tdsamount,voRefId:id,isUo:false,visible:true,compCode:data.compCode})
+                          }
+                      if(data.itemTable != []){
+                        for(var i=0;i<itemTable.length;i++)
+                        {        
+                           ledger.push({accountName:itemTable[i].accountId,date:data.date,particular:data.supliersId,refNo:data.no,voType:"Expense",debit:Number(itemTable[i].amount),voRefId:id,isUo:false,visible:true,compCode:data.compCode})
+                        } 
+                      }
+                       if(data.accountTable != []){
+                        for(var i=0;i<accountTable.length;i++)
+                        {        
+                           ledger.push({accountName:accountTable[i].accountId,date:data.date,particular:data.supliersId,refNo:data.no,voType:"Expense",debit:Number(accountTable[i].amount),voRefId:id,isUo:false,visible:true,compCode:data.compCode})
+                        }
+                      } 
+                  } 
+                if(data.role == 'UO')
+                {  if(data.itemTable != []){
+                     ledger.push({accountName:data.supliersId,date:data.date,particular:itemTable[0].accountId,refNo:data.no,voType:"Expense",credit:data.amount,voRefId:id,isUo:true,visible:true,compCode:data.compCode})
+                   }
+                      if(data.tdsAccountName)
+                        {
+                           ledger.push({accountName:data.tdsAccountId,date:data.date,particular:data.supliersId,refNo:data.no,voType:"Expense",credit:data.tdsamount,voRefId:id,isUo:true,visible:true,compCode:data.compCode})
+                        }
+                     if(data.itemTable != []){
+                        for(var i=0;i<itemTable.length;i++)
+                        {        
+                           ledger.push({accountName:itemTable[i].accountId,date:data.date,particular:data.supliersId,refNo:data.no,voType:"Expense",debit:Number(itemTable[i].amount),voRefId:id,isUo:true,visible:true,isUo:true,visible:true,compCode:data.compCode})
+                        } 
+                      }
+                      if(data.accountTable != []){
+                        for(var i=0;i<accountTable.length;i++)
+                        {        
+                           ledger.push({accountName:accountTable[i].accountId,date:data.date,particular:data.supliersId,refNo:data.no,voType:"Expense",debit:Number(accountTable[i].amount),voRefId:id,isUo:true,visible:true,compCode:data.compCode})
+                        } 
+                      }
+
+                }                                            
+                       
+                 return ledger; 
+   }
 
 
+  "save bill new"
+
+  router.post('/saveBillTest/:billId',function (req, res){
+   var data = req.body;
+   console.log(data)
+   var compCode = data.compCode
+   var billId = req.params.billId;
+   console.log(billId);
+   var query;
+   if(billId != 'null'){
+        var query  = {_id:new mongodb.ObjectId(billId)}
+       }
+       else{
+        query = {no:data.no}
+       }
+ voucherTransaction.getDataSource().connector.connect(function (err, db) {  
+                var collection = db.collection('voucherTransaction');               
+                isBillExist(db, function(result) {
+                  if(result>0){
+                    updateBill(db, data, function(result) {
+                      if(result){
+                         console.log("Bill Updated",result)
+                         var lineItem;
+                         var visible;
+                         if(data.role == 'O'){
+                          lineItem = data.transactionData.manualLineItem
+                          visible = true;
+
+                         }
+                          if(data.role == 'UO'){
+                          lineItem = data.transactionData.itemDetail
+                          visible = false;
+                         }
+                         var ledger = createLedgerJson(data.transactionData,billId);
+                         accountEntry(ledger,false,new mongodb.ObjectId(billId));
+                          updateInventory(db, visible, function(result) {          
+                            if(result){
+                              console.log("inventory removed")
+                              isInventoryExist(db, function(result) { 
+                                 console.log("checking inventory ...")         
+                                 if(result>0){
+                                  console.log("inventory Count",result);
+                                  var inventoryData = createInventoryData(lineItem,visible,data.no,billId,result,compCode);
+                                  console.log("inventory data",inventoryData)
+                                }
+                                else{
+                                  var inventoryData = createInventoryData(lineItem,visible,data.no,billId,0,compCode);
+                                }                        
+                            createInventory(db, inventoryData, function(result) {          
+                                 if(result){
+                                 console.log("inventory created",result)
+                                 res.status(200).send(billId);                                
+                              }
+                        });
+
+                     });
+                              
+                           }                 
+                      });
+                        }
+                    });
+                  }
+                
+                  else{
+                    createBill(db, data, function(result) {   
+                      if(result)
+                      {
+                         console.log("Bill Created",result)
+                         var ledger = createLedgerJson(data.transactionData,result.ops[0]._id);
+                         accountEntry(ledger,false,new mongodb.ObjectId(result.ops[0]._id));
+                         var billId = result.ops[0]._id
+                         var lineItem;
+                         if(data.role == 'O'){
+                          lineItem = data.transactionData.manualLineItem
+                         }
+                          if(data.role == 'UO'){
+                          lineItem = data.transactionData.itemDetail
+                         }
+
+                         isInventoryExist(db, function(result) { 
+                            console.log("checking inventory ...")         
+                              if(result>0){
+                                console.log(result);
+                                 var inventoryData = createInventoryData(lineItem,true,data.no,billId,result,compCode);
+                                 console.log("inventory data",inventoryData)
+                              }
+                              else{
+                                  var inventoryData = createInventoryData(lineItem,true,data.no,billId,0,compCode);
+                              }
+                        
+                         createInventory(db, inventoryData, function(result) {          
+                              if(result){
+                                console.log("inventory created",result)
+                                res.status(200).send(billId);
+                                 
+                              }
+                        });
+
+                     });
+                  }
+                });
+              }
+                                
+          });
+
+    }); 
+
+      "check if bill exist or not"    
+     var isBillExist = function(db, callback) {
+        var collection = db.collection('voucherTransaction');
+        console.log("query in is ",query)
+        var cursor = collection.count(query,function(err, result) {;
+                  assert.equal(err, null);
+                  callback(result);
+        });
+    }
+    "get inventory count of visible item"
+     var isInventoryExist = function(db, callback) {
+        var collection = db.collection('inventory');
+        var cursor = collection.count({visible:true,isActive:true},function(err, result) {;
+                  assert.equal(err, null);
+                  callback(result);
+        });
+    }
+    "update bill"
+      var updateBill = function(db, billData,callback) {
+        var collection = db.collection('voucherTransaction');
+              var cursor = collection.update(query,billData, function(err, result) {;
+                  assert.equal(err, null);
+                  callback(result);
+        });                                        
+     }
+     "create bill"
+      var createBill = function(db, billData,callback) {
+        var collection = db.collection('voucherTransaction');
+             var cursor = collection.insert(billData, function(err, result) {;
+                 assert.equal(err, null);
+                 callback(result);
+        });                                        
+      }
+      "create inventory"
+      var createInventory = function(db, inventoryData,callback) {
+        var collection = db.collection('inventory');
+             var cursor = collection.insert(inventoryData, function(err, result) {;
+                 assert.equal(err, null);
+                 callback(result);
+        });                                        
+      }
+      "update inventory"
+      var updateInventory = function(db, visible,callback) {
+        var collection = db.collection('inventory');          
+             var cursor = collection.remove({invId:billId,visible:visible,isActive:true}, function(err, result) {;
+                 assert.equal(err, null);
+                 callback(result);
+        });                                        
+      }
+                                   
+});
+   " return Inventory data "
+       function createInventoryData(data,visible,no,billId,count,compCode){
+          for(var i=0;i<data.length;i++)
+             {        
+               data[i].isActive  = true;
+               data[i].visible = visible;
+               data[i].no = no;
+               data[i].invId = billId;
+               data[i].rgNo = count + i + 1;
+               data[i].compCode = compCode;
+            }  
+            return data;
+       }
+       "create ledger json"
+       function createLedgerJson(data,id)
+       {    
+           console.log("ledger",data);                   
+           var ledger  = [];
+                if(data.role == 'O')
+                 {
+                   var accountData =  data.accountlineItem;                 
+                        for(var i=0;i<accountData.length;i++)
+                         {        
+                            ledger.push({accountName:accountData[i].accountId,date:data.date,particular:data.purchaseAccountId,refNo:data.no,voType:"Purchase Invoice",debit:Number(accountData[i].amount),voRefId:id,isUo:false,compCode:data.compCode})
+                         }  
+                            ledger.push({accountName:data.supliersId,date:data.date,particular:data.purchaseAccountId,refNo:data.no,voType:"Purchase Invoice",credit:Number(data.amount),voRefId:id,isUo:false,visible:false,compCode:data.compCode},
+                                    {accountName:data.purchaseAccountId,date:data.date,particular:data.supliersId,refNo:data.no,voType:"Purchase Invoice",debit:Number(data.purchaseAmount),voRefId:id,isUo:false,visible:false,compCode:data.compCode})
+                }
+                if(data.role == 'UO')
+                {     var accountData =  data.accountlineItem;
+                       for(var i=0;i<accountData.length;i++)
+                        {        
+                           ledger.push({accountName:accountData[i].accountId,date:data.date,particular:data.purchaseAccountId,refNo:data.no,voType:"Purchase Invoice",debit:Number(accountData[i].amount),voRefId:id,isUo:false,visible:true,compCode:data.compCode})
+                        }                                       
+                           ledger.push({accountName:data.supliersId,date:data.date,particular:data.purchaseAccountId,refNo:data.no,voType:"Purchase Invoice",credit:Number(data.adminAmount),voRefId:id,isUo:true,visible:true,compCode:data.compCode},
+                                    {accountName:data.purchaseAccountId,date:data.date,particular:data.supliersId,refNo:data.no,voType:"Purchase Invoice",debit:Number(data.purchaseAmount),voRefId:id,isUo:true,visible:true,compCode:data.compCode})
+                           
+                       
+                     
+                }                                            
+                       console.log(ledger)
+                 return ledger; 
+   }
 
 
+   
 
+   "get transaction data"
 
+   router.get('/getTransactionData/:compCode',function (req, res){
+    var compCode = req.params.compCode;
+     voucherTransaction.getDataSource().connector.connect(function (err, db) {  
+              getData(db, function(result) {          
+                  if(result){
+                     res.status(200).send(result);
+                  }
+              });
+            });
 
+    var getData = function(db, callback) {
+        var collection = db.collection('voucherTransaction');
+        var cursor = collection.aggregate( 
+                {$match:{compCode,compCode}},
+                {$project : 
+                { type : "$type",
+                  invoiceNo:"$no",
+                  date:"$date",
+                  amount:"$amount",
+                  balance:"$amount",
+                  supplier:"$transactionData.supliersId",
+                  compCode:"$compCode",
+                  id:"$_id"
 
+                }} ,function(err, result) {;
+                  assert.equal(err, null);
+                  callback(result);
+        });
+    }
 
+   });
 
+   " get all transaction of a particular supplier"
+    router.get('/getAllTransaction/:supliersId',function (req, res){
+    var supliersId = req.params.supliersId;
+     voucherTransaction.getDataSource().connector.connect(function (err, db) {  
+              getData(db, function(result) {          
+                  if(result){
+                     res.status(200).send(result);
+                  }
+              });
+            });
+
+    var getData = function(db, callback) {
+        var collection = db.collection('voucherTransaction');
+        var cursor = collection.aggregate(
+                   {$match :{'transactionData.supliersId':supliersId}},
+                   //{$match:{balance:{$gt:0}}},
+                   {$project :{
+                      date: "$date",
+                      duedate: "$duedate",
+                      amount: "$amount",
+                      vochNo: "$vochNo",
+                      type: "$type",
+                      balance:"$balance",
+                      id:"$_id"                   
+                   }
+                 }
+              ,function(err, result) {;
+                  assert.equal(err, null);
+                  callback(result);
+        });
+    }
+
+   });
+
+   "get all open bill of a particular supplier"
+
+ 
+    
   server.use(router);
 };

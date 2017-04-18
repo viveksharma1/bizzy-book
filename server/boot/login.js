@@ -176,36 +176,39 @@ router.post('/upload',function (req, res) {
      
 //login routes start here
     
-router.post('/login', function (req, res){
-    var res1;
-    const userCredentials = {
-        "email": req.body.email,
-        "password": req.body.password
-       }
-UserModel.login(userCredentials, 'user', function (err, result) {
-      if (err)
-            {
-        res.json({message:"User Not Found"});
-        return;
-      }
-      res1 = result;
-       
-    UserModel.find({where:{email:req.body.email}},{ fields: {email: true, role: true} },function (err, instance) {
-         if (err) {    
-            res.status(401).json({ "error": "wrong pass" });
-            return;
-        }                     
-         var data = instance;
-         var token = jwt.sign({role:instance[0].role,email:instance[0].email}, server.get('superSecret'), {     
-         });      
-         var tokdata = jwt.verify(token, server.get('superSecret'),  { 
-         });
-         var role= tokdata.role;
-       
-         res.json({res1,token}); 
-          });
-     });    
-});
+    router.post('/login', function (req, res) {
+        var res1;
+        const userCredentials = {
+            "email": req.body.email,
+            "password": req.body.password
+        }
+        UserModel.login(userCredentials, 'user', function (err, result) {
+            if (err) {
+                res.json({ message: "User Not Found" });
+                return;
+            }
+            var res1 = result;
+
+            UserModel.findOne({ where: { email: req.body.email } }, { fields: { email: true, role: true } }, function (err, data) {
+                if (err) {
+                    res.status(401).json({ "error": "wrong pass" });
+                    return;
+                }
+                //console.log(data)
+                //var data = instance;
+                var token = jwt.sign({ role: data.role, email: data.email, permission: data.permission }, server.get('superSecret'), {
+                });
+                //var tokdata = jwt.verify(token, server.get('superSecret'),  { 
+                //});
+                //var role= tokdata.role;
+                //delete res1["user"];
+                //res1.user.permission = {};
+                console.log(res1.user());
+                res1.token = token;
+                res.send(res1);
+            });
+        });
+    });
     
   //logout route starts here
     
