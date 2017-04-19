@@ -2204,7 +2204,7 @@ router.post('/saveExpensetest/:expenseId',function (req, res){
       "update inventory"
       var updateInventory = function(db, visible,callback) {
         var collection = db.collection('inventory');          
-             var cursor = collection.remove({invId:billId,visible:visible,isActive:true}, function(err, result) {;
+             var cursor = collection.remove({invId:new mongodb.ObjectId(billId),visible:visible,isActive:true}, function(err, result) {;
                  assert.equal(err, null);
                  callback(result);
         });                                        
