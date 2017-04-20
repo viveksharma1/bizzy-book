@@ -9,41 +9,63 @@
   "properties": {
     "accountName": {
       "type": "string",
-       "required": true,
-        "index": {"unique": true} 
+      "required": true,
+      "index": {
+        "unique": true
+      }
     },
     "group": {
-       "type": "string"
+      "type": "string"
     },
     "type": {
       "type": "string"
     },
-
     "Under": {
       "type": "string"
     },
-      "discription": {
+    "discription": {
       "type": "string"
     },
-      "credit": {
+    "credit": {
       "type": "number"
     },
-       "debit": {
+    "debit": {
       "type": "number"
     },
-       "openingBalance": {
+    "openingBalance": {
       "type": "number"
     },
-    
-       "ancestor": {
-      "type": ["string"]
+    "ancestor": {
+      "type": [
+        "string"
+      ]
     },
-       "balanceType": {
+    "balanceType": {
       "type": "string"
     },
+    "validations": {
+      "type": []
+    },
+    "relations": {
+      "type": {}
+    },
+    "acls": {
+      "type": []
+    },
+    "methods": {
+      "type": {}
+    }
+  },
   "validations": [],
   "relations": {},
-  "acls": [],
+  "acls": [
+    {
+      "accessType": "EXECUTE",
+      "principalType": "ROLE",
+      "principalId": "$unauthenticated",
+      "permission": "DENY",
+      "property": "updateAccount"
+    }
+  ],
   "methods": {}
-}
 }

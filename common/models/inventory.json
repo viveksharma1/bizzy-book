@@ -16,10 +16,9 @@
     "supliersName": {
       "type": "string"
     },
-     "currentStatus": {
+    "currentStatus": {
       "type": "string"
     }
-
   },
   "validations": [],
   "relations": {},

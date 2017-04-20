@@ -59,8 +59,7 @@
     "notes": {
       "type": "string"
     },
-      
-      "accountName": {
+    "accountName": {
       "type": "string"
     },
     "category": {

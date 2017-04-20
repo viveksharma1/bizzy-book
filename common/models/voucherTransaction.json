@@ -10,10 +10,10 @@
     "type": {
       "type": "string"
     },
-      "state": {
+    "state": {
       "type": "string"
     },
-     "date": {
+    "date": {
       "type": "date"
     },
     "amount": {
@@ -22,26 +22,22 @@
     "isUo": {
       "type": "number"
     },
-     "compCode": {
+    "compCode": {
       "type": "string"
-    }, 
-     "role": {
+    },
+    "role": {
       "type": "number"
     },
-
-     "refNo": {
+    "refNo": {
       "type": "string"
     },
     "no": {
       "type": "number"
     },
     "vo_payment": {
-      "type": 
-        "object"
-      
-    } 
+      "type": "object"
+    }
   },
-
   "validations": [],
   "relations": {},
   "acls": [],

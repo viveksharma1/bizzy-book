@@ -1,11 +1,5 @@
-
-
 {
-  
-  
-  
 
-  
   "mongo": {
     "host": "ds145245.mlab.com",
     "port": 45245,
@@ -16,9 +10,4 @@
     "user": "bizzy-book-new"
   }
 
-
-
 }
-
-
-  

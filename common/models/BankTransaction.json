@@ -10,7 +10,6 @@
     "date": {
       "type": "date"
     },
-       
     "remarks": {
       "type": "string"
     },

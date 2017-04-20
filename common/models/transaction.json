@@ -10,7 +10,6 @@
     "supliersId": {
       "type": "string"
     },
-       
     "suplierId": {
       "type": "string"
     },
@@ -26,7 +25,6 @@
     "date": {
       "type": "date"
     },
-
     "actualDate": {
       "type": "date"
     },
@@ -51,16 +49,16 @@
         "object"
       ]
     },
-     "adminAmount": {
+    "adminAmount": {
       "type": "number"
     },
-     "adminBalance": {
+    "adminBalance": {
       "type": "number"
     },
-     "amount": {
+    "amount": {
       "type": "number"
     },
-     "balance": {
+    "balance": {
       "type": "number"
     },
     "ExchangeRate": {
@@ -69,11 +67,10 @@
     "supCode": {
       "type": "string"
     },
-     "compCode": {
+    "compCode": {
       "type": "string"
     },
-    
-     "role": {
+    "role": {
       "type": "number"
     },
     "accountlineItem": {
@@ -81,19 +78,16 @@
         "object"
       ]
     },
-
-    
-     "totalWeight": {
+    "totalWeight": {
       "type": "number"
     },
-
-     "id": {
+    "id": {
       "type": "string"
-    }, 
+    },
     "refNo": {
       "type": "number"
     },
-     "customData": {
+    "customData": {
       "type": "string"
     },
     "customPaymentInfo": {
@@ -105,8 +99,10 @@
     "purchaseAccountId": {
       "type": "string"
     },
-     "paymentLog": {
-      "type": ["object"]
+    "paymentLog": {
+      "type": [
+        "object"
+      ]
     },
     "paymentDays": {
       "type": "string"

@@ -1085,25 +1085,33 @@ router.get('/getSupplierAccount/:compCode',function (req, res){
            
  }); 
   });
-
-
-  "get sundry debitor account"
-router.get('/getPartytAccount/:compCode',function (req, res){  
+  "get sales account"
+router.get('/getSaleAccount/:compCode',function (req, res){  
      var compCode = req.params.compCode 
-     Accounts.find({where:{compCode:compCode,ancestor: 'SUNDRY DEBTORS'}}, function (err, instance) { 
-
-                 if(instance){   
-
-                 //console.log(instance)             
+     Accounts.find({where:{compCode:compCode,ancestor: 'SALES ACCOUNTS'}}, function (err, instance) { 
+                 if(instance){               
                    res.send(instance);
                  };
            
  }); 
   });
+  "get sundry debitor account"
+router.get('/getPartytAccount/:compCode',function (req, res){  
+     var compCode = req.params.compCode 
+     Accounts.find({where:{compCode:compCode,ancestor: 'SUNDRY DEBTORS'}}, function (err, instance) { 
+                 if(instance){              
+                   res.send(instance);
+                 };
+           
+ }); 
+  });
+   
+    "get tax account "
+
+
 router.get('/getPaymentAccount/:compCode',function (req, res){ 
   var compCode = req.params.compCode  
      Accounts.find({where:{compCode:compCode,or:[{ancestor: 'BANK ACCOUNTS'},{ancestor:'CASH-IN-HAND'}]}}, function (err, instance) { 
-
                  if(instance){                
                    res.send(instance);
                  };
@@ -1114,7 +1122,6 @@ router.get('/getPaymentAccount/:compCode',function (req, res){
   router.get('/getExpenseAccount/:compCode',function (req, res){ 
   var compCode = req.params.compCode  
      Accounts.find({where:{compCode:compCode,or:[{ancestor: 'DIRECT EXPENSES'},{ancestor:'INDIRECT EXPENSES'}]}}, function (err, instance) { 
-
                  if(instance){                
                    res.send(instance);
                  };
@@ -1730,35 +1737,56 @@ router.post('/saveVoucher', function (req, res) {
 
     "update salesTransaction data in Inventory"
     function updateInventorySales(data,id,date,vochNo){
+    console.log(data);
        Inventory.getDataSource().connector.connect(function (err, db) {   
         var collection = db.collection('inventory');     
           for(var i = 0;i<data.length;i++)
             {  
                   var sum = 0 ;
-                  for(var j = 0;j<data[i].salesTransaction.length;j++){
-                     if(data[i].salesTransaction[j].id != id){      
-                       var sum = sum + Number(data[i].salesTransaction[j].saleQty)
-                     }
-             }   
-                 var invBalance = sum + Number(data[i].itemQty);
-             collection.update(
-                             { _id: new mongodb.ObjectId(data[i].id), "salesTransaction.id": new mongodb.ObjectId(id)},
-                             { $set: { "salesTransaction.$.saleQty" : data[i].itemQty,"BALANCE" : invBalance}}
-                            
-                             ,function (err, instance) { 
-                 if(instance){     
-                 console.log(instance.result);  
-                 } 
+          console.log(i);
+          console.log(data[i]);
+          if(data[i].salesTransaction){
+            for(var j = 0;j<data[i].salesTransaction.length;j++){
+             if(data[i].salesTransaction[j].id != id){      
+               var sum = sum + Number(data[i].salesTransaction[j].saleQty)
+             }
+            }   
+            var invBalance = sum + Number(data[i].itemQty);
+            collection.update(
+                 { _id: new mongodb.ObjectId(data[i].id), "salesTransaction.id": new mongodb.ObjectId(id)},
+                 { $set: { "salesTransaction.$.saleQty" : data[i].itemQty,"BALANCE" : invBalance}}
+                
+                 ,function (err, instance) { 
+           if(instance){     
+           console.log(instance.result);  
+           } 
 
+           });
+          }else{
+            var invBalance = data[i].itemQty;
+            var query = {$push: {'salesTransaction': {id:id,date:date,vochNo:vochNo,saleQty:data[i].itemQty,isUo:true}}} 
+             var query1 =  { $set: { "BALANCE" : invBalance}}       
+             collection.update({_id:new mongodb.ObjectId(data[i].id)},query1,function (err, instance) { 
+                 if(instance){     
+                 console.log(instance.result);           
+                 } 
                  });  
+                 collection.update({_id:new mongodb.ObjectId(data[i].id)},query,function (err, instance) { 
+                 if(instance){     
+                 console.log(instance.result);           
+                 } 
+                 });          
+          
+          }           
            }                   
                                    
 });
     }
 
 
-         "Get outstanding voucher detail by customer name "
-router.get('/getVoucherData', function (req, res) {  
+
+  "Get outstanding voucher detail by customer name "
+         router.get('/getVoucherData', function (req, res) {  
            var customerId  = req.query.customerId
        console.log(customerId);
            voucherTransaction.getDataSource().connector.connect(function (err, db) {   
@@ -1774,6 +1802,7 @@ router.get('/getVoucherData', function (req, res) {
                       type: "$type",
                       balance:"$balance",
             invoiceData:"$invoiceData",
+            vo_badla:"$vo_badla",
                       id:"$_id"                   
                    }
                  }
@@ -1785,7 +1814,7 @@ router.get('/getVoucherData', function (req, res) {
                   console.log(err);
               });
             });   
-        });     
+        });        
 
 
 
@@ -2204,7 +2233,7 @@ router.post('/saveExpensetest/:expenseId',function (req, res){
       "update inventory"
       var updateInventory = function(db, visible,callback) {
         var collection = db.collection('inventory');          
-             var cursor = collection.remove({invId:new mongodb.ObjectId(billId),visible:visible,isActive:true}, function(err, result) {;
+             var cursor = collection.remove({invId:billId,visible:visible,isActive:true}, function(err, result) {;
                  assert.equal(err, null);
                  callback(result);
         });                                        
@@ -2270,6 +2299,43 @@ router.post('/saveExpensetest/:expenseId',function (req, res){
                  return ledger; 
    }
 
+ "get Sales invoice transaction data"
+
+   router.get('/getInvoiceData/:compCode',function (req, res){
+    var compCode = req.params.compCode;
+    var role = req.query.role;
+     voucherTransaction.getDataSource().connector.connect(function (err, db) {  
+              getData(db, role,function(result) {          
+                  if(result){
+                     res.status(200).send(result);
+                  }
+              });
+            });
+
+    var getData = function(db, role,callback) {
+        var collection = db.collection('voucherTransaction');  
+
+        var cursor = collection.aggregate( 
+                {$match:{compCode,compCode}},
+                {$match:{$or:[{type:"General Invoice"},{type:"Sales Invoice"}]}},
+                {$project : 
+                { type : "$type",
+                  invoiceNo:"$vochNo",
+                  date:"$date",
+                  duedate:"$duedate",
+                  amount:"$amount",
+                  balance:"$balance",
+                  customer:"$customerId",
+                  compCode:"$compCode",
+                  id:"$_id"
+
+                }} ,function(err, result) {;
+                  assert.equal(err, null);
+                  callback(result);
+        });
+    }
+
+   });
 
    
 
@@ -2299,6 +2365,7 @@ router.post('/saveExpensetest/:expenseId',function (req, res){
 
         var cursor = collection.aggregate( 
                 {$match:{compCode,compCode}},
+                 {$match:{$or:[{type:"PURCHASE INVOICE"},{type:"EXPENSE"}]}},
                 {$project : 
                 { type : "$type",
                   invoiceNo:"$no",

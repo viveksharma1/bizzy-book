@@ -16,10 +16,10 @@
     "email": {
       "type": "string"
     },
-      "particular": {
+    "particular": {
       "type": "string"
     },
-      "type": {
+    "type": {
       "type": "string"
     },
     "currency": {
@@ -28,7 +28,6 @@
     "date": {
       "type": "date"
     },
-   
     "no": {
       "type": "string"
     },
@@ -38,8 +37,6 @@
     "credit": {
       "type": "string"
     }
-    
-     
   },
   "validations": [],
   "relations": {},

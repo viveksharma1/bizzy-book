@@ -15,10 +15,21 @@
         "object"
       ]
     },
-
+    "validations": {
+      "type": []
+    },
+    "relations": {
+      "type": {}
+    },
+    "acls": {
+      "type": []
+    },
+    "methods": {
+      "type": {}
+    }
+  },
   "validations": [],
   "relations": {},
   "acls": [],
   "methods": {}
-}
 }

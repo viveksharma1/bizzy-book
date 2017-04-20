@@ -9,19 +9,32 @@
   "properties": {
     "name": {
       "type": "string",
-       "required": true,
-       "index": {"unique": true} 
+      "required": true,
+      "index": {
+        "unique": true
+      }
     },
-     "type": {
+    "type": {
       "type": "string"
     },
-     "balanceType": {
+    "balanceType": {
       "type": "string"
     },
-
+    "validations": {
+      "type": []
+    },
+    "relations": {
+      "type": {}
+    },
+    "acls": {
+      "type": []
+    },
+    "methods": {
+      "type": {}
+    }
+  },
   "validations": [],
   "relations": {},
   "acls": [],
   "methods": {}
-}
 }

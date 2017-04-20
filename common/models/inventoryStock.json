@@ -10,7 +10,6 @@
     "grade": {
       "type": "string"
     },
-       
     "finish": {
       "type": "string"
     },

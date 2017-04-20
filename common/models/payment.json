@@ -10,7 +10,6 @@
     "bankAccount": {
       "type": "string"
     },
-       
     "partyAccount": {
       "type": "string"
     },
@@ -34,7 +33,6 @@
     "attachment": {
       "type": "string"
     }
-    
   },
   "validations": [],
   "relations": {},

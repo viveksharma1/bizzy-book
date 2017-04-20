@@ -16,10 +16,10 @@
     "particular": {
       "type": "string"
     },
-      "date": {
+    "date": {
       "type": "date"
     },
-      "refNo": {
+    "refNo": {
       "type": "string"
     },
     "voType": {
@@ -28,7 +28,6 @@
     "credit": {
       "type": "number"
     },
-   
     "voRefId": {
       "type": "string"
     },
@@ -38,8 +37,6 @@
     "balance": {
       "type": "string"
     }
-    
-     
   },
   "validations": [],
   "relations": {},

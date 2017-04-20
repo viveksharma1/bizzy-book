@@ -10,10 +10,10 @@
     "supliersName": {
       "type": "string"
     },
-      "compCode": {
-    "type": "string", 
-    "id": true 
-   },
+    "compCode": {
+      "type": "string",
+      "id": true
+    },
     "email": {
       "type": "string"
     },

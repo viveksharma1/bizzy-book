@@ -67,7 +67,7 @@
     "dataSource": "mongo",
     "public": true,
     "$promise": {},
-    "$resolved": true     
+    "$resolved": true
   },
   "transaction": {
     "dataSource": "mongo",
@@ -75,94 +75,86 @@
     "$promise": {},
     "$resolved": true
   },
-  
-    "accountMaster": {
+  "accountMaster": {
     "dataSource": "mongo",
     "public": true,
     "$promise": {},
     "$resolved": true
   },
-    "customerTransaction": {
+  "customerTransaction": {
     "dataSource": "mongo",
     "public": true,
     "$promise": {},
     "$resolved": true
   },
-    "customer": {
+  "customer": {
     "dataSource": "mongo",
     "public": true,
     "$promise": {},
     "$resolved": true
   },
-    "CompanyMaster": {
+  "CompanyMaster": {
     "dataSource": "mongo",
     "public": true,
     "$promise": {},
     "$resolved": true
   },
-     "ledger": {
+  "ledger": {
     "dataSource": "mongo",
     "public": true,
     "$promise": {},
     "$resolved": true
   },
-     "inventoryAsset": {
+  "inventoryAsset": {
     "dataSource": "mongo",
     "public": true,
     "$promise": {},
     "$resolved": true
-  }
-    ,
-     "bankAccount": {
-    "dataSource": "mongo",   
-    "public": true,
-    "$promise": {},
-    "$resolved": true  
-  }
-    ,
-     "account": {
-    "dataSource": "mongo",   
-    "public": true,
-    "$promise": {},
-    "$resolved": true 
-  }
-    ,
-     "BankTransaction": {
-    "dataSource": "mongo",   
-    "public": true,
-    "$promise": {},
-    "$resolved": true
-  }
-    ,
-     "inventoryStock": {
-    "dataSource": "mongo",   
-    "public": true,
-    "$promise": {},
-    "$resolved": true
-  }
-  ,
-     "master": {
-    "dataSource": "mongo",   
+  },
+  "bankAccount": {
+    "dataSource": "mongo",
     "public": true,
     "$promise": {},
     "$resolved": true
   },
-    "groupMaster": {
-    "dataSource": "mongo",   
+  "account": {
+    "dataSource": "mongo",
     "public": true,
     "$promise": {},
     "$resolved": true
-  }
-  ,
-    "voucherTransaction": {
-    "dataSource": "mongo",   
+  },
+  "BankTransaction": {
+    "dataSource": "mongo",
     "public": true,
     "$promise": {},
     "$resolved": true
-  }
-  ,
-    "payment": {
-    "dataSource": "mongo",   
+  },
+  "inventoryStock": {
+    "dataSource": "mongo",
+    "public": true,
+    "$promise": {},
+    "$resolved": true
+  },
+  "master": {
+    "dataSource": "mongo",
+    "public": true,
+    "$promise": {},
+    "$resolved": true
+  },
+  "groupMaster": {
+    "dataSource": "mongo",
+    "public": true,
+    "$promise": {},
+    "$resolved": true
+  },
+  "voucherTransaction": {
+    "dataSource": "mongo",
+    "public": true,
+    "$promise": {},
+    "$resolved": true
+  },
+  "payment": {
+    "dataSource": "mongo",
     "public": true,
     "$promise": {},
     "$resolved": true
