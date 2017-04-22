@@ -1844,7 +1844,26 @@ router.post('/saveVoucher', function (req, res) {
             });   
         })
 
+"get starting openingBalance of an account"
+router.get('/getStartingBalance/:accountName',function (req, res){
 
+  var compCode = req.query.compCode
+  var accountName = req.params.accountName
+  console.log(compCode,accountName)
+Accounts.getDataSource().connector.connect(function (err, db) {  
+   var collection = db.collection('account'); 
+   Accounts.find({where:{accountName:accountName}},function (err, instance) { 
+          if(instance){
+            console.log("accountData",instance)
+                res.send(instance);  
+          }
+            
+                
+         });  
+
+         }); 
+
+  });
 "get openingBalance of a particular account"
 router.get('/getOpeningBalnceByAccountName/:compCode',function (req, res){ 
    var compCode = req.params.compCode
@@ -1870,10 +1889,12 @@ router.get('/getOpeningBalnceByAccountName/:compCode',function (req, res){
          }
        }
           , function (err, instance) {
-              if(instance){
-
+              if(instance.length>0){
                 var openingBalance = instance[0].credit - instance[0].debit
                 res.send({openingBalance:Math.abs(openingBalance)}); 
+              }
+              else{
+                res.send("no data"); 
               }
             
       });
@@ -1921,14 +1942,14 @@ Ledgers.getDataSource().connector.connect(function (err, db) {
                if(accountData[i].id == ledgerDatalessThan[j]._id.accountName){    
                    accountData[i].credit =ledgerDatalessThan[j].credit
                    accountData[i].debit = ledgerDatalessThan[j].debit 
-                   accountData[i].openingBalance = (ledgerDatalessThan[j].credit - ledgerDatalessThan[j].debit) 
+                   //accountData[i].openingBalance = (ledgerDatalessThan[j].credit - ledgerDatalessThan[j].debit) 
                                                    
                 }   
               }
             } 
           }
             
-                res.send(instance);  
+                res.send(accountData);  
             
                 
          });   
@@ -1984,7 +2005,7 @@ console.log(accountName)
                 var collection = db.collection('ledger');               
                 openingBalnce(db, function(data) {
                   var ledgerOpeningBalnce
-                  if(data != []){
+                  if(data.length>0){
                     ledgerOpeningBalnce = data[0].credit - data[0].debit
                   }
                   else{
