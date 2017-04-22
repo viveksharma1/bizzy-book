@@ -1936,7 +1936,7 @@ Ledgers.getDataSource().connector.connect(function (err, db) {
         Accounts.find({where:{compCode:compCode}},function (err, instance) { 
           var accountData = instance    
           ledgerData = ledgerDatalessThan 
-          if(ledgerDatalessThan != []){           
+          if(ledgerDatalessThan.length>0){           
             for(var i=0;i<accountData.length;i++){
                for(var j=0;j<ledgerData.length;j++){
                if(accountData[i].id == ledgerDatalessThan[j]._id.accountName){    
