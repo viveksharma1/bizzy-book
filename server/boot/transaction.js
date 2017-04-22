@@ -1845,12 +1845,46 @@ router.post('/saveVoucher', function (req, res) {
         })
 
 
+"get openingBalance of a particular account"
+router.get('/getOpeningBalnceByAccountName/:compCode',function (req, res){ 
+   var compCode = req.params.compCode
+   var accountName = req.query.accountName
+   console.log(accountName)
+   var toDate = new Date(req.query.date);
+   console.log(toDate)
+   Ledgers.getDataSource().connector.connect(function (err, db) {  
+   var collection = db.collection('ledger'); 
+     collection.aggregate(
+        { $match : {
+           date: {
+           $lte: toDate   
+       },
+         compCode:compCode,
+         accountName:accountName
+  }}, 
+       { $group:
+         {
+           _id: {accountName:"$accountName"},          
+           credit: { $sum: "$credit" },
+           debit: { $sum: "$debit" }
+         }
+       }
+          , function (err, instance) {
+              if(instance){
 
-
+                var openingBalance = instance[0].credit - instance[0].debit
+                res.send({openingBalance:Math.abs(openingBalance)}); 
+              }
+            
+      });
+   });
+});
 
 router.get('/dateWiseAccountDetail/:compCode',function (req, res){ 
 
   var compCode = req.params.compCode
+  
+ 
   var toDate = new Date(req.query.date);
   console.log(toDate)
   console.log(compCode)
@@ -1861,9 +1895,11 @@ Ledgers.getDataSource().connector.connect(function (err, db) {
    { $match : {
       date: {
       $lte: toDate
-        
+      
     },
     compCode:compCode
+  
+    
   }}, 
      { $group:
          {
@@ -1878,7 +1914,8 @@ Ledgers.getDataSource().connector.connect(function (err, db) {
           console.log(instance);
         Accounts.find({where:{compCode:compCode}},function (err, instance) { 
           var accountData = instance    
-          ledgerData = ledgerDatalessThan            
+          ledgerData = ledgerDatalessThan 
+          if(ledgerDatalessThan != []){           
             for(var i=0;i<accountData.length;i++){
                for(var j=0;j<ledgerData.length;j++){
                if(accountData[i].id == ledgerDatalessThan[j]._id.accountName){    
@@ -1889,11 +1926,16 @@ Ledgers.getDataSource().connector.connect(function (err, db) {
                 }   
               }
             } 
-               res.send(accountData);   
+          }
+            
+                res.send(instance);  
+            
+                
          });   
      });                            
   });   
 });
+
 
 
 router.get('/getOpeningBalnce/:accountName',function (req, res){
@@ -1932,7 +1974,7 @@ console.log(accountName)
       var getLedgerData = function(db, callback) {
         var ledger;
         var collection = db.collection('ledger');
-             var cursor = collection.find({"accountName":accountName,compCode:compCode, date:{$gte:fromDate,$lte:toDate}}).toArray(function(err, result) {;
+             var cursor = collection.find({"accountName":accountName,compCode:compCode, date:{$gte:fromDate,$lt:toDate}}).toArray(function(err, result) {;
                 assert.equal(err, null);
                 console.log(result);
                 callback(result);
@@ -1941,7 +1983,15 @@ console.log(accountName)
        Ledgers.getDataSource().connector.connect(function (err, db) {  
                 var collection = db.collection('ledger');               
                 openingBalnce(db, function(data) {
-                  var ledgerOpeningBalnce = data[0].credit - data[0].debit
+                  var ledgerOpeningBalnce
+                  if(data != []){
+                    ledgerOpeningBalnce = data[0].credit - data[0].debit
+                  }
+                  else{
+                    ledgerOpeningBalnce = '';
+
+                  }
+                  
                   console.log(ledgerOpeningBalnce)
                    getLedgerData(db, function(data) {
                      res.send({openingBalance:ledgerOpeningBalnce,ledgerData:data})               
