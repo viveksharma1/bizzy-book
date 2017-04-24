@@ -1890,8 +1890,8 @@ router.get('/getOpeningBalnceByAccountName/:compCode',function (req, res){
        }
           , function (err, instance) {
               if(instance.length>0){
-                var openingBalance = instance[0].credit - instance[0].debit
-                res.send({openingBalance:Math.abs(openingBalance)}); 
+                var openingBalance = {credit:instance[0].credit,debit:instance[0].debit}
+                res.send({openingBalance:openingBalance}); 
               }
               else{
                 res.send("no data"); 
@@ -2004,13 +2004,12 @@ console.log(accountName)
        Ledgers.getDataSource().connector.connect(function (err, db) {  
                 var collection = db.collection('ledger');               
                 openingBalnce(db, function(data) {
-                  var ledgerOpeningBalnce
+                  var ledgerOpeningBalnce = {};
                   if(data.length>0){
-                    ledgerOpeningBalnce = data[0].credit - data[0].debit
+                    ledgerOpeningBalnce = {credit:data[0].credit,debit:data[0].debit}
                   }
                   else{
                     ledgerOpeningBalnce = '';
-
                   }
                   
                   console.log(ledgerOpeningBalnce)
