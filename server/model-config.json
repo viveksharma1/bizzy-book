@@ -33,66 +33,14 @@
     "dataSource": "mongo",
     "public": true
   },
-  "suppliers": {
-    "dataSource": "mongo",
-    "public": true,
-    "$promise": {},
-    "$resolved": true
-  },
-  "enquiry": {
-    "dataSource": "mongo",
-    "public": true,
-    "$promise": {},
-    "$resolved": true
-  },
-  "supplierscount": {
-    "dataSource": "mongo",
-    "public": true,
-    "$promise": {},
-    "$resolved": true
-  },
-  "purchaseOrder": {
-    "dataSource": "mongo",
-    "public": true,
-    "$promise": {},
-    "$resolved": true
-  },
+  
   "inventory": {
     "dataSource": "mongo",
     "public": true,
     "$promise": {},
     "$resolved": true
   },
-  "balk_Inventory": {
-    "dataSource": "mongo",
-    "public": true,
-    "$promise": {},
-    "$resolved": true
-  },
-  "transaction": {
-    "dataSource": "mongo",
-    "public": true,
-    "$promise": {},
-    "$resolved": true
-  },
-  "accountMaster": {
-    "dataSource": "mongo",
-    "public": true,
-    "$promise": {},
-    "$resolved": true
-  },
-  "customerTransaction": {
-    "dataSource": "mongo",
-    "public": true,
-    "$promise": {},
-    "$resolved": true
-  },
-  "customer": {
-    "dataSource": "mongo",
-    "public": true,
-    "$promise": {},
-    "$resolved": true
-  },
+  
   "CompanyMaster": {
     "dataSource": "mongo",
     "public": true,
@@ -105,12 +53,7 @@
     "$promise": {},
     "$resolved": true
   },
-  "inventoryAsset": {
-    "dataSource": "mongo",
-    "public": true,
-    "$promise": {},
-    "$resolved": true
-  },
+  
   "bankAccount": {
     "dataSource": "mongo",
     "public": true,
@@ -129,12 +72,7 @@
     "$promise": {},
     "$resolved": true
   },
-  "inventoryStock": {
-    "dataSource": "mongo",
-    "public": true,
-    "$promise": {},
-    "$resolved": true
-  },
+  
   "master": {
     "dataSource": "mongo",
     "public": true,
@@ -152,11 +90,6 @@
     "public": true,
     "$promise": {},
     "$resolved": true
-  },
-  "payment": {
-    "dataSource": "mongo",
-    "public": true,
-    "$promise": {},
-    "$resolved": true
   }
+  
 }

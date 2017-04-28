@@ -3,7 +3,7 @@ module.exports = function(server) {
     var router = server.loopback.Router();
     var UserModel = server.models.User;
     var mongo = require('mongodb').MongoClient;
-    var Transaction = server.models.transaction;
+   // var Transaction = server.models.transaction;
     var Account = server.models.account;
     var Binary = mongo.Binary;
     server.set('superSecret', "vivek"); 
