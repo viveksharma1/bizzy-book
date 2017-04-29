@@ -344,22 +344,22 @@ router.post('/saveBadlaVoucher',function (req, res){
         }
    });     
    
-   "Receive Payment"
-   router.post('/receivePayment',function (req, res){  
+   "Receipt"
+   router.post('/receipt',function (req, res){  
         var id = req.query.id
         var data = req.body;
         console.log(req.body);
         if (id != 'null' ) {
            var query = { id: id }
-           updatePayment(req.body,id);
+           updateReceipt(req.body,id);
            res.send({status:'200'});
         }
         else {
-           createPayment(data);
+           createReceipt(data);
            res.send({status:'200'});
         }
    });     
-       function updatePayment(data,id){
+       function updateReceipt(data,id){
         console.log(id);
            voucherTransaction.update({_id:new mongodb.ObjectId(id)}, data, function (err, instance) { 
             if(err)
@@ -386,7 +386,7 @@ router.post('/saveBadlaVoucher',function (req, res){
            });
        }
 
-        function createPayment(data){
+        function createReceipt(data){
           voucherTransaction.create(data, function (err, instance) { 
                if(err){
                 console.log(err);
@@ -497,11 +497,49 @@ router.post('/saveBadlaVoucher',function (req, res){
 " payment voucherTransaction"
   router.post('/payment',function (req, res){  
     var data = req.body;
-    createPayPayment(data,true);
+    //createPayment(data,true);
+    var id = req.query.id
+        //var data = req.body;
+        //console.log(req.body);
+        if (id != 'null' ) {
+           //var query = { id: id }
+           updatePayment(req.body,id,res);
+           //res.send({status:'200'});
+        }
+        else {
+           createPayment(data,res);
+           //res.send({status:'200'});
+        }
                
  });
+function updatePayment(data,id,res){
+        console.log(id);
+           voucherTransaction.update({_id:new mongodb.ObjectId(id)}, data, function (err, instance) { 
+            if(err)
+              console.log(err);
+            else {
+               var ledger = [];
+                 if(data.role == 'UO'){
+                     ledger.push({accountName:data.vo_payment.partyAccountId,compCode:data.compCode,date:data.date,particular:data.vo_payment.bankAccountId,refNo:data.vochNo,voType:"Payment",debit:Number(data.amount),voRefId:id,isUo:true,visible:true},
+                     {accountName:data.vo_payment.bankAccountId,compCode:data.compCode,date:data.date,particular:data.vo_payment.partyAccountId,refNo:data.vochNo,voType:"Payment",credit:Number(data.amount),voRefId:id,isUo:true,visible:true}
+                     )
+                     console.log(ledger);
+                     accountEntry(ledger,true,id);
+                   }
+                 else if(data.role == 'O'){
 
-  function createPayPayment(data,response){
+         ledger.push({accountName:data.vo_payment.partyAccountId,date:data.date,compCode:data.compCode,particular:data.vo_payment.bankAccountId,refNo:data.vochNo,voType:"Payment",debit:Number(data.amount),voRefId:id,isUo:false},
+                     {accountName:data.vo_payment.bankAccountId,date:data.date,compCode:data.compCode,particular:data.vo_payment.partyAccountId,refNo:data.vochNo,voType:"Payment",credit:Number(data.amount),voRefId:id,isUo:false}
+                     )
+                     console.log(ledger);
+                     accountEntry(ledger,false,new mongodb.ObjectId(id)); 
+                   }
+                   updatePaymentLog(data.vo_payment.billDetail,data.date,data.vochNo,new mongodb.ObjectId(id),data.role);  
+                if(res) res.send(instance);
+              }  
+           });
+       }
+  function createPayment(data,res){
     voucherTransaction.create( data, function (err, instance) { 
                  if(instance){   
                  var vochID  = instance.id             
@@ -519,37 +557,11 @@ router.post('/saveBadlaVoucher',function (req, res){
                      )
                      accountEntry(ledger,false,instance.id); 
                    }    
-                   //updateTransactions(data.vo_payment.billDetail,data.date,data.vochNo,vochID,data.role);
-           if(response) res.send(instance);
-                 };
+                   updateTransactions(data.vo_payment.billDetail,data.date,data.vochNo,vochID,data.role);
+           if(res) res.send(instance);
+                 }
 
  }); 
-      function updateTransactions(data,date,vochNo,vochID,role){ 
-      Transaction.getDataSource().connector.connect(function (err, db) {   
-        var collection = db.collection('transaction');        
-        for(var i = 0;i<data.length;i++ ){
-           if(role == 'UO'){
-          var query1 =  {$set:{adminBalance:Number(data[i].balance)}}
-          var query2 =  {$push:{'paymentLog':{id:vochID,date:date,vochNo:vochNo,amount:data[i].amountPaid,isUo:true}}}
-        }
-         if(role == 'O'){
-          var query1 =  {$set:{balance:Number(data[i].balance)}}
-          var query2 =  {$push:{'paymentLog':{id:vochID,date:date,vochNo:vochNo,amount:data[i].amountPaid,isUo:false}}}
-         }
-     collection.update({no:data[i].no},query1,function (err, instance) { 
-                 if(instance){     
-                 console.log(instance.result);           
-              }               
- });
-     collection.update({no:data[i].no},query2, function (err, instance) { 
-                 if(instance){     
-                 console.log(instance.result);           
-              }
-                
-           });  
-         }         
-       });       
-    }
   }
 
 router.post('/updateInventoryStatus', function (req, res) {
@@ -1105,7 +1117,7 @@ router.get('/getOpeningBalnce/:accountName',function (req, res){
                             debit: { $sum: "$debit" }
                           }
                 }
-]).toArray(function(err, result) {;
+]).toArray(function(err, result) {
                 assert.equal(err, null);
                 console.log(result);
                 callback(result);
@@ -1574,18 +1586,19 @@ router.post('/saveExpensetest/:expenseId',function (req, res){
               });
             });
 
-    var getData = function(db, callback) {
+   var getData = function(db, callback) {
         var collection = db.collection('voucherTransaction');
         var cursor = collection.aggregate(
                    {$match :{'transactionData.supliersId':supliersId}},
-                   //{$match:{balance:{$gt:0}}},
+                   {$match:{'transactionData.balance':{$gt:0}}},
                    {$project :{
                       date: "$date",
-                      duedate: "$duedate",
+                      duedate: "$transactionData.billDueDate",
                       amount: "$amount",
                       vochNo: "$vochNo",
                       type: "$type",
-                      balance:"$balance",
+                      balance:"$transactionData.balance",
+                      invoiceType:"$transactionData.invoiceType",
                       id:"$_id"                   
                    }
                  }
@@ -1792,7 +1805,7 @@ var getAccount = function(db,accountId,callback){
               receipts[i].vochNo=cVouchNo;
         receipts[i].id = mmongoose.Types.ObjectId();
         console.log(receipts[i]);
-              createPayment(receipts[i]);
+              createReceipt(receipts[i]);
              } 
            if(callback1) callback1();  
            }
@@ -1810,7 +1823,7 @@ var getAccount = function(db,accountId,callback){
               payments[i].vochNo=cVouchNo;
         payments[i].id = mmongoose.Types.ObjectId();
         console.log(payments[i]);
-              createPayPayment(payments[i],false);
+              createPayment(payments[i]);
                          }
              if(callback2) callback2(); 
       }
@@ -1851,7 +1864,7 @@ var getAccount = function(db,accountId,callback){
         var id=receipts[i].id;
       if(id){
         //console.log(receipts[i]+"updating");
-        updatePayment(receipts[i],receipts[i].id);
+        updateReceipt(receipts[i],receipts[i].id);
         receipts[i].id=mmongoose.Types.ObjectId(id);
         processReceipts(i+1);
       }
@@ -1863,7 +1876,7 @@ var getAccount = function(db,accountId,callback){
                     receipts[i].vochNo=cVouchNo;
             receipts[i].id = mmongoose.Types.ObjectId();
             console.log(receipts[i]+" creating");
-            createPayment(receipts[i]);
+            createReceipt(receipts[i]);
             processReceipts(i+1);
           }
         });
@@ -1878,7 +1891,9 @@ var getAccount = function(db,accountId,callback){
     function processPayments(i){
       if(i<payments.length){
       if(payments[i].id){
-        //updatePayPayment(payments[i],payments[i].id); uncomment later
+        updatePayment(payments[i],payments[i].id);// uncomment later
+        payments[i].id=mmongoose.Types.ObjectId(id);
+        processReceipts(i+1);
       }
       else{
         voucherTransaction.count({type:'Receive Payment'},function (err, instance) { 
@@ -1888,7 +1903,7 @@ var getAccount = function(db,accountId,callback){
                         payments[i].vochNo=cVouchNo;
         payments[i].id = mmongoose.Types.ObjectId();
         //console.log(payments[i]);
-              createPayPayment(payments[i],false);
+              createPayment(payments[i]);
         
           
         }});
@@ -2021,5 +2036,69 @@ function createRosemateEntry(){
       }
 
      });
+     router.get('/getInvoice/:invoiceNo',function (req, res){
+       var invoiceNo = req.params.invoiceNo;
+       voucherTransaction.getDataSource().connector.connect(function (err, db) { 
+               getInvoice(db, invoiceNo,function(result){
+                 if(result.length>0){
+                    res.status(200).send(result);
+                 }
+                 else{
+                   res.status(500).send({'status':"failed"});
+                 }
+             });
+       });
+       var getInvoice = function(db,invoiceNo,callback){
+         var collection = db.collection('voucherTransaction');
+         var cursor = collection.aggregate(
+           {$match:{vochNo:invoiceNo}},
+           {$project:{
+              supplier:"$transactionData.supliersId",
+              date:"$date",
+              totalLineItemData:"$transactionData.manualLineItem",
+              totalAmount:"$amount",
+              accountData:"$transactionData.accountlineItem"
+           }}
+
+         ,function(err, result){
+                assert.equal(err, null);
+                callback(result);
+         });
+      }
+  });
+
+   router.post('/purchaseSettelment',function (req, res){
+     var settelmentData =req.body
+     voucherTransaction.getDataSource().connector.connect(function (err, db) { 
+               savePurchaseSettelment(db, settelmentData,function(result){
+                 var ledger;
+                 if(result){
+                   ledger = ledgerCreation(settelmentData);
+                   accountEntry(ledger,false,result._id);
+                   res.status(200).send({id:result._id});
+                 }
+               });
+     });
+    function ledgerCreation(data){
+      var  firstLedger = data.ledgerDataFirst
+      var  secondLedger = data.ledgerDataSecond
+      var  thirdLedger = data.ledgerDataThird
+      var ledger = [];
+      var paritcular = "Purchase Settelment"  + data.invoiceNo
+      ledger.push({accountName:firstLedger.accountId,date:data.date,particular:paritcular,refNo:data.invoiceNo,voType:"Purchase Settelment",credit:Number(firstLedger.amount),voRefId:'',isUo:true,visible:true,compCode:data.compCode})
+      ledger.push({accountName:secondLedger.accountId,date:data.date,particular:firstLedger.accountId,refNo:data.invoiceNo,voType:"Purchase Settelment",debit:Number(secondLedger.amount),voRefId:'',isUo:true,visible:true,compCode:data.compCode})
+      ledger.push({accountName:thirdLedger.accountId,date:data.date,particular:firstLedger.accountId,refNo:data.invoiceNo,voType:"Purchase Settelment",debit:Number(thirdLedger.amount),voRefId:'',isUo:true,visible:true,compCode:data.compCode})
+      return ledger;
+    }
+    var savePurchaseSettelment = function(db,settelmentData,callback){
+         var collection = db.collection('voucherTransaction');
+         var cursor = collection.insert({settelmentData},function(err, result){
+                assert.equal(err, null);
+                callback(result);
+         });
+      }
+
+
+   });
   server.use(router);
 };
