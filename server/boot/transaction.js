@@ -2036,7 +2036,7 @@ function createRosemateEntry(){
       }
 
      });
-     router.get('/getInvoice/:invoiceNo',function (req, res){
+     router.get('/getInvoiceSett/:invoiceNo',function (req, res){
        var invoiceNo = req.params.invoiceNo;
        voucherTransaction.getDataSource().connector.connect(function (err, db) { 
                getInvoice(db, invoiceNo,function(result){
@@ -2044,7 +2044,7 @@ function createRosemateEntry(){
                     res.status(200).send(result);
                  }
                  else{
-                   res.status(500).send({'status':"failed"});
+                   res.status(200).send({'status':"Not Found"});
                  }
              });
        });
@@ -2066,39 +2066,110 @@ function createRosemateEntry(){
          });
       }
   });
-
-   router.post('/purchaseSettelment',function (req, res){
-     var settelmentData =req.body
-     voucherTransaction.getDataSource().connector.connect(function (err, db) { 
-               savePurchaseSettelment(db, settelmentData,function(result){
-                 var ledger;
-                 if(result){
-                   ledger = ledgerCreation(settelmentData);
-                   accountEntry(ledger,false,result._id);
-                   res.status(200).send({id:result._id});
-                 }
-               });
-     });
-    function ledgerCreation(data){
-      var  firstLedger = data.ledgerDataFirst
-      var  secondLedger = data.ledgerDataSecond
-      var  thirdLedger = data.ledgerDataThird
-      var ledger = [];
-      var paritcular = "Purchase Settelment"  + data.invoiceNo
-      ledger.push({accountName:firstLedger.accountId,date:data.date,particular:paritcular,refNo:data.invoiceNo,voType:"Purchase Settelment",credit:Number(firstLedger.amount),voRefId:'',isUo:true,visible:true,compCode:data.compCode})
-      ledger.push({accountName:secondLedger.accountId,date:data.date,particular:firstLedger.accountId,refNo:data.invoiceNo,voType:"Purchase Settelment",debit:Number(secondLedger.amount),voRefId:'',isUo:true,visible:true,compCode:data.compCode})
-      ledger.push({accountName:thirdLedger.accountId,date:data.date,particular:firstLedger.accountId,refNo:data.invoiceNo,voType:"Purchase Settelment",debit:Number(thirdLedger.amount),voRefId:'',isUo:true,visible:true,compCode:data.compCode})
-      return ledger;
-    }
-    var savePurchaseSettelment = function(db,settelmentData,callback){
+// purchaseSettelment count
+   router.post('/voucherTransactionsExist/:refNo',function (req, res){
+     var refNo = req.params.refNo
+     voucherTransaction.getDataSource().connector.connect(function (err, db) {
+        isExist(db, refNo,function(result){
+          if(result>0){
+            var count = result 
+            getId(db, refNo,function(result){
+              if(result){
+                res.status(200).send({count:count,id:result[0]._id});
+              }
+            });
+          }
+          else{
+             res.status(200).send({count:0});
+          }
+        })
+     })
+     var getId = function(db,refNo,callback){
          var collection = db.collection('voucherTransaction');
-         var cursor = collection.insert({settelmentData},function(err, result){
+         var cursor = collection.find({invoiceNo:refNo}).toArray(function(err, result){
                 assert.equal(err, null);
                 callback(result);
          });
       }
-
-
+     var isExist = function(db,refNo,callback){
+         var collection = db.collection('voucherTransaction');
+         var cursor = collection.count({invoiceNo:refNo},function(err, result){
+                assert.equal(err, null);
+                callback(result);
+         });
+      }
+  });
+  router.get('/getVoucherTransactionCount/:type',function (req, res){
+    var type = req.params.type
+      voucherTransaction.getDataSource().connector.connect(function (err, db) { 
+        getCount(db, type,function(result){
+          if(result){
+             res.status(200).send({count:result});
+          }
+          else{
+             res.status(200).send();
+          }
+        });
+      });
+       var getCount = function(db,type,callback){
+         var collection = db.collection('voucherTransaction');
+         var cursor = collection.count({type:type},function(err, result){
+                assert.equal(err, null);
+                callback(result);
+         });
+      }
+  });
+// purchaseSettelment api
+   router.post('/purchaseSettelment/:id',function (req, res){
+     var id = req.params.id
+     var settelmentData =req.body
+     voucherTransaction.getDataSource().connector.connect(function (err, db) { 
+             if(id!="null"){
+               updatePurchaseSettelment(db, settelmentData,new mongodb.ObjectId(id),function(result){
+                 if(result){
+                   ledger = ledgerCreation(settelmentData,id);
+                   accountEntry(ledger,true,id);
+                    res.status(200).send({id:id});
+                 }
+               });
+             }
+             else{
+               savePurchaseSettelment(db, settelmentData,id,function(result){
+                 var ledger;
+                 if(result){
+                   console.log(result.ops[0]._id)
+                   ledger = ledgerCreation(settelmentData,result.ops[0]._id);
+                   accountEntry(ledger,false,result.ops[0]._id);
+                   res.status(200).send({id:result.ops[0]._id});
+                 }
+               });
+             }
+     });
+    function ledgerCreation(data,id){
+        var  firstLedger = data.ledgerDataFirst
+        var  secondLedger = data.ledgerDataSecond
+        var  thirdLedger = data.ledgerDataThird
+        var ledger = [];
+        var paritcular = "Purchase Settelment"  + data.invoiceNo
+        ledger.push({accountName:firstLedger.accountId,date:data.date,particular:paritcular,refNo:data.voRefNo,voType:"Purchase Settelment",credit:Number(firstLedger.amount),voRefId:id,isUo:true,visible:true,compCode:data.compCode})
+        ledger.push({accountName:secondLedger.accountId,date:data.date,particular:firstLedger.accountId,refNo:data.voRefNo,voType:"Purchase Settelment",debit:Number(secondLedger.amount),voRefId:id,isUo:true,visible:true,compCode:data.compCode})
+        ledger.push({accountName:thirdLedger.accountId,date:data.date,particular:firstLedger.accountId,refNo:data.voRefNo,voType:"Purchase Settelment",debit:Number(thirdLedger.amount),voRefId:id,isUo:true,visible:true,compCode:data.compCode})
+       return ledger;
+    }
+    var savePurchaseSettelment = function(db,settelmentData,id,callback){
+         var collection = db.collection('voucherTransaction');
+         var cursor = collection.insert(settelmentData,function(err, result){
+                assert.equal(err, null);
+                callback(result);
+         });
+      }
+    var updatePurchaseSettelment = function(db,settelmentData,id,callback){
+         var collection = db.collection('voucherTransaction');
+         var cursor = collection.update({_id:id},settelmentData,function(err, result){
+                assert.equal(err, null);
+                callback(result);
+         });
+      }
    });
   server.use(router);
 };
