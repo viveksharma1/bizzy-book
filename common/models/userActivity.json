@@ -1,0 +1,39 @@
+{
+  "name": "userActivity",
+  "base": "PersistedModel",
+  "strict": false,
+  "idInjection": false,
+  "options": {
+    "validateUpsert": true
+  },
+  "properties": {
+    "date": {
+      "type": "date"
+    },
+    "activityType": {
+      "type": "string"
+    },
+    "vochNo": {
+      "type": "string"
+    },
+    "username": {
+      "type": "string"
+    },
+    "validations": {
+      "type": []
+    },
+    "relations": {
+      "type": {}
+    },
+    "acls": {
+      "type": []
+    },
+    "methods": {
+      "type": {}
+    }
+  },
+  "validations": [],
+  "relations": {},
+  "acls": [],
+  "methods": {}
+}
