@@ -1,5 +1,6 @@
 var loopback = require('loopback');
 var boot = require('loopback-boot');
+var es = require('event-stream');
 var app = module.exports = loopback();
 app.start = function()
 {
@@ -15,7 +16,11 @@ app.start = function()
     }
   });
 };
-
+app.use(function(req, res, next) {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+    next();
+});
 boot(app, __dirname, function(err)
 {
   if (err) throw err;

@@ -1816,7 +1816,7 @@ var receipts = data.vo_rosemate.receipts;
         var id = receipts[i].id;
         
           voucherTransaction.count({ type: 'Receipt' }, function (err, instance) {
-            if (instance) {
+            
               //console.log(instance);
               var cVouchNo = instance + 1;
               receipts[i].vochNo = cVouchNo;
@@ -1824,7 +1824,7 @@ var receipts = data.vo_rosemate.receipts;
               console.log(receipts[i] + " creating");
               createReceipt(receipts[i]);
               processReceipts(i + 1);
-            }
+           
           });
         
       } else {//if(callback1) 
@@ -1839,7 +1839,7 @@ var receipts = data.vo_rosemate.receipts;
       if (i < payments.length) {
         
           voucherTransaction.count({ type: 'Payment' }, function (err, instance) {
-            if (instance) {
+           
               console.log(instance);
               var cVouchNo = instance + 1;
               payments[i].vochNo = cVouchNo;
@@ -1849,7 +1849,7 @@ var receipts = data.vo_rosemate.receipts;
               createPayment(payments[i]);
               processPayments(i + 1);
 
-            }
+            
           });
               } else {
         createRosemateEntry();
@@ -1864,7 +1864,7 @@ var receipts = data.vo_rosemate.receipts;
       console.log("Inside Create Rosemate");
       voucherTransaction.count({ type: 'Rosemate' }, function (err, instance) {
         console.log(data);
-        data.vochNo = instance;
+        data.vochNo = instance + 1;
         voucherTransaction.create(data, function (err, instance) {
           if (err) {
             console.log(err);
@@ -1878,66 +1878,6 @@ var receipts = data.vo_rosemate.receipts;
     }
 
 
-
-
-    // function createReceiptEntries(callback1) {
-    //   voucherTransaction.count({ type: 'Receipt' }, function (err, instance) {
-    //     if (instance) {
-    //       console.log(instance);
-    //       var cVouchNo = instance;
-    //       var receipts = data.vo_rosemate.receipts;
-    //       for (var i = 0; i < receipts.length; i++) {
-    //         cVouchNo++;
-    //         receipts[i].vochNo = cVouchNo;
-    //         receipts[i].id = mmongoose.Types.ObjectId();
-    //         console.log(receipts[i]);
-    //         createReceipt(receipts[i]);
-    //       }
-    //       console.log("Calling callback1");
-    //       if (callback1) callback1();
-    //     }
-
-    //   });
-    // }
-    // function createPaymentEntries(callback2) {
-    //   voucherTransaction.count({ type: 'Payment' }, function (err, instance) {
-    //     if (instance) {
-    //       console.log(instance);
-    //       var cVouchNo = instance;
-    //       var payments = data.vo_rosemate.payments;
-    //       for (var i = 0; i < payments.length; i++) {
-    //         cVouchNo++;
-    //         payments[i].vochNo = cVouchNo;
-    //         payments[i].id = mmongoose.Types.ObjectId();
-    //         console.log(payments[i]);
-    //         createPayment(payments[i]);
-    //       }
-    //       console.log("Calling callback2");
-    //       if (callback2) callback2();
-    //     }
-    //   });
-
-    // }
-
-    // createReceiptEntries(createPaymentEntries(function () {
-    //   console.log("Inside Create Rosemate");
-    //   voucherTransaction.count({ type: 'Rosemate' }, function (err, instance) {
-    //     console.log(data);
-    //     data.vochNo = instance;
-    //     voucherTransaction.create(data, function (err, instance) {
-    //       if (err) {
-    //         console.log(err);
-    //       }
-    //       else {
-    //         console.log("Returning Result");
-    //         if (callback) callback();
-    //       }
-    //     });
-    //   });
-    // }));
-    //functionCreateRosemateEntry(){
-
-    //}
   }
   function updateRosemate(data, id, callback) {
     //get all receipts and check if has id
@@ -1960,7 +1900,7 @@ var receipts = data.vo_rosemate.receipts;
         }
         else {
           voucherTransaction.count({ type: 'Receipt' }, function (err, instance) {
-            if (instance) {
+            
               //console.log(instance);
               var cVouchNo = instance + 1;
               receipts[i].vochNo = cVouchNo;
@@ -1968,7 +1908,7 @@ var receipts = data.vo_rosemate.receipts;
               console.log(receipts[i] + " creating");
               createReceipt(receipts[i]);
               processReceipts(i + 1);
-            }
+            
           });
         }
       } else {//if(callback1) 
@@ -1988,7 +1928,7 @@ var receipts = data.vo_rosemate.receipts;
         }
         else {
           voucherTransaction.count({ type: 'Payment' }, function (err, instance) {
-            if (instance) {
+           
               //console.log(instance);
               var cVouchNo = instance + 1;
               payments[i].vochNo = cVouchNo;
@@ -1998,7 +1938,7 @@ var receipts = data.vo_rosemate.receipts;
               createPayment(payments[i]);
               processPayments(i + 1);
 
-            }
+           
           });
         }
       } else {
