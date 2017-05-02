@@ -90,6 +90,12 @@
     "public": true,
     "$promise": {},
     "$resolved": true
+  },
+  "userActivity": {
+    "dataSource": "mongo",
+    "public": true,
+    "$promise": {},
+    "$resolved": true
   }
   
 }
