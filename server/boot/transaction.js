@@ -440,7 +440,7 @@ router.post('/saveBadlaVoucher',function (req, res){
            console.log(ledger);
                      accountEntry(ledger,false,instance.id); 
                    
-         }           
+         }         console.log("updating transacation log");  
                    updateTransactions(data.vo_payment.billDetail,data.date,data.vochNo,vochID,data.role);
                  });
            
@@ -490,7 +490,8 @@ router.post('/saveBadlaVoucher',function (req, res){
                  }
                 
            });  
-        }       
+        }
+        console.log("Transaction log updated");
      
     });       
  }
@@ -1807,6 +1808,7 @@ var getAccount = function(db,accountId,callback){
         console.log(receipts[i]);
               createReceipt(receipts[i]);
              } 
+            console.log("Calling Callback1");
            if(callback1) callback1();  
            }
        
@@ -1814,6 +1816,7 @@ var getAccount = function(db,accountId,callback){
      }
      function createPaymentEntries(callback2){ voucherTransaction.count({type:'Payment'},function (err, instance) { 
           if(instance){
+            console.log("Insisde create payment");
         console.log(instance);
         var cVouchNo=instance;
     var payments=data.vo_rosemate.payments;
@@ -1825,6 +1828,7 @@ var getAccount = function(db,accountId,callback){
         console.log(payments[i]);
               createPayment(payments[i]);
                          }
+            console.log("Calling Callback2");
              if(callback2) callback2(); 
       }
      });
@@ -1918,6 +1922,7 @@ var getAccount = function(db,accountId,callback){
         
     
 function createRosemateEntry(){
+  console.log("Insisde create rosemate");
      voucherTransaction.update({_id:new mongodb.ObjectId(id)}, data, function (err, instance) { 
                if(err){
                 console.log(err);
