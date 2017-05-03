@@ -16,5 +16,5 @@
 .strong-pm
 coverage
 .node_modules
-server/datasources.*.json
+**/server/datasources.json
 npm-debug.log

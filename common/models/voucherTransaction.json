@@ -34,7 +34,13 @@
     "no": {
       "type": "number"
     },
+    "vochNo": {
+      "type": "string"
+    },
     "vo_payment": {
+      "type": "object"
+    },
+    "invoiceData": {
       "type": "object"
     }
   },
