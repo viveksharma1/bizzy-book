@@ -1,0 +1,17 @@
+{
+
+  "mongo": {
+    "host": "ds145245.mlab.com",
+    "port": 45245,
+    "database": "codebyte",
+    "password": "bizzy",
+    "name": "mongo",
+    "connector": "mongodb",
+    "user": "bizzy-book-new"
+  }
+
+
+
+
+ 
+}

@@ -1,0 +1,16 @@
+{
+
+"mongo": {
+    "host": "ds145355.mlab.com",
+    "port": 45355,
+    "database": "vivek",
+    "password": "vikash123",
+    "name": "mongo",
+    "connector": "mongodb",
+    "user": "vikash"
+  }
+
+
+
+ 
+}
