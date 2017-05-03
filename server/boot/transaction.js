@@ -14,7 +14,7 @@ module.exports = function (server) {
   var mmongoose = require('mongoose');
   var colors = require('colors');
   //var cron = require('node-cron');
-
+ 
   "rest Api Starts here"
   router.post('/updateAccount', function (req, res) {
     var id = req.body.id;
@@ -2226,5 +2226,7 @@ var receipts = data.vo_rosemate.receipts;
       });
     }
   });
+
+  
   server.use(router);
 };

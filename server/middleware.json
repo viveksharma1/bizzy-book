@@ -3,10 +3,11 @@
     "loopback#favicon": {}
   },
   "initial": {
+     "./boot/tracker": {},
     "compression": {"enabled":false},
     "cors": {
       "params": {
-        "origin":"http://bizzybook.azurewebsites.net",
+        "origin": true,
         "credentials": true,
         "maxAge": 86400
       }
