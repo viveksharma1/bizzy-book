@@ -1559,7 +1559,7 @@ module.exports = function (server) {
 
       var cursor = collection.aggregate(
         { $match: { compCode, compCode } },
-        { $match: { $or: [{ type: "PURCHASE INVOICE" }, { type: "EXPENSE" }] } },
+        { $match: { $or: [{ type: "Purchase Invoice" }, { type: "EXPENSE" }] } },
         {
           $project:
           {
@@ -2227,6 +2227,6 @@ var receipts = data.vo_rosemate.receipts;
     }
   });
 
-  
+  // vivek 
   server.use(router);
 };
