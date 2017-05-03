@@ -57,6 +57,7 @@ module.exports = function (server) {
             res.send({ "status": "200" });
           }
         })
+        
       }
     });
   });
