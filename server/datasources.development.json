@@ -1,10 +1,6 @@
 {
 
-
-
-
-    "mongo": {
-
+"mongo": {
     "host": "ds145355.mlab.com",
     "port": 45355,
     "database": "vivek",
@@ -13,8 +9,8 @@
     "connector": "mongodb",
     "user": "vikash"
   }
+
+
+
+ 
 }
-
-  
-
-
