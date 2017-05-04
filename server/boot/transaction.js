@@ -14,7 +14,7 @@ module.exports = function (server) {
   var mmongoose = require('mongoose');
   var colors = require('colors');
   //var cron = require('node-cron');
- 
+
   "rest Api Starts here"
   router.post('/updateAccount', function (req, res) {
     var id = req.body.id;
@@ -77,13 +77,15 @@ module.exports = function (server) {
             console.log("ledger removed")
           })
         }
-        Ledgers.create(data, function (err, instance) {
-          if (err) {
-            console.log(err)
-          } else {
-            console.log("ledger updated")
-          }
-        });
+        if (data != null) {
+          Ledgers.create(data, function (err, instance) {
+            if (err) {
+              console.log(err)
+            } else {
+              console.log("ledger updated")
+            }
+          });
+        }
       }
     });
   }
@@ -289,78 +291,165 @@ module.exports = function (server) {
   });
 
 
-  router.post('/saveBadlaVoucher', function (req, res) {
-    var id = req.query.id
-    var data = req.body;
-    console.log(req.body);
-    var data = req.body[0];
-    var dataBadla = req.body[1];
-    if (id != 'null') {
-      var query = { id: id }
-      console.log(id);
-      updatePayment(req.body, id);
-      //res.send({status:'200'});
-      voucherTransaction.update({ _id: new mongodb.ObjectId(id) }, dataBadla, function (err, instance) {
-        if (err)
-          console.log(err);
-        else {
-          var ledger = [];
-          if (dataBadla.role == 'UO') {
-            ledger.push({ accountName: dataBadla.vo_badla.badlaAccountId, compCode: dataBadla.compCode, date: dataBadla.date, particular: dataBadla.vo_badla.partyAccountId, remarks: " badla for Inv No(" + dataBadla.vo_badla.billDetail[0].vochNo + ")", refNo: dataBadla.vochNo, voType: "Badla", credit: Number(dataBadla.amount), voRefId: id, isUo: true, visible: true });
-            accountEntry(ledger, true, id);
-          }
-          else if (dataBadla.role == 'O') {
+  // router.post('/saveBadlaVoucher', function (req, res) {
+  //   var id = req.query.id
+  //   var data = req.body;
+  //   console.log(req.body);
+  //   var data = req.body[0];
+  //   var dataBadla = req.body[1];
+  //   if (id != 'null') {
+  //     var query = { id: id }
+  //     console.log(id);
+  //     updateReceipt(req.body, id);
+  //     //res.send({status:'200'});
+  //     voucherTransaction.update({ _id: new mongodb.ObjectId(id) }, dataBadla, function (err, instance) {
+  //       if (err)
+  //         console.log(err);
+  //       else {
+  //         var ledger = [];
+  //         if (dataBadla.role == 'UO') {
+  //           ledger.push({ accountName: dataBadla.vo_badla.badlaAccountId, compCode: dataBadla.compCode, date: dataBadla.date, particular: dataBadla.vo_badla.partyAccountId, remarks: " badla for Inv No(" + dataBadla.vo_badla.billDetail[0].vochNo + ")", refNo: dataBadla.vochNo, voType: "Badla", credit: Number(dataBadla.amount), voRefId: id, isUo: true, visible: true });
+  //           accountEntry(ledger, true, id);
+  //         }
+  //         else if (dataBadla.role == 'O') {
 
-            ledger.push({ accountName: dataBadla.vo_badla.badlaAccountId, compCode: dataBadla.compCode, date: dataBadla.date, particular: dataBadla.vo_badla.partyAccountId, remarks: " badla for Inv No(" + dataBadla.vo_badla.billDetail[0].vochNo + ")", refNo: dataBadla.vochNo, voType: "Badla", credit: Number(dataBadla.amount), voRefId: id, isUo: false });
-            accountEntry(ledger, false, id);
-          }
-          res.send({ status: '200' });
-        }
-      });
-    }
-    else {
-      createPayment(data);
-      voucherTransaction.create(dataBadla, function (err, instance) {
-        if (err) {
-          console.log(err);
-        } else {
-          var vochID = instance.id
-          var ledger = [];
-          if (dataBadla.role == 'UO') {
-            ledger.push({ accountName: dataBadla.vo_badla.badlaAccountId, compCode: dataBadla.compCode, date: dataBadla.date, particular: dataBadla.vo_badla.partyAccountId, remarks: " badla for Inv No(" + dataBadla.vo_badla.billDetail[0].vochNo + ")", refNo: dataBadla.vochNo, voType: "Badla", credit: Number(dataBadla.amount), voRefId: instance.id, isUo: true, visible: true });
-            console.log(ledger);
-            accountEntry(ledger, true, instance.id);
-          }
-          else if (dataBadla.role == 'O') {
+  //           ledger.push({ accountName: dataBadla.vo_badla.badlaAccountId, compCode: dataBadla.compCode, date: dataBadla.date, particular: dataBadla.vo_badla.partyAccountId, remarks: " badla for Inv No(" + dataBadla.vo_badla.billDetail[0].vochNo + ")", refNo: dataBadla.vochNo, voType: "Badla", credit: Number(dataBadla.amount), voRefId: id, isUo: false });
+  //           accountEntry(ledger, false, id);
+  //         }
+  //         res.send({ status: '200' });
+  //       }
+  //     });
+  //   }
+  //   else {
+  //     createReceipt(data);
+  //     voucherTransaction.create(dataBadla, function (err, instance) {
+  //       if (err) {
+  //         console.log(err);
+  //       } else {
+  //         var vochID = instance.id
+  //         var ledger = [];
+  //         if (dataBadla.role == 'UO') {
+  //           ledger.push({ accountName: dataBadla.vo_badla.badlaAccountId, compCode: dataBadla.compCode, date: dataBadla.date, particular: dataBadla.vo_badla.partyAccountId, remarks: " badla for Inv No(" + dataBadla.vo_badla.billDetail[0].vochNo + ")", refNo: dataBadla.vochNo, voType: "Badla", credit: Number(dataBadla.amount), voRefId: instance.id, isUo: true, visible: true });
+  //           console.log(ledger);
+  //           accountEntry(ledger, true, instance.id);
+  //         }
+  //         else if (dataBadla.role == 'O') {
 
-            ledger.push({ accountName: dataBadla.vo_badla.badlaAccountId, compCode: dataBadla.compCode, date: dataBadla.date, particular: dataBadla.vo_badla.partyAccountId, remarks: " badla for Inv No(" + dataBadla.vo_badla.billDetail[0].vochNo + ")", refNo: dataBadla.vochNo, voType: "Badla", credit: Number(dataBadla.amount), voRefId: instance.id, isUo: false });
-            console.log(ledger);
-            accountEntry(ledger, false, instance.id);
-          }
-          //updateTransactions(data.vo_payment.billDetail,data.date,data.vochNo,vochID,data.role);
-          res.send({ status: '200' });
-        }
-      });
+  //           ledger.push({ accountName: dataBadla.vo_badla.badlaAccountId, compCode: dataBadla.compCode, date: dataBadla.date, particular: dataBadla.vo_badla.partyAccountId, remarks: " badla for Inv No(" + dataBadla.vo_badla.billDetail[0].vochNo + ")", refNo: dataBadla.vochNo, voType: "Badla", credit: Number(dataBadla.amount), voRefId: instance.id, isUo: false });
+  //           console.log(ledger);
+  //           accountEntry(ledger, false, instance.id);
+  //         }
+  //         //updateTransactions(data.vo_payment.billDetail,data.date,data.vochNo,vochID,data.role);
+  //         res.send({ status: '200' });
+  //       }
+  //     });
 
-    }
-  });
+  //   }
+  // });
+  // function removeVoucherTransaction(){
 
-"Receipt"
+  // }
+  "Receipt"
   router.post('/receipt', function (req, res) {
     var id = req.query.id
     var data = req.body;
-    console.log(req.body);
+    console.log(data);
+    var dataBadla;
+    //var isBadla=false;
+    if (data.vo_badla) {
+      //badla payment
+      dataBadla = data.vo_badla;
+      delete data.vo_badla;
+    }
+    //if ( Array.isArray(req.body) && req.body.length>1 ) {
+    console.log(data);
+    console.log(dataBadla);
     if (id != 'null') {
-      var query = { id: id }
-      updateReceipt(req.body, id);
-      res.send({ status: '200' });
+      //var query = { id: id }
+      console.log(id);
+      updateReceipt(data, id, function () {
+        voucherTransaction.remove({ receiptId: new mongodb.ObjectId(id), type: dataBadla.type }, function (err, instance) {
+          if (dataBadla.role == 'UO') {
+            accountEntry(null, true, id);
+          }
+          else if (dataBadla.role == 'O') {
+            accountEntry(null, false, id);
+          }
+        });
+        if (dataBadla) {
+          dataBadla.receiptId =  new mongodb.ObjectId(id);
+          voucherTransaction.create(dataBadla, function (err, instance) {
+            if (err) {
+              console.log(err);
+            } else {
+              var vochID = instance.id
+              var ledger = [];
+              if (dataBadla.role == 'UO') {
+                ledger.push({ accountName: dataBadla.vo_badla.badlaAccountId, compCode: dataBadla.compCode, date: dataBadla.date, particular: dataBadla.vo_badla.partyAccountId, remarks: " badla for Inv No(" + dataBadla.vo_badla.billDetail[0].vochNo + ")", refNo: dataBadla.vochNo, voType: "Badla", credit: Number(dataBadla.amount), voRefId: instance.id, isUo: true, visible: true });
+                console.log(ledger);
+                accountEntry(ledger, true, instance.id);
+              }
+              else if (dataBadla.role == 'O') {
+                ledger.push({ accountName: dataBadla.vo_badla.badlaAccountId, compCode: dataBadla.compCode, date: dataBadla.date, particular: dataBadla.vo_badla.partyAccountId, remarks: " badla for Inv No(" + dataBadla.vo_badla.billDetail[0].vochNo + ")", refNo: dataBadla.vochNo, voType: "Badla", credit: Number(dataBadla.amount), voRefId: instance.id, isUo: false });
+                console.log(ledger);
+                accountEntry(ledger, false, instance.id);
+              }
+              //updateTransactions(data.vo_payment.billDetail,data.date,data.vochNo,vochID,data.role);
+              res.send({ status: '200' });
+            }
+          });
+        } else {
+          res.send({ status: '200' });
+        }
+      });
+
     }
     else {
-      createReceipt(data);
-      res.send({ status: '200' });
+      createReceipt(data, function (dataInstance) {
+        if (dataBadla) {
+          dataBadla.receiptId = dataInstance.id;
+          voucherTransaction.create(dataBadla, function (err, instance) {
+            if (err) {
+              console.log(err);
+            } else {
+              var vochID = instance.id
+              var ledger = [];
+              if (dataBadla.role == 'UO') {
+                ledger.push({ accountName: dataBadla.vo_badla.badlaAccountId, compCode: dataBadla.compCode, date: dataBadla.date, particular: dataBadla.vo_badla.partyAccountId, remarks: " badla for Inv No(" + dataBadla.vo_badla.billDetail[0].vochNo + ")", refNo: dataBadla.vochNo, voType: "Badla", credit: Number(dataBadla.amount), voRefId: instance.id, isUo: true, visible: true });
+                console.log(ledger);
+                accountEntry(ledger, true, instance.id);
+              }
+              else if (dataBadla.role == 'O') {
+
+                ledger.push({ accountName: dataBadla.vo_badla.badlaAccountId, compCode: dataBadla.compCode, date: dataBadla.date, particular: dataBadla.vo_badla.partyAccountId, remarks: " badla for Inv No(" + dataBadla.vo_badla.billDetail[0].vochNo + ")", refNo: dataBadla.vochNo, voType: "Badla", credit: Number(dataBadla.amount), voRefId: instance.id, isUo: false });
+                console.log(ledger);
+                accountEntry(ledger, false, instance.id);
+              }
+              //updateTransactions(data.vo_payment.billDetail,data.date,data.vochNo,vochID,data.role);
+              res.send({ status: '200' });
+            }
+          });
+        } else {
+          res.send({ status: '200' });
+        }
+      });
+
+
     }
+    // }else{
+    //   console.log(req.body);
+    //   if (id != 'null') {
+    //     var query = { id: id }
+    //     updateReceipt(req.body, id);
+    //     res.send({ status: '200' });
+    //   }
+    //   else {
+    //     createReceipt(data);
+    //     res.send({ status: '200' });
+    //   }
+    // }
   });
-  function updateReceipt(data, id) {
+  function updateReceipt(data, id, callback) {
     console.log(id);
     voucherTransaction.update({ _id: new mongodb.ObjectId(id) }, data, function (err, instance) {
       if (err)
@@ -383,11 +472,12 @@ module.exports = function (server) {
           accountEntry(ledger, false, new mongodb.ObjectId(id));
         }
         updatePaymentLog(data.vo_payment.billDetail, data.date, data.vochNo, new mongodb.ObjectId(id), data.role);
+        if (callback) callback(instance);
       }
     });
   }
 
-  function createReceipt(data) {
+  function createReceipt(data, callback) {
     voucherTransaction.create(data, function (err, instance) {
       if (err) {
         console.log(err);
@@ -443,6 +533,8 @@ module.exports = function (server) {
 
       }
       updateTransactions(data.vo_payment.billDetail, data.date, data.vochNo, vochID, data.role);
+      if (callback) callback(instance);
+
     });
 
   }
@@ -471,21 +563,22 @@ module.exports = function (server) {
     voucherTransaction.getDataSource().connector.connect(function (err, db) {
       var collection = db.collection('voucherTransaction');
       for (var i = 0; i < data.length; i++) {
-        if (role == 'UO') {
+        if (role == 'UO' && data[i].type == 'Purchase Invoice') {
           var query1 = { $set: { adminBalance: Number(data[i].balance) } }
           var query2 = { $push: { 'paymentLog': { id: vochID, date: date, vochNo: vochNo, amount: data[i].amountPaid, isUo: true } } }
         }
-        if (role == 'O') {
+        else {
           var query1 = { $set: { balance: Number(data[i].balance) } }
           var query2 = { $push: { 'paymentLog': { id: vochID, date: date, vochNo: vochNo, amount: data[i].amountPaid, isUo: false } } }
 
         }
-        collection.update({ id: vochID }, query1, function (err, instance) {
+        //_id: new mongodb.ObjectId(id)
+        collection.update({ _id: new mongodb.ObjectId(data[i].id) }, query1, function (err, instance) {
           if (instance) {
             console.log(instance.result);
           }
         });
-        collection.update({ id: vochID }, query2, function (err, instance) {
+        collection.update({ _id: new mongodb.ObjectId(data[i].id) }, query2, function (err, instance) {
           if (instance) {
             console.log(instance.result);
           }
@@ -1785,7 +1878,7 @@ module.exports = function (server) {
 
   })
 
-   " rosemate"
+  " rosemate"
 
   router.post('/saveRosemate', function (req, res) {
     var id = req.query.id
@@ -1807,26 +1900,26 @@ module.exports = function (server) {
   });
   function createRosemate(data, callback) {
 
-var receipts = data.vo_rosemate.receipts;
+    var receipts = data.vo_rosemate.receipts;
     var payments = data.vo_rosemate.payments;
     //var newReceipts=
 
     function processReceipts(i) {
       if (i < receipts.length) {
         var id = receipts[i].id;
-        
-          voucherTransaction.count({ type: 'Receipt' }, function (err, instance) {
-            
-              //console.log(instance);
-              var cVouchNo = instance + 1;
-              receipts[i].vochNo = cVouchNo;
-              receipts[i].id = mmongoose.Types.ObjectId();
-              console.log(receipts[i] + " creating");
-              createReceipt(receipts[i]);
-              processReceipts(i + 1);
-           
-          });
-        
+
+        voucherTransaction.count({ type: 'Receipt' }, function (err, instance) {
+
+          //console.log(instance);
+          var cVouchNo = instance + 1;
+          receipts[i].vochNo = cVouchNo;
+          receipts[i].id = mmongoose.Types.ObjectId();
+          console.log(receipts[i] + " creating");
+          createReceipt(receipts[i]);
+          processReceipts(i + 1);
+
+        });
+
       } else {//if(callback1) 
         processPayments(0);
       }
@@ -1837,21 +1930,21 @@ var receipts = data.vo_rosemate.receipts;
 
     function processPayments(i) {
       if (i < payments.length) {
-        
-          voucherTransaction.count({ type: 'Payment' }, function (err, instance) {
-           
-              console.log(instance);
-              var cVouchNo = instance + 1;
-              payments[i].vochNo = cVouchNo;
-              payments[i].id = mmongoose.Types.ObjectId();
-              //console.log(payments[i]);
-              console.log(payments[i] + " creating");
-              createPayment(payments[i]);
-              processPayments(i + 1);
 
-            
-          });
-              } else {
+        voucherTransaction.count({ type: 'Payment' }, function (err, instance) {
+
+          console.log(instance);
+          var cVouchNo = instance + 1;
+          payments[i].vochNo = cVouchNo;
+          payments[i].id = mmongoose.Types.ObjectId();
+          //console.log(payments[i]);
+          console.log(payments[i] + " creating");
+          createPayment(payments[i]);
+          processPayments(i + 1);
+
+
+        });
+      } else {
         createRosemateEntry();
       }
     }
@@ -1900,15 +1993,15 @@ var receipts = data.vo_rosemate.receipts;
         }
         else {
           voucherTransaction.count({ type: 'Receipt' }, function (err, instance) {
-            
-              //console.log(instance);
-              var cVouchNo = instance + 1;
-              receipts[i].vochNo = cVouchNo;
-              receipts[i].id = mmongoose.Types.ObjectId();
-              console.log(receipts[i] + " creating");
-              createReceipt(receipts[i]);
-              processReceipts(i + 1);
-            
+
+            //console.log(instance);
+            var cVouchNo = instance + 1;
+            receipts[i].vochNo = cVouchNo;
+            receipts[i].id = mmongoose.Types.ObjectId();
+            console.log(receipts[i] + " creating");
+            createReceipt(receipts[i]);
+            processReceipts(i + 1);
+
           });
         }
       } else {//if(callback1) 
@@ -1928,17 +2021,17 @@ var receipts = data.vo_rosemate.receipts;
         }
         else {
           voucherTransaction.count({ type: 'Payment' }, function (err, instance) {
-           
-              //console.log(instance);
-              var cVouchNo = instance + 1;
-              payments[i].vochNo = cVouchNo;
-              payments[i].id = mmongoose.Types.ObjectId();
-              //console.log(payments[i]);
-              console.log(payments[i] + " creating");
-              createPayment(payments[i]);
-              processPayments(i + 1);
 
-           
+            //console.log(instance);
+            var cVouchNo = instance + 1;
+            payments[i].vochNo = cVouchNo;
+            payments[i].id = mmongoose.Types.ObjectId();
+            //console.log(payments[i]);
+            console.log(payments[i] + " creating");
+            createPayment(payments[i]);
+            processPayments(i + 1);
+
+
           });
         }
       } else {
@@ -2209,16 +2302,16 @@ var receipts = data.vo_rosemate.receipts;
 
   router.post('/userActivityLog', function (req, res) {
     var data = req.body;
-      voucherTransaction.getDataSource().connector.connect(function (err, db) {
-        createLog(db, data, function (result) {
-          if(result){
-            res.status(200).send(result);
-          }
-        });
+    voucherTransaction.getDataSource().connector.connect(function (err, db) {
+      createLog(db, data, function (result) {
+        if (result) {
+          res.status(200).send(result);
+        }
       });
-      
+    });
 
-     var createLog = function (db, userLog, callback) {
+
+    var createLog = function (db, userLog, callback) {
       var collection = db.collection('userActivity');
       var cursor = collection.insert(userLog, function (err, result) {
         assert.equal(err, null);
@@ -2227,6 +2320,6 @@ var receipts = data.vo_rosemate.receipts;
     }
   });
 
-  // vivek 
+  // change by vivek
   server.use(router);
 };
