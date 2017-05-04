@@ -7242,7 +7242,7 @@ paths:
           description: Request was successful
           schema:
             $ref: '#/definitions/user_login'
-      deprecated: false
+      deprecated: falsey
   /user_logins/findOne:
     get:
       tags:
