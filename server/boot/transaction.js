@@ -2520,15 +2520,19 @@ router.post('/assignCompany', function (req, res) {
   });
 });
 router.get('/getUserCompanies/:id', function (req, res) {
-  var data = req.params.id;
+  var id = req.params.id;
   user.getDataSource().connector.connect(function (err, db) {
   var collection = db.collection('User');
   collection.findOne({_id:mongodb.ObjectId(id)},function(err,instance){
     if(err)
       console.log(err);
     else {
+      var userComp=instance.companies;
+      console.log(userComp);
       var companies=db.collection('CompanyMaster');
-      companies.find({isActive:1,CompanyId:{$in:instance.companies}},function(err,data){
+      var qry={IsActive:1,CompanyId:{$in:userComp}};
+      console.log(qry);
+      companies.find(qry).toArray(function(err,data){
         if(err){
           console.log(err);
         }else{
