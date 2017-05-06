@@ -14,6 +14,8 @@ module.exports = function (server) {
   var assert = require('assert');
   var mmongoose = require('mongoose');
   var colors = require('colors');
+  var test = require('./voucherDelete');
+   //test.getData();
   //var cron = require('node-cron');
 
   "rest Api Starts here"
@@ -231,7 +233,7 @@ module.exports = function (server) {
   "get supplier count "
   router.get('/getSupplierCount/:compCode', function (req, res) {
     var compCode = req.params.compCode
-    Accounts.find({ where: { ancestor: 'SUNDRY CREDITORS' } }, function (err, instance) {
+    Accounts.find({ where: { ancestor: 'SUNDRY CREDITORS', isActive: true } }, function (err, instance) {
       if (instance) {
         var count = instance.length;
         res.send({ count: count });
@@ -242,7 +244,7 @@ module.exports = function (server) {
   "get sundry creditor account"
   router.get('/getSupplierAccount/:compCode', function (req, res) {
     var compCode = req.params.compCode
-    Accounts.find({ where: { ancestor: 'SUNDRY CREDITORS' } }, function (err, instance) {
+    Accounts.find({ where: { ancestor: 'SUNDRY CREDITORS', isActive: true} }, function (err, instance) {
       if (instance) {
         res.send(instance);
       };
@@ -252,7 +254,7 @@ module.exports = function (server) {
   "get sales account"
   router.get('/getSaleAccount/:compCode', function (req, res) {
     var compCode = req.params.compCode
-    Accounts.find({ where: { ancestor: 'SALES ACCOUNTS' } }, function (err, instance) {
+    Accounts.find({ where: { ancestor: 'SALES ACCOUNTS' , isActive: true} }, function (err, instance) {
       if (instance) {
         res.send(instance);
       };
@@ -262,7 +264,7 @@ module.exports = function (server) {
   "get sundry debitor account"
   router.get('/getPartytAccount/:compCode', function (req, res) {
     var compCode = req.params.compCode
-    Accounts.find({ where: { ancestor: 'SUNDRY DEBTORS' } }, function (err, instance) {
+    Accounts.find({ where: { ancestor: 'SUNDRY DEBTORS' , isActive: true} }, function (err, instance) {
       if (instance) {
         res.send(instance);
       };
@@ -273,7 +275,7 @@ module.exports = function (server) {
   "get tax account "
   router.get('/getPaymentAccount/:compCode', function (req, res) {
     var compCode = req.params.compCode
-    Accounts.find({ where: { or: [{ ancestor: 'BANK ACCOUNTS' }, { ancestor: 'CASH-IN-HAND' }] } }, function (err, instance) {
+    Accounts.find({ where: { or: [{ ancestor: 'BANK ACCOUNTS' }, { ancestor: 'CASH-IN-HAND' }], isActive: true } }, function (err, instance) {
       if (instance) {
         res.send(instance);
       };
@@ -283,7 +285,7 @@ module.exports = function (server) {
   "getExpenseAccount"
   router.get('/getExpenseAccount/:compCode', function (req, res) {
     var compCode = req.params.compCode
-    Accounts.find({ where: { or: [{ ancestor: 'DIRECT EXPENSES' }, { ancestor: 'INDIRECT EXPENSES' }] } }, function (err, instance) {
+    Accounts.find({ where: { or: [{ ancestor: 'DIRECT EXPENSES' }, { ancestor: 'INDIRECT EXPENSES' }] , isActive: true} }, function (err, instance) {
       if (instance) {
         res.send(instance);
       };
@@ -1318,54 +1320,54 @@ module.exports = function (server) {
     });
   });
 
-  router.get('/dateWiseAccountDetail/:compCode', function (req, res) {
-    var compCode = req.params.compCode
-    var toDate = new Date(req.query.date);
-    console.log(toDate)
-    console.log(compCode)
-    Ledgers.getDataSource().connector.connect(function (err, db) {
-      var collection = db.collection('ledger');
-      collection.aggregate(
-        {
-          $match: {
-            date: {
-              $lte: toDate
+  // router.get('/dateWiseAccountDetail/:compCode', function (req, res) {
+  //   var compCode = req.params.compCode
+  //   var toDate = new Date(req.query.date);
+  //   console.log(toDate)
+  //   console.log(compCode)
+  //   Ledgers.getDataSource().connector.connect(function (err, db) {
+  //     var collection = db.collection('ledger');
+  //     collection.aggregate(
+  //       {
+  //         $match: {
+  //           date: {
+  //             $lte: toDate
 
-            },
-            compCode: compCode,
-          }
-        },
-        {
-          $group:
-          {
-            _id: { accountName: "$accountName" },
-            credit: { $sum: "$credit" },
-            debit: { $sum: "$debit" }
-          }
-        }
-        , function (err, instance) {
-          var ledgerDatalessThan = instance
-          var ledgerDatagreaterThan = instance
-          console.log(instance);
-          Accounts.find({ where: { isActive: true } }, function (err, instance) {
-            var accountData = instance
-            ledgerData = ledgerDatalessThan
-            if (ledgerDatalessThan.length > 0) {
-              for (var i = 0; i < accountData.length; i++) {
-                for (var j = 0; j < ledgerData.length; j++) {
-                  if (accountData[i].id == ledgerDatalessThan[j]._id.accountName) {
-                    accountData[i].credit = ledgerDatalessThan[j].credit
-                    accountData[i].debit = ledgerDatalessThan[j].debit
-                    //accountData[i].openingBalance = (ledgerDatalessThan[j].credit - ledgerDatalessThan[j].debit)                                         
-                  }
-                }
-              }
-            }
-            res.send(accountData);
-          });
-        });
-    });
-  });
+  //           },
+  //           compCode: compCode,
+  //         }
+  //       },
+  //       {
+  //         $group:
+  //         {
+  //           _id: { accountName: "$accountName" },
+  //           credit: { $sum: "$credit" },
+  //           debit: { $sum: "$debit" }
+  //         }
+  //       }
+  //       , function (err, instance) {
+  //         var ledgerDatalessThan = instance
+  //         var ledgerDatagreaterThan = instance
+  //         console.log(instance);
+  //         Accounts.find({ where: { isActive: true } }, function (err, instance) {
+  //           var accountData = instance
+  //           ledgerData = ledgerDatalessThan
+  //           if (ledgerDatalessThan.length > 0) {
+  //             for (var i = 0; i < accountData.length; i++) {
+  //               for (var j = 0; j < ledgerData.length; j++) {
+  //                 if (accountData[i].id == ledgerDatalessThan[j]._id.accountName) {
+  //                   accountData[i].credit = ledgerDatalessThan[j].credit
+  //                   accountData[i].debit = ledgerDatalessThan[j].debit
+  //                   //accountData[i].openingBalance = (ledgerDatalessThan[j].credit - ledgerDatalessThan[j].debit)                                         
+  //                 }
+  //               }
+  //             }
+  //           }
+  //          reate
+  //         });
+  //       });
+  //   });
+  // });
 
 
 
@@ -1554,13 +1556,11 @@ module.exports = function (server) {
     if (billId != 'null') {
       var query = { _id: new mongodb.ObjectId(billId) }
     }
-    else {
-      query = { no: data.no }
-    }
     voucherTransaction.getDataSource().connector.connect(function (err, db) {
       var collection = db.collection('voucherTransaction');
-      isBillExist(db, function (result) {
-        if (result > 0) {
+      // isBillExist(db, function (result) {
+        if (billId != 'null') {
+        // if (result > 0) {
           updateBill(db, data, function (result) {
             if (result) {
               console.log("Bill Updated", result)
@@ -1622,11 +1622,11 @@ module.exports = function (server) {
                 console.log("checking inventory ...")
                 if (result > 0) {
                   console.log(result);
-                  var inventoryData = createInventoryData(lineItem, true, data.no, billId, result, compCode);
+                  var inventoryData = createInventoryData(lineItem, true, data.no, billId.toHexString(), result, compCode);
                   console.log("inventory data", inventoryData)
                 }
                 else {
-                  var inventoryData = createInventoryData(lineItem, true, data.no, billId, 0, compCode);
+                  var inventoryData = createInventoryData(lineItem, true, data.no, billId.toHexString(), 0, compCode);
                 }
 
                 createInventory(db, inventoryData, function (result) {
@@ -1641,8 +1641,6 @@ module.exports = function (server) {
             }
           });
         }
-
-      });
 
     });
 
@@ -1696,7 +1694,6 @@ module.exports = function (server) {
     var updateInventory = function (db, visible, callback) {
       var collection = db.collection('inventory');
       var cursor = collection.remove({ invId: billId, visible: visible, isActive: true }, function (err, result) {
-        ;
         assert.equal(err, null);
         callback(result);
       });
@@ -1704,12 +1701,12 @@ module.exports = function (server) {
 
   });
   " return Inventory data "
-  function createInventoryData(data, visible, no, billId, count, compCode) {
+  function createInventoryData(data, visible, no, id, count, compCode) {
     for (var i = 0; i < data.length; i++) {
       data[i].isActive = true;
       data[i].visible = visible;
       data[i].no = no;
-      data[i].invId = billId;
+      data[i].invId = id;
       data[i].rgNo = count + i + 1;
       data[i].compCode = compCode;
     }
