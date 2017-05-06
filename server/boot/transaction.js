@@ -1283,32 +1283,25 @@ module.exports = function (server) {
     });
   });
   "get openingBalance of a particular account"
-  router.get('/getOpeningBalnceByAccountName/:compCode', function (req, res) {
-    var compCode = req.params.compCode
+  router.post('/getOpeningBalnceByAccountName/:compCode', function (req, res) {
+    var compCode = req.body
     var accountName = req.query.accountName
     var toDate = new Date(req.query.date);
     console.log(toDate)
     Ledgers.getDataSource().connector.connect(function (err, db) {
       var collection = db.collection('ledger');
+       if(req.query.role == 'UO'){
       collection.aggregate(
-        {
-          $match: {
-            date: {
-              $lte: toDate
-            },
-            compCode: compCode,
-            accountName: accountName
-          }
-        },
-        {
-          $group:
-          {
-            _id: { accountName: "$accountName" },
-            credit: { $sum: "$credit" },
-            debit: { $sum: "$debit" }
-          }
-        }
-        , function (err, instance) {
+       {$match: { date: { $lte: toDate},compCode:{$in:compCode},visible:true}},
+         {
+           $group:
+            {
+              _id: { accountName: "$accountName" },
+               credit: { $sum: "$credit" },
+               debit: { $sum: "$debit" }
+           }
+         },
+         function (err, instance) {
           if (instance.length > 0) {
             var openingBalance = { credit: instance[0].credit, debit: instance[0].debit }
             res.send({ openingBalance: openingBalance });
@@ -1317,6 +1310,29 @@ module.exports = function (server) {
             res.send("no data");
           }
         });
+       }
+       if(req.query.role == 'O'){
+        collection.aggregate(
+        {$match: { date: { $lte: toDate},compCode:{$in:compCode},isUo:false}},
+         {
+           $group:
+            {
+              _id: { accountName: "$accountName" },
+               credit: { $sum: "$credit" },
+               debit: { $sum: "$debit" }
+           }
+         },
+         function (err, instance) {
+          if (instance.length > 0) {
+            var openingBalance = { credit: instance[0].credit, debit: instance[0].debit }
+            res.send({ openingBalance: openingBalance });
+          }
+          else {
+            res.send("no data");
+          }
+        });
+
+       }
     });
   });
 
@@ -1371,20 +1387,23 @@ module.exports = function (server) {
 
 
 
-  router.get('/getOpeningBalnce/:accountName', function (req, res) {
-    var compCode = req.query.compCode
+  router.post('/getOpeningBalnce/:accountName', function (req, res) {
+    var compCode = req.body
     var fromDate = new Date(req.query.date)
     var toDate = new Date(req.query.todate)
     var accountName = req.params.accountName
-    console.log(accountName)
-    var openingBalnce = function (db, callback) {
+    var role = req.query.role
+    console.log(compCode)
+    var openingBalnce = function (db,role,compCode, callback) {
+      if(role == 'UO'){
       var collection = db.collection('ledger');
       var cursor = collection.aggregate([
         {
           $match: {
             date: { $lte: fromDate },
             accountName: accountName,
-            compCode: compCode
+            compCode:{$in:compCode},
+            visible:true
           }
         },
         {
@@ -1401,11 +1420,39 @@ module.exports = function (server) {
         callback(result);
       });
     }
+  
+   if(role == 'O'){
+        var collection = db.collection('ledger');
+      var cursor = collection.aggregate([
+        {
+          $match: {
+            date: { $lte: fromDate },
+            accountName: accountName,
+            compCode:{$in:compCode},
+            isUo:false
+          }
+        },
+        {
+          $group:
+          {
+            _id: { accountName: "$accountName" },
+            credit: { $sum: "$credit" },
+            debit: { $sum: "$debit" }
+          }
+        }
+      ]).toArray(function (err, result) {
+        assert.equal(err, null);
+        console.log(result);
+        callback(result);
+      });
+    }
+   }
+
     var getLedgerData = function (db, callback) {
       var ledger;
       var collection = db.collection('ledger');
-      var cursor = collection.find({ "accountName": accountName, compCode: compCode, date: { $gte: fromDate, $lt: toDate } }).toArray(function (err, result) {
-        ;
+      var cursor = collection.find({ "accountName": accountName, compCode: {$in:compCode}, date: { $gte: fromDate, $lt: toDate } }).toArray(function (err, result) {
+
         assert.equal(err, null);
         console.log(result);
         callback(result);
@@ -1413,7 +1460,7 @@ module.exports = function (server) {
     }
     Ledgers.getDataSource().connector.connect(function (err, db) {
       var collection = db.collection('ledger');
-      openingBalnce(db, function (data) {
+      openingBalnce(db,role,compCode, function (data) {
         var ledgerOpeningBalnce = {};
         if (data.length > 0) {
           ledgerOpeningBalnce = { credit: data[0].credit, debit: data[0].debit }
@@ -2516,6 +2563,8 @@ module.exports = function (server) {
       }
     });
   });
+
+
   router.post('/editCompany', function (req, res) {
     var data = req.body;
     delete data._id;
@@ -2526,6 +2575,7 @@ module.exports = function (server) {
         else {
           console.log("company assigned");
           res.status(200).send(instance);
+
         }
       });
     });
