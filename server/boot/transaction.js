@@ -2517,26 +2517,6 @@ module.exports = function (server) {
       }
     });
   });
-router.get('/getUserCompanies/:id', function (req, res) {
-  var data = req.params.id;
-  user.getDataSource().connector.connect(function (err, db) {
-  var collection = db.collection('User');
-  collection.findOne({_id:mongodb.ObjectId(id)},function(err,instance){
-    if(err)
-      console.log(err);
-    else {
-      var companies=db.collection('CompanyMaster');
-      companies.find({isActive:1,CompanyId:{$in:instance.companies}},function(err,data){
-        if(err){
-          console.log(err);
-        }else{
-          res.status(200).send(data);
-        }
-      });
-    }  
-  });
-  });
-  });
   router.post('/editCompany', function (req, res) {
     var data = req.body;
     delete data._id;
@@ -2575,6 +2555,5 @@ router.get('/getUserCompanies/:id', function (req, res) {
         });
       });
     });
-
     server.use(router);
   };
