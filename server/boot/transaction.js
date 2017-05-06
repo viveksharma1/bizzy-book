@@ -2537,7 +2537,6 @@ router.get('/getUserCompanies/:id', function (req, res) {
   });
   });
   });
-=======
   router.post('/editCompany', function (req, res) {
     var data = req.body;
     delete data._id;
@@ -2576,7 +2575,6 @@ router.get('/getUserCompanies/:id', function (req, res) {
         });
       });
     });
->>>>>>> devel
 
     server.use(router);
   };
