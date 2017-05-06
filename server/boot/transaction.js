@@ -9,6 +9,7 @@ module.exports = function (server) {
   var Accounts = server.models.account;
   var Ledgers = server.models.ledger;
   var groupMaster = server.models.groupMaster;
+  var user = server.models.User;
   var MongoClient = require('mongodb').MongoClient;
   var assert = require('assert');
   var mmongoose = require('mongoose');
@@ -2494,5 +2495,31 @@ voucherTransaction.findOne({where:{receiptId:new mongodb.ObjectID(id),type:"Badl
   });
 
   // change by vivek
+router.post('/assignCompany', function (req, res) {
+  var data = req.body;
+  var role = data.role;
+        user.getDataSource().connector.connect(function (err, db) {
+        var collection = db.collection('User');
+  if (role == 'O') {
+    collection.update({companies:{$ne: data.compCode}},{$push:{companies:data.compCode}},{multi:true},function(err,instance){
+      if(err) console.log(err);
+      else {
+        console.log("company assigned");
+        res.status(200).send(instance);
+      }
+    })
+  }else if (role == 'UO') {
+      collection.update({role:{$ne : 2},companies:{$ne: data.compCode}},{$push:{companies:data.compCode}},{multi:true},function(err,instance){
+      if(err) console.log(err);
+      else {
+        console.log("company assigned");
+        res.status(200).send(instance);
+      }
+    })
+    }
+  });
+});
+
+
   server.use(router);
 };
