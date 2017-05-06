@@ -1553,7 +1553,7 @@ voucherTransaction.findOne({where:{receiptId:new mongodb.ObjectID(id),type:"Badl
     var billId = req.params.billId;
     var query;
     if (billId != 'null') {
-      var query = { _id: new mongodb.ObjectId(billId) }
+      query = { _id: new mongodb.ObjectId(billId) }
     }
     else {
       query = { no: data.no }
@@ -2496,6 +2496,7 @@ voucherTransaction.findOne({where:{receiptId:new mongodb.ObjectID(id),type:"Badl
   });
 
   // change by vivek
+
 router.post('/assignCompany', function (req, res) {
   var data = req.body;
   var role = data.role;
@@ -2520,6 +2521,27 @@ router.post('/assignCompany', function (req, res) {
     }
   });
 });
+
+router.get('/getUserCompanies/:id', function (req, res) {
+  var data = req.params.id;
+  user.getDataSource().connector.connect(function (err, db) {
+  var collection = db.collection('User');
+  collection.findOne({_id:mongodb.ObjectId(id)},function(err,instance){
+    if(err)
+      console.log(err);
+    else {
+      var companies=db.collection('CompanyMaster');
+      companies.find({isActive:1,CompanyId:{$in:instance.companies}},function(err,data){
+        if(err){
+          console.log(err);
+        }else{
+          res.status(200).send(data);
+        }
+      });
+    }  
+  });
+  });
+  
 
 
   server.use(router);
