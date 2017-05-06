@@ -2541,8 +2541,7 @@ router.get('/getUserCompanies/:id', function (req, res) {
     }  
   });
   });
-  
-
+  });
 
   server.use(router);
 };
