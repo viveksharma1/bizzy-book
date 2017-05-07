@@ -188,10 +188,14 @@ router.post('/upload',function (req, res) {
                 return;
             }
             var res1 = result;
-
+                
             UserModel.findOne({ where: { email: req.body.email } }, { fields: { email: true, role: true } }, function (err, data) {
                 if (err) {
                     res.status(401).json({ "error": "wrong pass" });
+                    return;
+                }
+                if(data.status=='0'){
+                    res.json({ message: "User Not Found" });
                     return;
                 }
                 //console.log(data)

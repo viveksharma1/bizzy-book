@@ -353,23 +353,23 @@ module.exports = function (server) {
 
   // }
   "Delete Receipt"
-  router.post('/deleteReceipt',function(req,res){
+  router.post('/deleteReceipt', function (req, res) {
     var id = req.query.id
     var data = req.body;
     //remove any dependent vouchers like 'badla' and there ledgers
-    removeBadlaVoucher(id,data.role)
+    removeBadlaVoucher(id, data.role)
     //remove receipt and ledger.
-    removeVoucherTransaction(id,data.role);
+    removeVoucherTransaction(id, data.role);
     //update balance and payment log.
     updateBalanceAndTransactionLog(new mongodb.ObjectId(id), data.role);
     res.send({ status: '200' });
   });
-    "Delete Payment"
-  router.post('/deletePayment',function(req,res){
+  "Delete Payment"
+  router.post('/deletePayment', function (req, res) {
     var id = req.query.id
     var data = req.body;
     //remove payment and ledger.
-    removeVoucherTransaction(id,data.role);
+    removeVoucherTransaction(id, data.role);
     //update balance and payment log.
     updateBalanceAndTransactionLog(new mongodb.ObjectId(id), data.role);
     res.send({ status: '200' });
@@ -395,10 +395,10 @@ module.exports = function (server) {
       updateReceipt(data, id, function () {
         //find out if any badla voucher exists for receipt then delete badla voucher and ledger
         //and create new badla and ledger if there is badla object in the request.
-        removeBadlaVoucher(id,data.role);
+        removeBadlaVoucher(id, data.role);
         if (dataBadla) {
-          dataBadla.receiptId =  new mongodb.ObjectId(id);
-          createBadlaVoucher(dataBadla,function(){
+          dataBadla.receiptId = new mongodb.ObjectId(id);
+          createBadlaVoucher(dataBadla, function () {
             res.send({ status: '200' });
           });
         } else {
@@ -411,7 +411,7 @@ module.exports = function (server) {
       createReceipt(data, function (dataInstance) {
         if (dataBadla) {
           dataBadla.receiptId = dataInstance.id;
-          createBadlaVoucher(dataBadla,function(){
+          createBadlaVoucher(dataBadla, function () {
             res.send({ status: '200' });
           });
         } else {
@@ -422,66 +422,66 @@ module.exports = function (server) {
 
     }
   });
-  function removeBadlaVoucher(id,role){
-voucherTransaction.findOne({where:{receiptId:new mongodb.ObjectID(id),type:"Badla Voucher"}},function(err,instance){
-          if(err){
-            console.log(err);
-          }else{
-            if(instance){
-              console.log(instance.id)
-                if (role == 'UO') {
-                  accountEntry(null, true, new mongodb.ObjectID(instance.id));
-                }
-                else if (role == 'O') {
-                  accountEntry(null, false, new mongodb.ObjectID(instance.id));
-                }
-                voucherTransaction.remove({receiptId:new mongodb.ObjectID(id),type:"Badla Voucher"},function(err,instance){
-                  if(err) console.log(err);
-                  else console.log(instance);
-                });
-            }
+  function removeBadlaVoucher(id, role) {
+    voucherTransaction.findOne({ where: { receiptId: new mongodb.ObjectID(id), type: "Badla Voucher" } }, function (err, instance) {
+      if (err) {
+        console.log(err);
+      } else {
+        if (instance) {
+          console.log(instance.id)
+          if (role == 'UO') {
+            accountEntry(null, true, new mongodb.ObjectID(instance.id));
           }
-        })
-  }
-  function removeVoucherTransaction(id,role){
-                if (role == 'UO') {
-                  accountEntry(null, true, new mongodb.ObjectID(id));
-                }
-                else if (role == 'O') {
-                  accountEntry(null, false, new mongodb.ObjectID(id));
-                }
-                voucherTransaction.remove({_id:new mongodb.ObjectID(id)},function(err,instance){
-                  if(err) console.log(err);
-                  else console.log(instance);
-                });
-            }
- 
-  function createBadlaVoucher (dataBadla,callback){
-    voucherTransaction.count({ type: dataBadla.type }, function (err, instance) {
-            if(err) console.log(err);
-            else{
-              dataBadla.vochNo=instance+1;
-              voucherTransaction.create(dataBadla, function (err, instance) {
-                if (err) {
-                  console.log(err);
-                } else {
-                  var vochID = instance.id
-                  var ledger = [];
-                  if (dataBadla.role == 'UO') {
-                    ledger.push({ accountName: dataBadla.vo_badla.badlaAccountId, compCode: dataBadla.compCode, date: dataBadla.date, particular: dataBadla.vo_badla.partyAccountId, remarks: " badla for Inv No(" + dataBadla.vo_badla.billDetail[0].vochNo + ")", refNo: dataBadla.vochNo, voType: dataBadla.type, credit: Number(dataBadla.amount), voRefId: instance.id, isUo: true, visible: true });
-                    console.log(ledger);
-                    accountEntry(ledger, true, instance.id);
-                  }
-                  else if (dataBadla.role == 'O') {
-                    ledger.push({ accountName: dataBadla.vo_badla.badlaAccountId, compCode: dataBadla.compCode, date: dataBadla.date, particular: dataBadla.vo_badla.partyAccountId, remarks: " badla for Inv No(" + dataBadla.vo_badla.billDetail[0].vochNo + ")", refNo: dataBadla.vochNo, voType: dataBadla.type, credit: Number(dataBadla.amount), voRefId: instance.id, isUo: false });
-                    console.log(ledger);
-                    accountEntry(ledger, false, instance.id);
-                  }
-                 if(callback) callback();
-                }
-              });
-            }
+          else if (role == 'O') {
+            accountEntry(null, false, new mongodb.ObjectID(instance.id));
+          }
+          voucherTransaction.remove({ receiptId: new mongodb.ObjectID(id), type: "Badla Voucher" }, function (err, instance) {
+            if (err) console.log(err);
+            else console.log(instance);
           });
+        }
+      }
+    })
+  }
+  function removeVoucherTransaction(id, role) {
+    if (role == 'UO') {
+      accountEntry(null, true, new mongodb.ObjectID(id));
+    }
+    else if (role == 'O') {
+      accountEntry(null, false, new mongodb.ObjectID(id));
+    }
+    voucherTransaction.remove({ _id: new mongodb.ObjectID(id) }, function (err, instance) {
+      if (err) console.log(err);
+      else console.log(instance);
+    });
+  }
+
+  function createBadlaVoucher(dataBadla, callback) {
+    voucherTransaction.count({ type: dataBadla.type }, function (err, instance) {
+      if (err) console.log(err);
+      else {
+        dataBadla.vochNo = instance + 1;
+        voucherTransaction.create(dataBadla, function (err, instance) {
+          if (err) {
+            console.log(err);
+          } else {
+            var vochID = instance.id
+            var ledger = [];
+            if (dataBadla.role == 'UO') {
+              ledger.push({ accountName: dataBadla.vo_badla.badlaAccountId, compCode: dataBadla.compCode, date: dataBadla.date, particular: dataBadla.vo_badla.partyAccountId, remarks: " badla for Inv No(" + dataBadla.vo_badla.billDetail[0].vochNo + ")", refNo: dataBadla.vochNo, voType: dataBadla.type, credit: Number(dataBadla.amount), voRefId: instance.id, isUo: true, visible: true });
+              console.log(ledger);
+              accountEntry(ledger, true, instance.id);
+            }
+            else if (dataBadla.role == 'O') {
+              ledger.push({ accountName: dataBadla.vo_badla.badlaAccountId, compCode: dataBadla.compCode, date: dataBadla.date, particular: dataBadla.vo_badla.partyAccountId, remarks: " badla for Inv No(" + dataBadla.vo_badla.billDetail[0].vochNo + ")", refNo: dataBadla.vochNo, voType: dataBadla.type, credit: Number(dataBadla.amount), voRefId: instance.id, isUo: false });
+              console.log(ledger);
+              accountEntry(ledger, false, instance.id);
+            }
+            if (callback) callback();
+          }
+        });
+      }
+    });
   }
 
   function updateReceipt(data, id, callback) {
@@ -494,20 +494,20 @@ voucherTransaction.findOne({where:{receiptId:new mongodb.ObjectID(id),type:"Badl
         var ledger = [];
         if (data.role == 'UO') {
           for (var m = 0; m < data.vo_payment.billDetail.length; m++) {
-          var bill = data.vo_payment.billDetail[m];
-          if (bill.interest) {
-            if (bill.interest > 0) {
-              ledger.push(
-                { accountName: data.vo_payment.partyAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.bankAccountId, refNo: data.vochNo, voType: "Interest Receivable", credit: Math.abs(Number(bill.interest)), voRefId: instance.id, isUo: true, visible: true },
-                { accountName: data.vo_payment.bankAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.partyAccountId, refNo: data.vochNo, voType: "Interest Receivable", debit: Math.abs(Number(bill.interest)), voRefId: instance.id, isUo: true, visible: true });
-            } else if (bill.interest < 0) {
-              ledger.push(
-                { accountName: data.vo_payment.partyAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.bankAccountId, refNo: data.vochNo, voType: "Interest Payable", credit: Math.abs(Number(bill.interest)), voRefId: instance.id, isUo: true, visible: true },
-                { accountName: data.vo_payment.bankAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.partyAccountId, refNo: data.vochNo, voType: "Interest Payable", debit: Math.abs(Number(bill.interest)), voRefId: instance.id, isUo: true, visible: true });
+            var bill = data.vo_payment.billDetail[m];
+            if (bill.interest) {
+              if (bill.interest > 0) {
+                ledger.push(
+                  { accountName: data.vo_payment.partyAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.bankAccountId, refNo: data.vochNo, voType: "Interest Receivable", credit: Math.abs(Number(bill.interest)), voRefId: instance.id, isUo: true, visible: true },
+                  { accountName: data.vo_payment.bankAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.partyAccountId, refNo: data.vochNo, voType: "Interest Receivable", debit: Math.abs(Number(bill.interest)), voRefId: instance.id, isUo: true, visible: true });
+              } else if (bill.interest < 0) {
+                ledger.push(
+                  { accountName: data.vo_payment.partyAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.bankAccountId, refNo: data.vochNo, voType: "Interest Payable", credit: Math.abs(Number(bill.interest)), voRefId: instance.id, isUo: true, visible: true },
+                  { accountName: data.vo_payment.bankAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.partyAccountId, refNo: data.vochNo, voType: "Interest Payable", debit: Math.abs(Number(bill.interest)), voRefId: instance.id, isUo: true, visible: true });
+              }
             }
-          }
 
-        }
+          }
           ledger.push({ accountName: data.vo_payment.partyAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.bankAccountId, refNo: data.vochNo, voType: data.type, credit: Number(data.amount), voRefId: id, isUo: true, visible: true },
             { accountName: data.vo_payment.bankAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.partyAccountId, refNo: data.vochNo, voType: data.type, debit: Number(data.amount), voRefId: id, isUo: true, visible: true }
           )
@@ -515,20 +515,20 @@ voucherTransaction.findOne({where:{receiptId:new mongodb.ObjectID(id),type:"Badl
           accountEntry(ledger, true, id);
         }
         else if (data.role == 'O') {
-        for (var m = 0; m < data.vo_payment.billDetail.length; m++) {
-          var bill = data.vo_payment.billDetail[m];
-          if (bill.interest) {
-            if (bill.interest > 0) {
-              ledger.push(
-                { accountName: data.vo_payment.partyAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.bankAccountId, refNo: data.vochNo, voType: "Interest Receivable", credit: Math.abs(Number(bill.interest)), voRefId: instance.id, isUo: false },
-                { accountName: data.vo_payment.bankAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.partyAccountId, refNo: data.vochNo, voType: "Interest Receivable", debit: Math.abs(Number(bill.interest)), voRefId: instance.id, isUo: false });
-            } else if (bill.interest < 0) {
-              ledger.push(
-                { accountName: data.vo_payment.partyAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.bankAccountId, refNo: data.vochNo, voType: "Interest Payable", credit: Math.abs(Number(bill.interest)), voRefId: instance.id, isUo: false },
-                { accountName: data.vo_payment.bankAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.partyAccountId, refNo: data.vochNo, voType: "Interest Payable", debit: Math.abs(Number(bill.interest)), voRefId: instance.id, isUo: false });
+          for (var m = 0; m < data.vo_payment.billDetail.length; m++) {
+            var bill = data.vo_payment.billDetail[m];
+            if (bill.interest) {
+              if (bill.interest > 0) {
+                ledger.push(
+                  { accountName: data.vo_payment.partyAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.bankAccountId, refNo: data.vochNo, voType: "Interest Receivable", credit: Math.abs(Number(bill.interest)), voRefId: instance.id, isUo: false },
+                  { accountName: data.vo_payment.bankAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.partyAccountId, refNo: data.vochNo, voType: "Interest Receivable", debit: Math.abs(Number(bill.interest)), voRefId: instance.id, isUo: false });
+              } else if (bill.interest < 0) {
+                ledger.push(
+                  { accountName: data.vo_payment.partyAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.bankAccountId, refNo: data.vochNo, voType: "Interest Payable", credit: Math.abs(Number(bill.interest)), voRefId: instance.id, isUo: false },
+                  { accountName: data.vo_payment.bankAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.partyAccountId, refNo: data.vochNo, voType: "Interest Payable", debit: Math.abs(Number(bill.interest)), voRefId: instance.id, isUo: false });
+              }
             }
           }
-        }
           ledger.push({ accountName: data.vo_payment.partyAccountId, date: data.date, compCode: data.compCode, particular: data.vo_payment.bankAccountId, refNo: data.vochNo, voType: "Receipt", credit: Number(data.amount), voRefId: id, isUo: false },
             { accountName: data.vo_payment.bankAccountId, date: data.date, compCode: data.compCode, particular: data.vo_payment.partyAccountId, refNo: data.vochNo, voType: "Receipt", debit: Number(data.amount), voRefId: id, isUo: false }
           )
@@ -537,7 +537,7 @@ voucherTransaction.findOne({where:{receiptId:new mongodb.ObjectID(id),type:"Badl
         }
         updateTransactions(data.vo_payment.billDetail, data.date, data.vochNo, new mongodb.ObjectId(id), data.role);
         if (callback) callback(instance);
-      
+
       }
     });
   }
@@ -615,62 +615,62 @@ voucherTransaction.findOne({where:{receiptId:new mongodb.ObjectID(id),type:"Badl
     });
   }
 
-  function updateBalanceAndTransactionLog(vochID,role,callback){
+  function updateBalanceAndTransactionLog(vochID, role, callback) {
     //voucherTransaction.getDataSource().connector.connect(function (err, db) {
-     // var collection = db.collection('voucherTransaction');
-      console.log(vochID);
-      voucherTransaction.find({where:{"paymentLog.id":new mongodb.ObjectID(vochID) }},{amount:1,balance:1,paymentLog:1}, function (err, instance) {
-            if(err){
-              console.log(err);
-              if(callback) callback();
-            }else{
-              var data=instance;
-              console.log(data);
-              voucherTransaction.getDataSource().connector.connect(function (err, db) {
-                var collection = db.collection('voucherTransaction');
-                for (var i = 0; i < data.length; i++) {
-                  if (role == 'UO' && data[i].type == 'Purchase Invoice') {
-                    var paymentLogAmt=0;
-                    for(var m=0;m<data[i].paymentLog.length;m++){
-                      if(data[i].paymentLog[m].id==vochID)
-                        paymentLogAmt+=Number(data[i].paymentLog[m].amount);
-                    }
-                    var query1 = { $set: { adminBalance: Number(data[i].balance)+paymentLogAmt } }
-                    var query2 = { $pull: { 'paymentLog': { id: vochID} } }
-                  }
-                  else {
-                    var paymentLogAmt=0;
-                    for(var m=0;m<data[i].paymentLog.length;m++){
-                      console.log(data[i].paymentLog[m].id);
-                      console.log(vochID);
-                      if(data[i].paymentLog[m].id.equals(vochID)){
-                        paymentLogAmt+=Number(data[i].paymentLog[m].amount);
-                      }
-                    }
-                    var query1 = { $set: { balance: Number(data[i].balance)+paymentLogAmt } }
-                    var query2 = { $pull: { 'paymentLog': { id: vochID} } }
-
-                  }
-                  //update balance..
-                  //console.log(data[i].id);
-                  
-                  collection.update({ _id: new mongodb.ObjectId(data[i].id) }, query1, function (err, instance) {
-                    if (instance) {
-                      console.log(instance.result);
-                    }
-                  });
-                  //pull paymentlog..
-                  collection.update({ _id: new mongodb.ObjectId(data[i].id) }, query2, function (err, instance) {
-                    if (instance) {
-                      console.log(instance.result);
-                    }
-
-                  });
+    // var collection = db.collection('voucherTransaction');
+    console.log(vochID);
+    voucherTransaction.find({ where: { "paymentLog.id": new mongodb.ObjectID(vochID) } }, { amount: 1, balance: 1, paymentLog: 1 }, function (err, instance) {
+      if (err) {
+        console.log(err);
+        if (callback) callback();
+      } else {
+        var data = instance;
+        console.log(data);
+        voucherTransaction.getDataSource().connector.connect(function (err, db) {
+          var collection = db.collection('voucherTransaction');
+          for (var i = 0; i < data.length; i++) {
+            if (role == 'UO' && data[i].type == 'Purchase Invoice') {
+              var paymentLogAmt = 0;
+              for (var m = 0; m < data[i].paymentLog.length; m++) {
+                if (data[i].paymentLog[m].id == vochID)
+                  paymentLogAmt += Number(data[i].paymentLog[m].amount);
+              }
+              var query1 = { $set: { adminBalance: Number(data[i].balance) + paymentLogAmt } }
+              var query2 = { $pull: { 'paymentLog': { id: vochID } } }
+            }
+            else {
+              var paymentLogAmt = 0;
+              for (var m = 0; m < data[i].paymentLog.length; m++) {
+                console.log(data[i].paymentLog[m].id);
+                console.log(vochID);
+                if (data[i].paymentLog[m].id.equals(vochID)) {
+                  paymentLogAmt += Number(data[i].paymentLog[m].amount);
                 }
-                if(callback) callback();
-              });
+              }
+              var query1 = { $set: { balance: Number(data[i].balance) + paymentLogAmt } }
+              var query2 = { $pull: { 'paymentLog': { id: vochID } } }
+
+            }
+            //update balance..
+            //console.log(data[i].id);
+
+            collection.update({ _id: new mongodb.ObjectId(data[i].id) }, query1, function (err, instance) {
+              if (instance) {
+                console.log(instance.result);
+              }
+            });
+            //pull paymentlog..
+            collection.update({ _id: new mongodb.ObjectId(data[i].id) }, query2, function (err, instance) {
+              if (instance) {
+                console.log(instance.result);
+              }
+
+            });
           }
-      });
+          if (callback) callback();
+        });
+      }
+    });
     //});
   }
 
@@ -680,8 +680,8 @@ voucherTransaction.findOne({where:{receiptId:new mongodb.ObjectID(id),type:"Badl
     voucherTransaction.getDataSource().connector.connect(function (err, db) {
       var collection = db.collection('voucherTransaction');
       for (var i = 0; i < data.length; i++) {
-        if (role == 'UO' ) {
-          if(data[i].type == 'Purchase Invoice')
+        if (role == 'UO') {
+          if (data[i].type == 'Purchase Invoice')
             var query1 = { $set: { adminBalance: Number(data[i].balance) } };
           else
             var query1 = { $set: { balance: Number(data[i].balance) } }
@@ -732,23 +732,23 @@ voucherTransaction.findOne({where:{receiptId:new mongodb.ObjectID(id),type:"Badl
       if (err)
         console.log(err);
       else {
-        updateBalanceAndTransactionLog(new mongodb.ObjectId(id), data.role);  
+        updateBalanceAndTransactionLog(new mongodb.ObjectId(id), data.role);
         var ledger = [];
         if (data.role == 'UO') {
           for (var m = 0; m < data.vo_payment.billDetail.length; m++) {
-          var bill = data.vo_payment.billDetail[m];
-          if (bill.interest) {
-            if (bill.interest > 0) {
-              ledger.push(
-                { accountName: data.vo_payment.partyAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.bankAccountId, refNo: data.vochNo, voType: "Interest Receivable", debit: Math.abs(Number(bill.interest)), voRefId: instance.id, isUo: true, visible: true },
-                { accountName: data.vo_payment.bankAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.partyAccountId, refNo: data.vochNo, voType: "Interest Receivable", credit: Math.abs(Number(bill.interest)), voRefId: instance.id, isUo: true, visible: true });
-            } else if (bill.interest < 0) {
-              ledger.push(
-                { accountName: data.vo_payment.partyAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.bankAccountId, refNo: data.vochNo, voType: "Interest Payable", debit: Math.abs(Number(bill.interest)), voRefId: instance.id, isUo: true, visible: true },
-                { accountName: data.vo_payment.bankAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.partyAccountId, refNo: data.vochNo, voType: "Interest Payable", credit: Math.abs(Number(bill.interest)), voRefId: instance.id, isUo: true, visible: true });
+            var bill = data.vo_payment.billDetail[m];
+            if (bill.interest) {
+              if (bill.interest > 0) {
+                ledger.push(
+                  { accountName: data.vo_payment.partyAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.bankAccountId, refNo: data.vochNo, voType: "Interest Receivable", debit: Math.abs(Number(bill.interest)), voRefId: instance.id, isUo: true, visible: true },
+                  { accountName: data.vo_payment.bankAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.partyAccountId, refNo: data.vochNo, voType: "Interest Receivable", credit: Math.abs(Number(bill.interest)), voRefId: instance.id, isUo: true, visible: true });
+              } else if (bill.interest < 0) {
+                ledger.push(
+                  { accountName: data.vo_payment.partyAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.bankAccountId, refNo: data.vochNo, voType: "Interest Payable", debit: Math.abs(Number(bill.interest)), voRefId: instance.id, isUo: true, visible: true },
+                  { accountName: data.vo_payment.bankAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.partyAccountId, refNo: data.vochNo, voType: "Interest Payable", credit: Math.abs(Number(bill.interest)), voRefId: instance.id, isUo: true, visible: true });
+              }
             }
           }
-        }
           ledger.push({ accountName: data.vo_payment.partyAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.bankAccountId, refNo: data.vochNo, voType: data.type, debit: Number(data.amount), voRefId: id, isUo: true, visible: true },
             { accountName: data.vo_payment.bankAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.partyAccountId, refNo: data.vochNo, voType: data.type, credit: Number(data.amount), voRefId: id, isUo: true, visible: true }
           )
@@ -788,20 +788,20 @@ voucherTransaction.findOne({where:{receiptId:new mongodb.ObjectID(id),type:"Badl
         //res.send(instance);
         var ledger = [];
         if (data.role == 'UO') {
-           for (var m = 0; m < data.vo_payment.billDetail.length; m++) {
-          var bill = data.vo_payment.billDetail[m];
-          if (bill.interest) {
-            if (bill.interest > 0) {
-              ledger.push(
-                { accountName: data.vo_payment.partyAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.bankAccountId, refNo: data.vochNo, voType: "Interest Receivable", debit: Math.abs(Number(bill.interest)), voRefId: instance.id, isUo: true, visible: true },
-                { accountName: data.vo_payment.bankAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.partyAccountId, refNo: data.vochNo, voType: "Interest Receivable", credit: Math.abs(Number(bill.interest)), voRefId: instance.id, isUo: true, visible: true });
-            } else if (bill.interest < 0) {
-              ledger.push(
-                { accountName: data.vo_payment.partyAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.bankAccountId, refNo: data.vochNo, voType: "Interest Payable", debit: Math.abs(Number(bill.interest)), voRefId: instance.id, isUo: true, visible: true },
-                { accountName: data.vo_payment.bankAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.partyAccountId, refNo: data.vochNo, voType: "Interest Payable", credit: Math.abs(Number(bill.interest)), voRefId: instance.id, isUo: true, visible: true });
+          for (var m = 0; m < data.vo_payment.billDetail.length; m++) {
+            var bill = data.vo_payment.billDetail[m];
+            if (bill.interest) {
+              if (bill.interest > 0) {
+                ledger.push(
+                  { accountName: data.vo_payment.partyAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.bankAccountId, refNo: data.vochNo, voType: "Interest Receivable", debit: Math.abs(Number(bill.interest)), voRefId: instance.id, isUo: true, visible: true },
+                  { accountName: data.vo_payment.bankAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.partyAccountId, refNo: data.vochNo, voType: "Interest Receivable", credit: Math.abs(Number(bill.interest)), voRefId: instance.id, isUo: true, visible: true });
+              } else if (bill.interest < 0) {
+                ledger.push(
+                  { accountName: data.vo_payment.partyAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.bankAccountId, refNo: data.vochNo, voType: "Interest Payable", debit: Math.abs(Number(bill.interest)), voRefId: instance.id, isUo: true, visible: true },
+                  { accountName: data.vo_payment.bankAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.partyAccountId, refNo: data.vochNo, voType: "Interest Payable", credit: Math.abs(Number(bill.interest)), voRefId: instance.id, isUo: true, visible: true });
+              }
             }
           }
-        }
           ledger.push({ accountName: data.vo_payment.partyAccountId, date: data.date, particular: data.vo_payment.bankAccountId, refNo: data.vochNo, voType: data.type, debit: Number(data.amount), voRefId: instance.id, isUo: true, visible: true },
             { accountName: data.vo_payment.bankAccountId, date: data.date, particular: data.vo_payment.partyAccountId, refNo: data.vochNo, voType: data.type, credit: Number(data.amount), voRefId: instance.id, isUo: true, visible: true }
           )
@@ -2539,54 +2539,71 @@ voucherTransaction.findOne({where:{receiptId:new mongodb.ObjectID(id),type:"Badl
   });
 
   // change by vivek
-router.post('/assignCompany', function (req, res) {
-  var data = req.body;
-  var role = data.role;
-        user.getDataSource().connector.connect(function (err, db) {
-        var collection = db.collection('User');
-  if (role == 'O') {
-    collection.update({companies:{$ne: data.compCode}},{$push:{companies:data.compCode}},{multi:true},function(err,instance){
-      if(err) console.log(err);
-      else {
-        console.log("company assigned");
-        res.status(200).send(instance);
+  router.post('/assignCompany', function (req, res) {
+    var data = req.body;
+    var role = data.role;
+    user.getDataSource().connector.connect(function (err, db) {
+      var collection = db.collection('User');
+      if (role == 'O') {
+        collection.update({ companies: { $ne: data.compCode } }, { $push: { companies: data.compCode } }, { multi: true }, function (err, instance) {
+          if (err) console.log(err);
+          else {
+            console.log("company assigned");
+            res.status(200).send(instance);
+          }
+        })
+      } else if (role == 'UO') {
+        collection.update({ role: { $ne: 2 }, companies: { $ne: data.compCode } }, { $push: { companies: data.compCode } }, { multi: true }, function (err, instance) {
+          if (err) console.log(err);
+          else {
+            console.log("company assigned");
+            res.status(200).send(instance);
+          }
+        })
       }
-    })
-  }else if (role == 'UO') {
-      collection.update({role:{$ne : 2},companies:{$ne: data.compCode}},{$push:{companies:data.compCode}},{multi:true},function(err,instance){
-      if(err) console.log(err);
-      else {
-        console.log("company assigned");
-        res.status(200).send(instance);
-      }
-    })
-    }
+    });
   });
-});
-router.get('/getUserCompanies/:id', function (req, res) {
-  var id = req.params.id;
-  user.getDataSource().connector.connect(function (err, db) {
-  var collection = db.collection('User');
-  collection.findOne({_id:mongodb.ObjectId(id)},function(err,instance){
-    if(err)
-      console.log(err);
-    else {
-      var userComp=instance.companies;
-      //console.log(userComp);
-      var companies=db.collection('CompanyMaster');
-      var qry={IsActive:1,CompanyId:{$in:userComp}};
-      //console.log(qry);
-      companies.find(qry).toArray(function(err,data){
-        if(err){
-          console.log(err);
-        }else{
-          res.status(200).send(data);
+
+
+  router.post('/editCompany', function (req, res) {
+    var data = req.body;
+    delete data._id;
+    user.getDataSource().connector.connect(function (err, db) {
+      var collection = db.collection('CompanyMaster');
+      collection.update({ CompanyId: data.CompanyId},data, function (err, instance) {
+        if (err) console.log(err);
+        else {
+          console.log("company assigned");
+          res.status(200).send(instance);
+
         }
       });
-    }  
+    });
   });
-});
-});
+    router.get('/getUserCompanies/:id', function (req, res) {
+      var id = req.params.id;
+      user.getDataSource().connector.connect(function (err, db) {
+        var collection = db.collection('User');
+        collection.findOne({ _id: mongodb.ObjectId(id) }, function (err, instance) {
+          if (err)
+            console.log(err);
+          else {
+            var userComp = instance.companies;
+            console.log(userComp);
+            var companies = db.collection('CompanyMaster');
+            var qry = { IsActive: 1, CompanyId: { $in: userComp } };
+            console.log(qry);
+            companies.find(qry).toArray(function (err, data) {
+              if (err) {
+                console.log(err);
+              } else {
+                res.status(200).send(data);
+              }
+            });
+          }
+        });
+      });
+    });
 
-  server.use(router);
-};
+    server.use(router);
+  };
