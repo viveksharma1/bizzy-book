@@ -62,8 +62,9 @@ exports.dateWiseAccountDetail = function (req, res) {
 });
 var getLedger = function (db, callback) {
        var collection = db.collection('ledger');
+       if(req.query.role == 'O'){
        var cursor = collection.aggregate(     
-         {$match: { date: { $lte: toDate},compCode:{$in:compCode},query}},
+         {$match: { date: { $lte: toDate},compCode:{$in:compCode},isUo:false}},
          {
            $group:
             {
@@ -76,6 +77,23 @@ var getLedger = function (db, callback) {
                 callback(result);
       });
      }
+     if(req.query.role == 'UO'){
+         var cursor = collection.aggregate(     
+         {$match: { date: { $lte: toDate},compCode:{$in:compCode},visible:true}},
+         {
+           $group:
+            {
+              _id: { accountName: "$accountName" },
+               credit: { $sum: "$credit" },
+               debit: { $sum: "$debit" }
+           }
+         },  function(err, result) {
+                assert.equal(err, null);
+                callback(result);
+      });
+     }
+ }
+    
        var getAccount = function (db,callback) {
            var collection = db.collection('account');
            var cursor = collection.find({}).toArray(function(err, result) {
