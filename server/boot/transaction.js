@@ -60,6 +60,7 @@ module.exports = function (server) {
             res.send({ "status": "200" });
           }
         })
+        
       }
     });
   });
@@ -1601,7 +1602,7 @@ module.exports = function (server) {
     var billId = req.params.billId;
     var query;
     if (billId != 'null') {
-      var query = { _id: new mongodb.ObjectId(billId) }
+      query = { _id: new mongodb.ObjectId(billId) }
     }
     voucherTransaction.getDataSource().connector.connect(function (err, db) {
       var collection = db.collection('voucherTransaction');
@@ -2604,6 +2605,5 @@ module.exports = function (server) {
         });
       });
     });
-
     server.use(router);
   };
