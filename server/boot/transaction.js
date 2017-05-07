@@ -9,6 +9,7 @@ module.exports = function (server) {
   var Accounts = server.models.account;
   var Ledgers = server.models.ledger;
   var groupMaster = server.models.groupMaster;
+  var user = server.models.User;
   var MongoClient = require('mongodb').MongoClient;
   var assert = require('assert');
   var mmongoose = require('mongoose');
@@ -2491,5 +2492,54 @@ voucherTransaction.findOne({where:{receiptId:new mongodb.ObjectID(id),type:"Badl
   });
 
   // change by vivek
+router.post('/assignCompany', function (req, res) {
+  var data = req.body;
+  var role = data.role;
+        user.getDataSource().connector.connect(function (err, db) {
+        var collection = db.collection('User');
+  if (role == 'O') {
+    collection.update({companies:{$ne: data.compCode}},{$push:{companies:data.compCode}},{multi:true},function(err,instance){
+      if(err) console.log(err);
+      else {
+        console.log("company assigned");
+        res.status(200).send(instance);
+      }
+    })
+  }else if (role == 'UO') {
+      collection.update({role:{$ne : 2},companies:{$ne: data.compCode}},{$push:{companies:data.compCode}},{multi:true},function(err,instance){
+      if(err) console.log(err);
+      else {
+        console.log("company assigned");
+        res.status(200).send(instance);
+      }
+    })
+    }
+  });
+});
+router.get('/getUserCompanies/:id', function (req, res) {
+  var id = req.params.id;
+  user.getDataSource().connector.connect(function (err, db) {
+  var collection = db.collection('User');
+  collection.findOne({_id:mongodb.ObjectId(id)},function(err,instance){
+    if(err)
+      console.log(err);
+    else {
+      var userComp=instance.companies;
+      console.log(userComp);
+      var companies=db.collection('CompanyMaster');
+      var qry={IsActive:1,CompanyId:{$in:userComp}};
+      console.log(qry);
+      companies.find(qry).toArray(function(err,data){
+        if(err){
+          console.log(err);
+        }else{
+          res.status(200).send(data);
+        }
+      });
+    }  
+  });
+});
+});
+
   server.use(router);
 };
