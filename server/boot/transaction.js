@@ -352,6 +352,23 @@ module.exports = function (server) {
   // function removeVoucherTransaction(){
 
   // }
+  "delete sales invoice"
+  router.post('/deleteSalesInvoice', function (req, res) {
+    var id = req.query.id
+    var data = req.body;
+    voucherTransaction.findOne({where:{type:req.type,_id: new mongodb.ObjectID(id)}},{paymentLog:1},function(err,instance){
+      if(err){
+        console.log(err);
+      }
+      else if(instance.paymentLog && instance.paymentLog.length>0){
+        res.send({err:"Receipt exists",status:200});
+      }else{
+        removeVoucherTransaction(id, data.role);
+        res.send({ status: '200' });
+      }
+    })
+    //check if there is any receipt for the invoice if exists return err message "Receipt Voucher exists".
+  });
   "Delete Receipt"
   router.post('/deleteReceipt', function (req, res) {
     var id = req.query.id
