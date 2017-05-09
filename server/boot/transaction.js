@@ -353,6 +353,23 @@ module.exports = function (server) {
   // function removeVoucherTransaction(){
 
   // }
+  "delete sales invoice"
+  router.post('/deleteSalesInvoice', function (req, res) {
+    var id = req.query.id
+    var data = req.body;
+    voucherTransaction.findOne({where:{type:req.type,_id: new mongodb.ObjectID(id)}},{paymentLog:1},function(err,instance){
+      if(err){
+        console.log(err);
+      }
+      else if(instance.paymentLog && instance.paymentLog.length>0){
+        res.send({err:"Receipt exists",status:200});
+      }else{
+        removeVoucherTransaction(id, data.role);
+        res.send({ status: '200' });
+      }
+    })
+    //check if there is any receipt for the invoice if exists return err message "Receipt Voucher exists".
+  });
   "Delete Receipt"
   router.post('/deleteReceipt', function (req, res) {
     var id = req.query.id
@@ -1288,12 +1305,13 @@ module.exports = function (server) {
     var compCode = req.body
     var accountName = req.query.accountName
     var toDate = new Date(req.query.date);
+    var role = req.query.role;
     console.log(toDate)
     Ledgers.getDataSource().connector.connect(function (err, db) {
       var collection = db.collection('ledger');
-       if(req.query.role == 'UO'){
+       if(role == 'UO'){
       collection.aggregate(
-       {$match: { date: { $lte: toDate},compCode:{$in:compCode},visible:true}},
+       {$match: { date: { $lte: toDate},compCode:{$in:compCode},visible:true,accountName:accountName}},
          {
            $group:
             {
@@ -1312,9 +1330,9 @@ module.exports = function (server) {
           }
         });
        }
-       if(req.query.role == 'O'){
+       if(role == 'O'){
         collection.aggregate(
-        {$match: { date: { $lte: toDate},compCode:{$in:compCode},isUo:false}},
+        {$match: { date: { $lte: toDate},compCode:{$in:compCode},isUo:false,accountName:accountName}},
          {
            $group:
             {
@@ -1325,6 +1343,7 @@ module.exports = function (server) {
          },
          function (err, instance) {
           if (instance.length > 0) {
+            console.log("closing balance".green,instance)
             var openingBalance = { credit: instance[0].credit, debit: instance[0].debit }
             res.send({ openingBalance: openingBalance });
           }
@@ -1401,10 +1420,11 @@ module.exports = function (server) {
       var cursor = collection.aggregate([
         {
           $match: {
-            date: { $lte: fromDate },
+            date: { $lt: fromDate },
             accountName: accountName,
             compCode:{$in:compCode},
-            visible:true
+            visible:true,
+            accountName:accountName
           }
         },
         {
@@ -1427,10 +1447,11 @@ module.exports = function (server) {
       var cursor = collection.aggregate([
         {
           $match: {
-            date: { $lte: fromDate },
+            date: { $lt: fromDate },
             accountName: accountName,
             compCode:{$in:compCode},
-            isUo:false
+            isUo:false,
+            accountName:accountName
           }
         },
         {
@@ -1443,35 +1464,43 @@ module.exports = function (server) {
         }
       ]).toArray(function (err, result) {
         assert.equal(err, null);
-        console.log(result);
         callback(result);
       });
     }
    }
 
-    var getLedgerData = function (db, callback) {
-      var ledger;
+    var getLedgerData = function (db,role, callback) {
+       var ledger;
+      if(role == 'UO'){
       var collection = db.collection('ledger');
-      var cursor = collection.find({ "accountName": accountName, compCode: {$in:compCode}, date: { $gte: fromDate, $lt: toDate } }).toArray(function (err, result) {
-
+      var cursor = collection.find({ "accountName": accountName, compCode: {$in:compCode}, date: { $gte: fromDate, $lt: toDate },visible:true }).toArray(function (err, result) {
         assert.equal(err, null);
         console.log(result);
         callback(result);
       });
     }
+    if(role == 'O'){
+      var collection = db.collection('ledger');
+      var cursor = collection.find({ "accountName": accountName, compCode: {$in:compCode}, date: { $gte: fromDate, $lt: toDate },isUo:false }).toArray(function (err, result) {
+        assert.equal(err, null);
+        console.log(result);
+        callback(result);
+      });
+    }
+  }
     Ledgers.getDataSource().connector.connect(function (err, db) {
       var collection = db.collection('ledger');
       openingBalnce(db,role,compCode, function (data) {
         var ledgerOpeningBalnce = {};
         if (data.length > 0) {
+          console.log(data)
           ledgerOpeningBalnce = { credit: data[0].credit, debit: data[0].debit }
+          console.log("opening balance".green,ledgerOpeningBalnce)
         }
         else {
           ledgerOpeningBalnce = '';
         }
-
-        console.log(ledgerOpeningBalnce)
-        getLedgerData(db, function (data) {
+        getLedgerData(db, role, function (data) {
           res.send({ openingBalance: ledgerOpeningBalnce, ledgerData: data })
         });
       });
@@ -1614,17 +1643,20 @@ module.exports = function (server) {
               console.log("Bill Updated", result)
               var lineItem;
               var visible;
+              var isUo;
               if (data.role == 'O') {
                 lineItem = data.transactionData.manualLineItem
                 visible = true;
+                isUo = false
 
               }
               if (data.role == 'UO') {
                 lineItem = data.transactionData.itemDetail
                 visible = false;
+                isUo = true
               }
               var ledger = createLedgerJson(data.transactionData, billId);
-              accountEntry(ledger, false, new mongodb.ObjectId(billId));
+              accountEntry(ledger, isUo, new mongodb.ObjectId(billId));
               updateInventory(db, visible, function (result) {
                 if (result) {
                   console.log("inventory removed")
@@ -1633,14 +1665,14 @@ module.exports = function (server) {
                     if (result > 0) {
                       console.log("inventory Count", result);
                       var inventoryData = createInventoryData(lineItem, visible, data.no, billId, result, compCode);
-                      console.log("inventory data", inventoryData)
+                      //console.log("inventory data", inventoryData)
                     }
                     else {
                       var inventoryData = createInventoryData(lineItem, visible, data.no, billId, 0, compCode);
                     }
                     createInventory(db, inventoryData, function (result) {
                       if (result) {
-                        console.log("inventory created", result)
+                        //console.log("inventory created", result)
                         res.status(200).send(billId);
                       }
                     });
@@ -1767,10 +1799,10 @@ module.exports = function (server) {
       data.transactionData.itemDetail = data1.transactionData.itemDetail
     }
     if (role == 'UO') {
-      data.transactionData.amount = data.data1.amount
-      data.transactionData.balance = data.data1.balance
-      data.transactionData.balance2 = data.data1.balance
-      data.transactionData.manualLineItem = data.data1.manualLineItem
+      data.transactionData.amount = data1.transactionData.amount
+      data.transactionData.balance = data1.transactionData.balance
+      data.transactionData.balance2 = data1.transactionData.balance
+      data.transactionData.manualLineItem = data1.transactionData.manualLineItem
     }
 
     return data;
