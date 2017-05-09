@@ -1,6 +1,7 @@
 module.exports = function (server) {
 
   var mongodb = require('mongodb');
+  var ObjectID = require('mongodb').ObjectID
   var router = server.loopback.Router();
   var master = server.models.master;
   var Inventory = server.models.inventory;
@@ -15,6 +16,7 @@ module.exports = function (server) {
   var mmongoose = require('mongoose');
   var colors = require('colors');
   var test = require('./voucherDelete');
+  var utils = require('./utils');
    //test.getData();
   //var cron = require('node-cron');
 
@@ -1001,6 +1003,67 @@ module.exports = function (server) {
 
 
 
+function validateAvailableQtyOnCreate(data,res,callback){
+      var aggLineItems=data.aggLineItems;
+      var obj_ids = aggLineItems.map(function (item){ return ObjectID(item.id)});
+      console.log(obj_ids);
+      Inventory.getDataSource().connector.connect(function (err, db) {
+              var collection = db.collection('inventory');
+              collection.find({"_id":{"$in":obj_ids},"BALANCE":{$gt:0}}).toArray(function(err,result){
+                console.log(result);
+                if(aggLineItems.length>result.length){
+                    //return error.....
+                    console.log("balance low");
+                    res.send({err:"low balance",status:200});
+                }else{
+                  for(var i=0;i<aggLineItems.length;i++){
+                   var match=  utils.getItembyId(result,aggLineItems[i].id);
+                   if(match){
+                   //var match= getItembyId(aggLineItems[i].id, result);
+                   if(match.BALANCE<aggLineItems[i].sum){
+                     //return err and break for loop
+                     res.send({err:"low balance",status:200});
+                     break;
+                   }
+                   }
+                  }
+                  if(callback) callback();
+                }
+              });
+              
+      });
+    }
+    function validateAvailableQtyOnUpdate(data,res,callback){
+      var aggLineItems=data.aggLineItems;
+      var obj_ids = aggLineItems.map(function (item){ return ObjectID(item.id)});
+      console.log(obj_ids);
+      Inventory.getDataSource().connector.connect(function (err, db) {
+              var collection = db.collection('inventory');
+              collection.find({"_id":{"$in":obj_ids},"BALANCE":{$gt:0}}).toArray(function(err,result){
+                console.log(result);
+                if(aggLineItems.length>result.length){
+                    //return error.....
+                    console.log("balance low");
+                    res.send({err:"low balance",status:200});
+                }else{
+                  for(var i=0;i<aggLineItems.length;i++){
+                   var match=  utils.getItembyId(result,aggLineItems[i].id);
+                   if(match){
+                   //var match= getItembyId(aggLineItems[i].id, result);
+                   if(match.BALANCE<aggLineItems[i].sum){
+                     //return err and break for loop
+                     res.send({err:"low balance",status:200});
+                     break;
+                   }
+                   }
+                  }
+                  if(callback) callback();
+                }
+              });
+              
+      });
+    }
+
   "save voucherTransaction"
   router.post('/saveVoucher', function (req, res) {
     var data = req.body
@@ -1011,9 +1074,7 @@ module.exports = function (server) {
     else {
       query = { vochNo: data.vochNo }
     }
-    voucherTransaction.getDataSource().connector.connect(function (err, db) {
-      var collection = db.collection('transaction');
-      voucherTransaction.count(query, function (err, instance) {
+     voucherTransaction.count(query, function (err, instance) {
         if (err) {
           console.log(err)
         }
@@ -1021,24 +1082,29 @@ module.exports = function (server) {
           count = instance;
           console.log(instance)
           if (count == 0) {
-            createVoucher(data);
+            validateAvailableQtyOnCreate(data,res,function(){
+              createSalesInvoiceVoucher(data,res);
+            });
+            //createVoucher(data);
           }
           else {
-            updateVoucher(data, id);
+            res.send({err:"update failed",status:200});
+            //validateAvailableQtyOnCreate(data);
+            //updateVoucher(data, id);
           }
         }
       });
-    });
+    //});
     "create voucher"
-    function createVoucher(data) {
+    function createSalesInvoiceVoucher(data,res) {
       voucherTransaction.create(data, function (err, instance) {
         if (err) {
-          console.log(err)
+          console.log(err);
         }
         else {
           console.log("voucher created")
           console.log(instance)
-          if (data.role == 'O') {
+          if (data.role == 'O') { //Sales Invoice
             var invData = data.invoiceData.billData;
             var vochNo = data.vochNo
             var date = data.date
@@ -1056,12 +1122,11 @@ module.exports = function (server) {
 
             )
             accountEntry(ledger, false, instance.id);
-            updateInventoryValue(invData, id, date, vochNo);
+            updateInventoryValueOnCreate(invData, id, date, vochNo);
           }
 
           if (data.role == 'UO') {
             var accountData = data.invoiceData.accountlineItem;
-
             var ledger = [];
             if (accountData) {
               for (var i = 0; i < accountData.length; i++) {
@@ -1073,6 +1138,7 @@ module.exports = function (server) {
 
             )
             accountEntry(ledger, true, instance.id);
+            updateInventoryValueOnCreate(invData, id, date, vochNo);
           }
 
           console.log({ "message": "voucher Created", "id": instance.id });
@@ -1081,7 +1147,7 @@ module.exports = function (server) {
 
       });
     }
-
+      
 
 
 
@@ -1151,22 +1217,12 @@ module.exports = function (server) {
   });
 
   "update inventory balance"
-  function updateInventoryValue(data, id, date, vochNo) {
+  function updateInventoryValueOnCreate(data, id, date, vochNo) {
     Inventory.getDataSource().connector.connect(function (err, db) {
       var collection = db.collection('inventory');
       for (var i = 0; i < data.length; i++) {
-        var sum = 0;
-        if (data[i].salesTransaction) {
-          for (var j = 0; j < data[i].salesTransaction.length; j++) {
-            var sum = sum + Number(data[i].salesTransaction[j].saleQty)
-          }
-          var invBalance = sum + Number(data[i].itemQty);
-        }
-        else {
-          var invBalance = data[i].itemQty;
-        }
-        var query = { $push: { 'salesTransaction': { id: id, date: date, vochNo: vochNo, saleQty: data[i].itemQty, isUo: true } } }
-        var query1 = { $set: { "BALANCE": invBalance } }
+        var query = { $push: { 'salesTransaction': { id: id, date: date, vochNo: vochNo, saleQty: data[i].itemQty} } }
+        var query1 = { $inc: { BALANCE: -Number(data[i].itemQty) } };
         collection.update({ _id: new mongodb.ObjectId(data[i].id) }, query1, function (err, instance) {
           if (instance) {
             console.log(instance.result);
