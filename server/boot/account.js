@@ -30,7 +30,9 @@ var isExist = function (db, callback) {
 exports.dateWiseAccountDetail = function (req, res) {
     var compCode = req.body
     console.log(compCode)
+    
     var toDate = new Date(req.query.date);
+    console.log(toDate)
     var role = req.query.role
     if(req.query.role == 'UO'){
         var query =  "visible:" + true
@@ -96,7 +98,7 @@ var getLedger = function (db, callback) {
     
        var getAccount = function (db,callback) {
            var collection = db.collection('account');
-           var cursor = collection.find({}).toArray(function(err, result) {
+           var cursor = collection.find({isActive:true}).toArray(function(err, result) {
                 assert.equal(err, null);
                 callback(result);
            });
