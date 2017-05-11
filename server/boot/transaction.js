@@ -1030,17 +1030,27 @@ function validateAvailableQtyOnCreate(data,res,callback){
                   if(callback) callback();
                 }
               });
-              
+
       });
     }
-    function validateAvailableQtyOnUpdate(data,res,callback){
+    function validateAvailableQtyOnUpdate(data,id,res,callback){
       var aggLineItems=data.aggLineItems;
       var obj_ids = aggLineItems.map(function (item){ return ObjectID(item.id)});
       console.log(obj_ids);
       Inventory.getDataSource().connector.connect(function (err, db) {
               var collection = db.collection('inventory');
-              collection.find({"_id":{"$in":obj_ids},"BALANCE":{$gt:0}}).toArray(function(err,result){
+              collection.find({"_id":{"$in":obj_ids}}).toArray(function(err,result){
                 console.log(result);
+                voucherTransaction.find({ where: { "salesTransaction.id":id } }, { salesTransaction: 1 }, function (err, resultOld) {
+                if (err) {
+                  console.log(err);
+                } else {
+                  for(var m=0;m<result.length;m++){
+                    var match=utils.getItembyId(resultOld,result[m].id);
+                    if(match){
+                      result[m].BALANCE=result[m].BALANCE+match.saleQty;
+                    }
+                  }
                 if(aggLineItems.length>result.length){
                     //return error.....
                     console.log("balance low");
@@ -1059,10 +1069,13 @@ function validateAvailableQtyOnCreate(data,res,callback){
                   }
                   if(callback) callback();
                 }
-              });
-              
+              }
+                });
+                });
+
       });
     }
+    
 
   "save voucherTransaction"
   router.post('/saveVoucher', function (req, res) {
@@ -1089,7 +1102,7 @@ function validateAvailableQtyOnCreate(data,res,callback){
           }
           else {
             res.send({err:"update failed",status:200});
-            //validateAvailableQtyOnCreate(data);
+            validateAvailableQtyOnUpdate(data,id);
             //updateVoucher(data, id);
           }
         }
@@ -1104,14 +1117,13 @@ function validateAvailableQtyOnCreate(data,res,callback){
         else {
           console.log("voucher created")
           console.log(instance)
-          if (data.role == 'O') { //Sales Invoice
+          if (data.role == 'O') { //Sales Invoice can be created by Official
             var invData = data.invoiceData.billData;
             var vochNo = data.vochNo
             var date = data.date
             var id = instance.id
             var accountData = data.invoiceData.accountlineItem;
             var ledger = [];
-
             if (accountData) {
               for (var i = 0; i < accountData.length; i++) {
                 ledger.push({ accountName: accountData[i].accountId, date: data.date, particular: data.invoiceData.ledgerAccountId, refNo: data.vochNo, voType: data.type, credit: Number(accountData[i].amount), voRefId: instance.id, isUo: false })
@@ -1124,22 +1136,22 @@ function validateAvailableQtyOnCreate(data,res,callback){
             accountEntry(ledger, false, instance.id);
             updateInventoryValueOnCreate(invData, id, date, vochNo);
           }
+          //unused in sales invoice voucher.
+          // if (data.role == 'UO') {
+          //   var accountData = data.invoiceData.accountlineItem;
+          //   var ledger = [];
+          //   if (accountData) {
+          //     for (var i = 0; i < accountData.length; i++) {
+          //       ledger.push({ accountName: accountData[i].accountId, date: data.date, particular: data.invoiceData.ledgerAccountId, refNo: data.vochNo, voType: data.type, credit: Number(accountData[i].amount), voRefId: instance.id, isUo: true, visible: true, compCode: data.compCode })
+          //     }
+          //   }
+          //   ledger.push({ accountName: data.invoiceData.ledgerAccountId, date: data.date, particular: data.invoiceData.customerAccountId, refNo: data.vochNo, voType: data.type, credit: Number(data.invoiceData.saleAmount), voRefId: instance.id, isUo: true, visible: true, compCode: data.compCode },
+          //     { accountName: data.invoiceData.customerAccountId, date: data.date, particular: data.invoiceData.ledgerAccountId, refNo: data.vochNo, voType: data.type, debit: Number(data.invoiceData.saleAmount), voRefId: instance.id, isUo: true, visible: true, compCode: data.compCode }
 
-          if (data.role == 'UO') {
-            var accountData = data.invoiceData.accountlineItem;
-            var ledger = [];
-            if (accountData) {
-              for (var i = 0; i < accountData.length; i++) {
-                ledger.push({ accountName: accountData[i].accountId, date: data.date, particular: data.invoiceData.ledgerAccountId, refNo: data.vochNo, voType: data.type, credit: Number(accountData[i].amount), voRefId: instance.id, isUo: true, visible: true, compCode: data.compCode })
-              }
-            }
-            ledger.push({ accountName: data.invoiceData.ledgerAccountId, date: data.date, particular: data.invoiceData.customerAccountId, refNo: data.vochNo, voType: data.type, credit: Number(data.invoiceData.saleAmount), voRefId: instance.id, isUo: true, visible: true, compCode: data.compCode },
-              { accountName: data.invoiceData.customerAccountId, date: data.date, particular: data.invoiceData.ledgerAccountId, refNo: data.vochNo, voType: data.type, debit: Number(data.invoiceData.saleAmount), voRefId: instance.id, isUo: true, visible: true, compCode: data.compCode }
-
-            )
-            accountEntry(ledger, true, instance.id);
-            updateInventoryValueOnCreate(invData, id, date, vochNo);
-          }
+          //   )
+          //   accountEntry(ledger, true, instance.id);
+          //   updateInventoryValueOnCreate(invData, id, date, vochNo);
+          // }
 
           console.log({ "message": "voucher Created", "id": instance.id });
           res.send({ "message": "voucher Created", "id": instance.id });
@@ -1147,7 +1159,7 @@ function validateAvailableQtyOnCreate(data,res,callback){
 
       });
     }
-      
+
 
 
 
@@ -1449,7 +1461,7 @@ function validateAvailableQtyOnCreate(data,res,callback){
   //                 if (accountData[i].id == ledgerDatalessThan[j]._id.accountName) {
   //                   accountData[i].credit = ledgerDatalessThan[j].credit
   //                   accountData[i].debit = ledgerDatalessThan[j].debit
-  //                   //accountData[i].openingBalance = (ledgerDatalessThan[j].credit - ledgerDatalessThan[j].debit)                                         
+  //                   //accountData[i].openingBalance = (ledgerDatalessThan[j].credit - ledgerDatalessThan[j].debit)
   //                 }
   //               }
   //             }
@@ -1496,7 +1508,7 @@ function validateAvailableQtyOnCreate(data,res,callback){
         callback(result);
       });
     }
-  
+
    if(role == 'O'){
         var collection = db.collection('ledger');
       var cursor = collection.aggregate([
@@ -2226,7 +2238,7 @@ function validateAvailableQtyOnCreate(data,res,callback){
 
         });
 
-      } else {//if(callback1) 
+      } else {//if(callback1)
         processPayments(0);
       }
 
@@ -2310,7 +2322,7 @@ function validateAvailableQtyOnCreate(data,res,callback){
 
           });
         }
-      } else {//if(callback1) 
+      } else {//if(callback1)
         processPayments(0);
       }
 
