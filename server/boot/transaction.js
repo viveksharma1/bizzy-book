@@ -17,7 +17,7 @@ module.exports = function (server) {
   var colors = require('colors');
   var test = require('./voucherDelete');
   var utils = require('./utils');
-   //test.getData();
+  //test.getData();
   //var cron = require('node-cron');
 
   "rest Api Starts here"
@@ -79,24 +79,24 @@ module.exports = function (server) {
         count = instance;
         console.log(count)
         if (count > 0) {
-          Ledgers.remove({voRefId: voRefId, isUo: isUo }, function (err, instance) {
+          Ledgers.remove({ voRefId: voRefId, isUo: isUo }, function (err, instance) {
             console.log("ledger removed")
-             Ledgers.create(data, function (err, instance) {
-               if (err) {
+            Ledgers.create(data, function (err, instance) {
+              if (err) {
                 console.log(err)
               } else {
                 console.log("ledger updated")
               }
-          });
+            });
           })
         }
-        else{
-           Ledgers.create(data, function (err, instance) {
-               if (err) {
-                console.log(err)
-              } else {
-                console.log("ledger created")
-              }
+        else {
+          Ledgers.create(data, function (err, instance) {
+            if (err) {
+              console.log(err)
+            } else {
+              console.log("ledger created")
+            }
           });
         }
       }
@@ -254,7 +254,7 @@ module.exports = function (server) {
   "get sundry creditor account"
   router.get('/getSupplierAccount/:compCode', function (req, res) {
     var compCode = req.params.compCode
-    Accounts.find({ where: { ancestor: 'SUNDRY CREDITORS', isActive: true} }, function (err, instance) {
+    Accounts.find({ where: { ancestor: 'SUNDRY CREDITORS', isActive: true } }, function (err, instance) {
       if (instance) {
         res.send(instance);
       };
@@ -264,7 +264,7 @@ module.exports = function (server) {
   "get sales account"
   router.get('/getSaleAccount/:compCode', function (req, res) {
     var compCode = req.params.compCode
-    Accounts.find({ where: { ancestor: 'SALES ACCOUNTS' , isActive: true} }, function (err, instance) {
+    Accounts.find({ where: { ancestor: 'SALES ACCOUNTS', isActive: true } }, function (err, instance) {
       if (instance) {
         res.send(instance);
       };
@@ -274,7 +274,7 @@ module.exports = function (server) {
   "get sundry debitor account"
   router.get('/getPartytAccount/:compCode', function (req, res) {
     var compCode = req.params.compCode
-    Accounts.find({ where: { ancestor: 'SUNDRY DEBTORS' , isActive: true} }, function (err, instance) {
+    Accounts.find({ where: { ancestor: 'SUNDRY DEBTORS', isActive: true } }, function (err, instance) {
       if (instance) {
         res.send(instance);
       };
@@ -295,7 +295,7 @@ module.exports = function (server) {
   "getExpenseAccount"
   router.get('/getExpenseAccount/:compCode', function (req, res) {
     var compCode = req.params.compCode
-    Accounts.find({ where: { or: [{ ancestor: 'DIRECT EXPENSES' }, { ancestor: 'INDIRECT EXPENSES' }] , isActive: true} }, function (err, instance) {
+    Accounts.find({ where: { or: [{ ancestor: 'DIRECT EXPENSES' }, { ancestor: 'INDIRECT EXPENSES' }], isActive: true } }, function (err, instance) {
       if (instance) {
         res.send(instance);
       };
@@ -366,13 +366,13 @@ module.exports = function (server) {
   router.post('/deleteSalesInvoice', function (req, res) {
     var id = req.query.id
     var data = req.body;
-    voucherTransaction.findOne({where:{type:req.type,_id: new mongodb.ObjectID(id)}},{paymentLog:1},function(err,instance){
-      if(err){
+    voucherTransaction.findOne({ where: { type: req.type, _id: new mongodb.ObjectID(id) } }, { paymentLog: 1 }, function (err, instance) {
+      if (err) {
         console.log(err);
       }
-      else if(instance.paymentLog && instance.paymentLog.length>0){
-        res.send({err:"Receipt exists",status:200});
-      }else{
+      else if (instance.paymentLog && instance.paymentLog.length > 0) {
+        res.send({ err: "Receipt exists", status: 200 });
+      } else {
         removeVoucherTransaction(id, data.role);
         res.send({ status: '200' });
       }
@@ -659,8 +659,11 @@ module.exports = function (server) {
             if (role == 'UO' && data[i].type == 'Purchase Invoice') {
               var paymentLogAmt = 0;
               for (var m = 0; m < data[i].paymentLog.length; m++) {
-                if (data[i].paymentLog[m].id == vochID)
+                if (data[i].paymentLog[m].id == vochID) {
                   paymentLogAmt += Number(data[i].paymentLog[m].amount);
+                  //also call break as there is only one paymentLog for one voucherId.
+                }
+
               }
               var query1 = { $set: { adminBalance: Number(data[i].balance) + paymentLogAmt } }
               var query2 = { $pull: { 'paymentLog': { id: vochID } } }
@@ -1011,162 +1014,192 @@ module.exports = function (server) {
 
 
 
-function validateAvailableQtyOnCreate(data,res,callback){
-      var aggLineItems=data.aggLineItems;
-      var obj_ids = aggLineItems.map(function (item){ return ObjectID(item.id)});
-      console.log(obj_ids);
-      Inventory.getDataSource().connector.connect(function (err, db) {
-              var collection = db.collection('inventory');
-              collection.find({"_id":{"$in":obj_ids},"BALANCE":{$gt:0}}).toArray(function(err,result){
-                console.log(result);
-                if(aggLineItems.length>result.length){
-                    //return error.....
-                    console.log("balance low");
-                    res.send({err:"low balance",status:200});
-                }else{
-                  for(var i=0;i<aggLineItems.length;i++){
-                   var match=  utils.getItembyId(result,aggLineItems[i].id);
-                   if(match){
-                   //var match= getItembyId(aggLineItems[i].id, result);
-                   if(match.BALANCE<aggLineItems[i].sum){
-                     //return err and break for loop
-                     res.send({err:"low balance",status:200});
-                     break;
-                   }
-                   }
-                  }
-                  if(callback) callback();
-                }
-              });
-              
+  function validateAvailableQtyOnCreate(data, res, callback) {
+    var aggLineItems = data.aggLineItems;
+    var obj_ids = aggLineItems.map(function (item) { return ObjectID(item.id) });
+    console.log(obj_ids);
+    Inventory.getDataSource().connector.connect(function (err, db) {
+      var collection = db.collection('inventory');
+      collection.find({ "_id": { "$in": obj_ids }, "BALANCE": { $gt: 0 } }).toArray(function (err, result) {
+        console.log(result);
+        if (aggLineItems.length > result.length) {
+          //return error.....
+          console.log("balance low");
+          res.send({ err: "low balance", status: 200 });
+          return;
+        } else {
+          for (var i = 0; i < aggLineItems.length; i++) {
+            var match = utils.getItembyId(result, aggLineItems[i].id);
+            if (match) {
+              //var match= getItembyId(aggLineItems[i].id, result);
+              if (match.BALANCE < aggLineItems[i].sum) {
+                //return err and break for loop
+                res.send({ err: "low balance", status: 200 });
+                return;
+              }
+            }
+          }
+          if (callback) callback();
+        }
       });
-    }
-    function validateAvailableQtyOnUpdate(data,res,callback){
-      var aggLineItems=data.aggLineItems;
-      var obj_ids = aggLineItems.map(function (item){ return ObjectID(item.id)});
-      console.log(obj_ids);
-      Inventory.getDataSource().connector.connect(function (err, db) {
-              var collection = db.collection('inventory');
-              collection.find({"_id":{"$in":obj_ids},"BALANCE":{$gt:0}}).toArray(function(err,result){
-                console.log(result);
-                if(aggLineItems.length>result.length){
-                    //return error.....
-                    console.log("balance low");
-                    res.send({err:"low balance",status:200});
-                }else{
-                  for(var i=0;i<aggLineItems.length;i++){
-                   var match=  utils.getItembyId(result,aggLineItems[i].id);
-                   if(match){
-                   //var match= getItembyId(aggLineItems[i].id, result);
-                   if(match.BALANCE<aggLineItems[i].sum){
-                     //return err and break for loop
-                     res.send({err:"low balance",status:200});
-                     break;
-                   }
-                   }
+
+    });
+  }
+  function validateAvailableQtyOnUpdate(data, id, res, callback) {
+    var aggLineItems = data.aggLineItems;
+    var obj_ids = aggLineItems.map(function (item) { return ObjectID(item.id) });
+    console.log(obj_ids);
+    Inventory.getDataSource().connector.connect(function (err, db) {
+      var collection = db.collection('inventory');
+      collection.find({ "_id": { "$in": obj_ids } }).toArray(function (err, result) {
+        console.log(result);
+        voucherTransaction.findOne({ "where": { "_id": ObjectID(id) } }, { invoiceData: 1 }, function (err, resultOld) {
+          if (err) {
+            console.log(err);
+          } else {
+            var oldbillData = resultOld.invoiceData.billData;
+            for (var m = 0; m < result.length; m++) {
+              var match = utils.getItembyId2(oldbillData, result[m]._id);
+              if (match) {
+                result[m].BALANCE = result[m].BALANCE + Number(match.itemQty);
+              }
+            }
+            if (aggLineItems.length > result.length) {
+              //return error.....
+              console.log("balance low");
+              res.send({ err: "low balance", status: 200 });
+              return;
+            } else {
+              for (var i = 0; i < aggLineItems.length; i++) {
+                var match = utils.getItembyId(result, aggLineItems[i].id);
+                if (match) {
+                  //var match= getItembyId(aggLineItems[i].id, result);
+                  if (match.BALANCE < aggLineItems[i].sum) {
+                    //return err and break for loop
+                    res.send({ err: "low balance", status: 200 });
+                    break;
                   }
-                  if(callback) callback();
                 }
-              });
-              
+              }
+
+            }
+            //if (res.headersSent) return;
+            if (callback) callback(oldbillData);
+          }
+        });
       });
-    }
+
+    });
+  }
+
 
   "save voucherTransaction"
-  router.post('/saveVoucher', function (req, res) {
+  router.post('/salesInvoiceVoucher', function (req, res) {
     var data = req.body
-    var id = req.query.id
+    var id = req.query.id;
+    // if (id) {
+    //   var query = {type:data.type, id: "6913f4be1402843c38fceb1e" }
+    // }
+    // else {
+    //   query = { type:data.type,vochNo: data.vochNo }
+    // }
+    if (id == null) {
+        validateAvailableQtyOnCreate(data, res, function () {
+        createSalesInvoiceVoucher(data, res);
+      });
+    } else {
+      voucherTransaction.findOne({ "where": { type: data.type, id: id } }, function (err, instance, count) {
+        if (err) {
+          console.log(err)
+        }
+        else {
+          //count = instance;
+          console.log(instance)
+          if (instance) {
+            //res.send({ err: "update failed", status: 200 });
+            //also check is there any receipt against this invoice then send err message invoice has some receipts.
+            if (instance.paymentLog && instance.paymentLog.length > 0) {
+              res.send({ err: "Receipt exists", status: 200 });
+              return;
+            } else {
+              validateAvailableQtyOnUpdate(data, id, res, function (result) {
+                updateSalesInvoiceVoucher(data, id, result, res);
+              });
+              //updateVoucher(data, id);
+            }
+          }
+        }
+      });
+    }
+  });
+  //});
+  "create voucher"
+  function createSalesInvoiceVoucher(data, res) {
+    delete data.aggLineItems;
+    voucherTransaction.create(data, function (err, instance) {
+      if (err) {
+        console.log(err);
+      }
+      else {
+        console.log("voucher created")
+        console.log(instance)
+        if (data.role == 'O') { //Sales Invoice can be created by Official
+          var invData = data.invoiceData.billData;
+          var vochNo = data.vochNo
+          var date = data.date
+          var id = instance.id
+          var accountData = data.invoiceData.accountlineItem;
+          var ledger = [];
+          if (accountData) {
+            for (var i = 0; i < accountData.length; i++) {
+              ledger.push({ accountName: accountData[i].accountId, date: data.date, particular: data.invoiceData.ledgerAccountId, refNo: data.vochNo, voType: data.type, credit: Number(accountData[i].amount), voRefId: instance.id, isUo: false })
+            }
+          }
+          ledger.push({ accountName: data.invoiceData.ledgerAccountId, date: data.date, particular: data.invoiceData.customerAccountId, refNo: data.vochNo, voType: data.type, credit: Number(data.invoiceData.saleAmount), voRefId: instance.id, isUo: false, visible: false, compCode: data.compCode },
+            { accountName: data.invoiceData.customerAccountId, date: data.date, particular: data.invoiceData.ledgerAccountId, refNo: data.vochNo, voType: data.type, debit: Number(data.invoiceData.saleAmount), voRefId: instance.id, isUo: false, visible: false, compCode: data.compCode }
+
+          )
+          accountEntry(ledger, false, instance.id);
+          updateInventoryValueOnCreate(invData, id, date, vochNo);
+        }
+        //unused in sales invoice voucher.
+        // if (data.role == 'UO') {
+        //   var accountData = data.invoiceData.accountlineItem;
+        //   var ledger = [];
+        //   if (accountData) {
+        //     for (var i = 0; i < accountData.length; i++) {
+        //       ledger.push({ accountName: accountData[i].accountId, date: data.date, particular: data.invoiceData.ledgerAccountId, refNo: data.vochNo, voType: data.type, credit: Number(accountData[i].amount), voRefId: instance.id, isUo: true, visible: true, compCode: data.compCode })
+        //     }
+        //   }
+        //   ledger.push({ accountName: data.invoiceData.ledgerAccountId, date: data.date, particular: data.invoiceData.customerAccountId, refNo: data.vochNo, voType: data.type, credit: Number(data.invoiceData.saleAmount), voRefId: instance.id, isUo: true, visible: true, compCode: data.compCode },
+        //     { accountName: data.invoiceData.customerAccountId, date: data.date, particular: data.invoiceData.ledgerAccountId, refNo: data.vochNo, voType: data.type, debit: Number(data.invoiceData.saleAmount), voRefId: instance.id, isUo: true, visible: true, compCode: data.compCode }
+
+        //   )
+        //   accountEntry(ledger, true, instance.id);
+        //   updateInventoryValueOnCreate(invData, id, date, vochNo);
+        // }
+
+        console.log({ "message": "voucher Created", "id": instance.id });
+        res.send({ "message": "voucher Created", "id": instance.id });
+      }
+
+    });
+  }
+
+
+
+
+  "update voucherTransaction"
+  function updateSalesInvoiceVoucher(data, id, dataOld, res) {
     if (id) {
       var query = { id: id }
     }
     else {
       query = { vochNo: data.vochNo }
     }
-     voucherTransaction.count(query, function (err, instance) {
-        if (err) {
-          console.log(err)
-        }
-        else {
-          count = instance;
-          console.log(instance)
-          if (count == 0) {
-            validateAvailableQtyOnCreate(data,res,function(){
-              createSalesInvoiceVoucher(data,res);
-            });
-            //createVoucher(data);
-          }
-          else {
-            res.send({err:"update failed",status:200});
-            //validateAvailableQtyOnCreate(data);
-            //updateVoucher(data, id);
-          }
-        }
-      });
-    //});
-    "create voucher"
-    function createSalesInvoiceVoucher(data,res) {
-      voucherTransaction.create(data, function (err, instance) {
-        if (err) {
-          console.log(err);
-        }
-        else {
-          console.log("voucher created")
-          console.log(instance)
-          if (data.role == 'O') { //Sales Invoice
-            var invData = data.invoiceData.billData;
-            var vochNo = data.vochNo
-            var date = data.date
-            var id = instance.id
-            var accountData = data.invoiceData.accountlineItem;
-            var ledger = [];
-
-            if (accountData) {
-              for (var i = 0; i < accountData.length; i++) {
-                ledger.push({ accountName: accountData[i].accountId, date: data.date, particular: data.invoiceData.ledgerAccountId, refNo: data.vochNo, voType: data.type, credit: Number(accountData[i].amount), voRefId: instance.id, isUo: false })
-              }
-            }
-            ledger.push({ accountName: data.invoiceData.ledgerAccountId, date: data.date, particular: data.invoiceData.customerAccountId, refNo: data.vochNo, voType: data.type, credit: Number(data.invoiceData.saleAmount), voRefId: instance.id, isUo: false, visible: false, compCode: data.compCode },
-              { accountName: data.invoiceData.customerAccountId, date: data.date, particular: data.invoiceData.ledgerAccountId, refNo: data.vochNo, voType: data.type, debit: Number(data.invoiceData.saleAmount), voRefId: instance.id, isUo: false, visible: false, compCode: data.compCode }
-
-            )
-            accountEntry(ledger, false, instance.id);
-            updateInventoryValueOnCreate(invData, id, date, vochNo);
-          }
-
-          if (data.role == 'UO') {
-            var accountData = data.invoiceData.accountlineItem;
-            var ledger = [];
-            if (accountData) {
-              for (var i = 0; i < accountData.length; i++) {
-                ledger.push({ accountName: accountData[i].accountId, date: data.date, particular: data.invoiceData.ledgerAccountId, refNo: data.vochNo, voType: data.type, credit: Number(accountData[i].amount), voRefId: instance.id, isUo: true, visible: true, compCode: data.compCode })
-              }
-            }
-            ledger.push({ accountName: data.invoiceData.ledgerAccountId, date: data.date, particular: data.invoiceData.customerAccountId, refNo: data.vochNo, voType: data.type, credit: Number(data.invoiceData.saleAmount), voRefId: instance.id, isUo: true, visible: true, compCode: data.compCode },
-              { accountName: data.invoiceData.customerAccountId, date: data.date, particular: data.invoiceData.ledgerAccountId, refNo: data.vochNo, voType: data.type, debit: Number(data.invoiceData.saleAmount), voRefId: instance.id, isUo: true, visible: true, compCode: data.compCode }
-
-            )
-            accountEntry(ledger, true, instance.id);
-            updateInventoryValueOnCreate(invData, id, date, vochNo);
-          }
-
-          console.log({ "message": "voucher Created", "id": instance.id });
-          res.send({ "message": "voucher Created", "id": instance.id });
-        }
-
-      });
-    }
-      
-
-
-
-    "update voucherTransaction"
-    function updateVoucher(data, id) {
-      if (id) {
-        var query = { id: id }
-      }
-      else {
-        query = { vochNo: data.vochNo }
-      }
+    //update inventory and balance and pull transactionLog.....
+    reversingSalesTransactionLogOfCreate(ObjectID(id), dataOld, function () {
+      delete data.aggLineItems;
       voucherTransaction.update(query, data, function (err, instance) {
         if (err) {
           console.log(err)
@@ -1174,12 +1207,9 @@ function validateAvailableQtyOnCreate(data,res,callback){
         else {
           console.log(instance);
           if (data.role == 'O') {
-
             var invDataSales = data.invoiceData.billData;
             var vochNo = data.vochNo
             var date = data.date
-
-
             var accountData = data.invoiceData.accountlineItem;
             var accountData = data.invoiceData.accountlineItem;
             var objectId = new mongodb.ObjectId(id)
@@ -1195,41 +1225,68 @@ function validateAvailableQtyOnCreate(data,res,callback){
             )
             console.log(ledger);
             accountEntry(ledger, false, objectId);
-            updateInventorySales(invDataSales, id, date, vochNo);
+            updateInventoryValueOnCreate(invDataSales, ObjectID(id), date, vochNo);
 
           }
-          if (data.role == 'UO') {
-            var invDataSales = data.invoiceData.billData;
-            var vochNo = data.vochNo
-            var date = data.date
-            var accountData = data.invoiceData.accountlineItem;
-            var objectId = new mongodb.ObjectId(id)
-            var ledger = [];
-            if (accountData) {
-              for (var i = 0; i < accountData.length; i++) {
-                ledger.push({ accountName: accountData[i].accountId, date: data.date, particular: data.invoiceData.ledgerAccountId, refNo: data.vochNo, voType: data.type, debit: Number(accountData[i].amount), voRefId: objectId, isUo: true, visible: true, compCode: data.compCode })
-              }
-            }
-            ledger.push({ accountName: data.invoiceData.ledgerAccountId, date: data.date, particular: data.invoiceData.customerAccountId, refNo: data.vochNo, voType: data.type, credit: Number(data.invoiceData.saleAmount), voRefId: objectId, isUo: true, visible: true, compCode: data.compCode },
-              { accountName: data.invoiceData.customerAccountId, date: data.date, particular: data.invoiceData.ledgerAccountId, refNo: data.vochNo, voType: data.type, debit: Number(data.invoiceData.saleAmount), voRefId: objectId, isUo: true, visible: true, compCode: data.compCode }
+          // if (data.role == 'UO') {
+          //   var invDataSales = data.invoiceData.billData;
+          //   var vochNo = data.vochNo
+          //   var date = data.date
+          //   var accountData = data.invoiceData.accountlineItem;
+          //   var objectId = new mongodb.ObjectId(id)
+          //   var ledger = [];
+          //   if (accountData) {
+          //     for (var i = 0; i < accountData.length; i++) {
+          //       ledger.push({ accountName: accountData[i].accountId, date: data.date, particular: data.invoiceData.ledgerAccountId, refNo: data.vochNo, voType: data.type, debit: Number(accountData[i].amount), voRefId: objectId, isUo: true, visible: true, compCode: data.compCode })
+          //     }
+          //   }
+          //   ledger.push({ accountName: data.invoiceData.ledgerAccountId, date: data.date, particular: data.invoiceData.customerAccountId, refNo: data.vochNo, voType: data.type, credit: Number(data.invoiceData.saleAmount), voRefId: objectId, isUo: true, visible: true, compCode: data.compCode },
+          //     { accountName: data.invoiceData.customerAccountId, date: data.date, particular: data.invoiceData.ledgerAccountId, refNo: data.vochNo, voType: data.type, debit: Number(data.invoiceData.saleAmount), voRefId: objectId, isUo: true, visible: true, compCode: data.compCode }
 
-            )
-            accountEntry(ledger, true, objectId);
-            updateInventorySales(invDataSales, id, date, vochNo);
-          }
+          //   )
+          //   accountEntry(ledger, true, objectId);
+          //   updateInventorySales(invDataSales, id, date, vochNo);
+          // }
           console.log({ "message": "voucher Updated", "id": id });
+          //if (res.headersSent) return;
           res.send({ "message": "voucher Updated", "id": id });
         }
       });
-    }
-  });
+    });
+
+  }
+  //});
+
+  "update inventory balance"
+  function reversingSalesTransactionLogOfCreate(vochID, dataOld, callback) {
+    console.log(vochID);
+    Inventory.getDataSource().connector.connect(function (err, db) {
+      var collection = db.collection('inventory');
+      for (var i = 0; i < dataOld.length; i++) {
+        var query = { $pull: { 'salesTransaction': { id: vochID } } }
+        var query1 = { $inc: { BALANCE: Number(dataOld[i].itemQty) } };
+        collection.update({ _id: new mongodb.ObjectId(dataOld[i].id) }, query1, function (err, instance) {
+          if (instance) {
+            console.log(instance.result);
+          }
+        });
+        collection.update({ _id: new mongodb.ObjectId(dataOld[i].id) }, query, function (err, instance) {
+          if (instance) {
+            console.log(instance.result);
+          }
+        });
+      }
+      if (callback) callback();
+    });
+  }
+
 
   "update inventory balance"
   function updateInventoryValueOnCreate(data, id, date, vochNo) {
     Inventory.getDataSource().connector.connect(function (err, db) {
       var collection = db.collection('inventory');
       for (var i = 0; i < data.length; i++) {
-        var query = { $push: { 'salesTransaction': { id: id, date: date, vochNo: vochNo, saleQty: data[i].itemQty} } }
+        var query = { $push: { 'salesTransaction': { id: id, date: date, vochNo: vochNo, saleQty: data[i].itemQty } } }
         var query1 = { $inc: { BALANCE: -Number(data[i].itemQty) } };
         collection.update({ _id: new mongodb.ObjectId(data[i].id) }, query1, function (err, instance) {
           if (instance) {
@@ -1372,50 +1429,50 @@ function validateAvailableQtyOnCreate(data,res,callback){
     console.log(toDate)
     Ledgers.getDataSource().connector.connect(function (err, db) {
       var collection = db.collection('ledger');
-       if(role == 'UO'){
-      collection.aggregate(
-       {$match: { date: { $lte: toDate},compCode:{$in:compCode},visible:true,accountName:accountName}},
-         {
-           $group:
-            {
-              _id: { accountName: "$accountName" },
-               credit: { $sum: "$credit" },
-               debit: { $sum: "$debit" }
-           }
-         },
-         function (err, instance) {
-          if (instance.length > 0) {
-            var openingBalance = { credit: instance[0].credit, debit: instance[0].debit }
-            res.send({ openingBalance: openingBalance });
-          }
-          else {
-            res.send("no data");
-          }
-        });
-       }
-       if(role == 'O'){
+      if (role == 'UO') {
         collection.aggregate(
-        {$match: { date: { $lte: toDate},compCode:{$in:compCode},isUo:false,accountName:accountName}},
-         {
-           $group:
+          { $match: { date: { $lte: toDate }, compCode: { $in: compCode }, visible: true, accountName: accountName } },
+          {
+            $group:
             {
               _id: { accountName: "$accountName" },
-               credit: { $sum: "$credit" },
-               debit: { $sum: "$debit" }
-           }
-         },
-         function (err, instance) {
-          if (instance.length > 0) {
-            console.log("closing balance".green,instance)
-            var openingBalance = { credit: instance[0].credit, debit: instance[0].debit }
-            res.send({ openingBalance: openingBalance });
-          }
-          else {
-            res.send("no data");
-          }
-        });
+              credit: { $sum: "$credit" },
+              debit: { $sum: "$debit" }
+            }
+          },
+          function (err, instance) {
+            if (instance.length > 0) {
+              var openingBalance = { credit: instance[0].credit, debit: instance[0].debit }
+              res.send({ openingBalance: openingBalance });
+            }
+            else {
+              res.send("no data");
+            }
+          });
+      }
+      if (role == 'O') {
+        collection.aggregate(
+          { $match: { date: { $lte: toDate }, compCode: { $in: compCode }, isUo: false, accountName: accountName } },
+          {
+            $group:
+            {
+              _id: { accountName: "$accountName" },
+              credit: { $sum: "$credit" },
+              debit: { $sum: "$debit" }
+            }
+          },
+          function (err, instance) {
+            if (instance.length > 0) {
+              console.log("closing balance".green, instance)
+              var openingBalance = { credit: instance[0].credit, debit: instance[0].debit }
+              res.send({ openingBalance: openingBalance });
+            }
+            else {
+              res.send("no data");
+            }
+          });
 
-       }
+      }
     });
   });
 
@@ -1457,7 +1514,7 @@ function validateAvailableQtyOnCreate(data,res,callback){
   //                 if (accountData[i].id == ledgerDatalessThan[j]._id.accountName) {
   //                   accountData[i].credit = ledgerDatalessThan[j].credit
   //                   accountData[i].debit = ledgerDatalessThan[j].debit
-  //                   //accountData[i].openingBalance = (ledgerDatalessThan[j].credit - ledgerDatalessThan[j].debit)                                         
+  //                   //accountData[i].openingBalance = (ledgerDatalessThan[j].credit - ledgerDatalessThan[j].debit)
   //                 }
   //               }
   //             }
@@ -1477,88 +1534,88 @@ function validateAvailableQtyOnCreate(data,res,callback){
     var accountName = req.params.accountName
     var role = req.query.role
     console.log(compCode)
-    var openingBalnce = function (db,role,compCode, callback) {
-      if(role == 'UO'){
-      var collection = db.collection('ledger');
-      var cursor = collection.aggregate([
-        {
-          $match: {
-            date: { $lt: fromDate },
-            accountName: accountName,
-            compCode:{$in:compCode},
-            visible:true,
-            accountName:accountName
-          }
-        },
-        {
-          $group:
-          {
-            _id: { accountName: "$accountName" },
-            credit: { $sum: "$credit" },
-            debit: { $sum: "$debit" }
-          }
-        }
-      ]).toArray(function (err, result) {
-        assert.equal(err, null);
-        console.log(result);
-        callback(result);
-      });
-    }
-  
-   if(role == 'O'){
+    var openingBalnce = function (db, role, compCode, callback) {
+      if (role == 'UO') {
         var collection = db.collection('ledger');
-      var cursor = collection.aggregate([
-        {
-          $match: {
-            date: { $lt: fromDate },
-            accountName: accountName,
-            compCode:{$in:compCode},
-            isUo:false,
-            accountName:accountName
-          }
-        },
-        {
-          $group:
+        var cursor = collection.aggregate([
           {
-            _id: { accountName: "$accountName" },
-            credit: { $sum: "$credit" },
-            debit: { $sum: "$debit" }
+            $match: {
+              date: { $lt: fromDate },
+              accountName: accountName,
+              compCode: { $in: compCode },
+              visible: true,
+              accountName: accountName
+            }
+          },
+          {
+            $group:
+            {
+              _id: { accountName: "$accountName" },
+              credit: { $sum: "$credit" },
+              debit: { $sum: "$debit" }
+            }
           }
-        }
-      ]).toArray(function (err, result) {
-        assert.equal(err, null);
-        callback(result);
-      });
-    }
-   }
+        ]).toArray(function (err, result) {
+          assert.equal(err, null);
+          console.log(result);
+          callback(result);
+        });
+      }
 
-    var getLedgerData = function (db,role, callback) {
-       var ledger;
-      if(role == 'UO'){
-      var collection = db.collection('ledger');
-      var cursor = collection.find({ "accountName": accountName, compCode: {$in:compCode}, date: { $gte: fromDate, $lt: toDate },visible:true }).toArray(function (err, result) {
-        assert.equal(err, null);
-        console.log(result);
-        callback(result);
-      });
+      if (role == 'O') {
+        var collection = db.collection('ledger');
+        var cursor = collection.aggregate([
+          {
+            $match: {
+              date: { $lt: fromDate },
+              accountName: accountName,
+              compCode: { $in: compCode },
+              isUo: false,
+              accountName: accountName
+            }
+          },
+          {
+            $group:
+            {
+              _id: { accountName: "$accountName" },
+              credit: { $sum: "$credit" },
+              debit: { $sum: "$debit" }
+            }
+          }
+        ]).toArray(function (err, result) {
+          assert.equal(err, null);
+          callback(result);
+        });
+      }
     }
-    if(role == 'O'){
-      var collection = db.collection('ledger');
-      var cursor = collection.find({ "accountName": accountName, compCode: {$in:compCode}, date: { $gte: fromDate, $lt: toDate },isUo:false }).toArray(function (err, result) {
-        assert.equal(err, null);
-        console.log(result);
-        callback(result);
-      });
+
+    var getLedgerData = function (db, role, callback) {
+      var ledger;
+      if (role == 'UO') {
+        var collection = db.collection('ledger');
+        var cursor = collection.find({ "accountName": accountName, compCode: { $in: compCode }, date: { $gte: fromDate, $lt: toDate }, visible: true }).toArray(function (err, result) {
+          assert.equal(err, null);
+          console.log(result);
+          callback(result);
+        });
+      }
+      if (role == 'O') {
+        var collection = db.collection('ledger');
+        var cursor = collection.find({ "accountName": accountName, compCode: { $in: compCode }, date: { $gte: fromDate, $lt: toDate }, isUo: false }).toArray(function (err, result) {
+          assert.equal(err, null);
+          console.log(result);
+          callback(result);
+        });
+      }
     }
-  }
     Ledgers.getDataSource().connector.connect(function (err, db) {
       var collection = db.collection('ledger');
-      openingBalnce(db,role,compCode, function (data) {
+      openingBalnce(db, role, compCode, function (data) {
         var ledgerOpeningBalnce = {};
         if (data.length > 0) {
           console.log(data)
           ledgerOpeningBalnce = { credit: data[0].credit, debit: data[0].debit }
-          console.log("opening balance".green,ledgerOpeningBalnce)
+          console.log("opening balance".green, ledgerOpeningBalnce)
         }
         else {
           ledgerOpeningBalnce = '';
@@ -1577,39 +1634,39 @@ function validateAvailableQtyOnCreate(data,res,callback){
     var expenseId = req.params.expenseId;
     var query;
     if (expenseId != 'null') {
-       query = { _id: new mongodb.ObjectId(expenseId) }
+      query = { _id: new mongodb.ObjectId(expenseId) }
     }
     voucherTransaction.getDataSource().connector.connect(function (err, db) {
       var collection = db.collection('voucherTransaction');
-       if (expenseId != 'null') {
-          updateExpence(db, data, function (result) {
-            if (result) {
-              var isUo
-              console.log("Expense Updated")
-               if (data.role == 'O') {
-                 isUo = false 
-               }
-                if (data.role == 'UO') {
-                 isUo = true 
-               }
-              var ledger = createLedgerJsonExpense(data.transactionData, expenseId);
-              accountEntry(ledger, isUo, new mongodb.ObjectId(expenseId));
-              res.status(200).send(expenseId);
+      if (expenseId != 'null') {
+        updateExpence(db, data, function (result) {
+          if (result) {
+            var isUo
+            console.log("Expense Updated")
+            if (data.role == 'O') {
+              isUo = false
             }
-          });
-        }
-        else {
-          createExpence(db, data, function (result) {
-            console.log(result.ops[0]._id);
-            if (result) {
-              console.log("Expense Created")
-              var ledger = createLedgerJsonExpense(data.transactionData, result.ops[0]._id);
-              accountEntry(ledger, isUo, new mongodb.ObjectId(result.ops[0]._id));
-              res.status(200).send(result.ops[0]._id);
+            if (data.role == 'UO') {
+              isUo = true
             }
-          });
-        }
-     
+            var ledger = createLedgerJsonExpense(data.transactionData, expenseId);
+            accountEntry(ledger, isUo, new mongodb.ObjectId(expenseId));
+            res.status(200).send(expenseId);
+          }
+        });
+      }
+      else {
+        createExpence(db, data, function (result) {
+          console.log(result.ops[0]._id);
+          if (result) {
+            console.log("Expense Created")
+            var ledger = createLedgerJsonExpense(data.transactionData, result.ops[0]._id);
+            accountEntry(ledger, isUo, new mongodb.ObjectId(result.ops[0]._id));
+            res.status(200).send(result.ops[0]._id);
+          }
+        });
+      }
+
     });
     var updateExpence = function (db, expenseData, callback) {
       var collection = db.collection('voucherTransaction');
@@ -1634,36 +1691,36 @@ function validateAvailableQtyOnCreate(data,res,callback){
     console.log()
     var ledger = [];
     if (data.role == 'O') {
-      if (data.itemTable.length >0) {
+      if (data.itemTable.length > 0) {
         ledger.push({ accountName: data.supliersId, date: data.date, particular: itemTable[0].accountId, refNo: data.no, voType: "Expense", credit: data.amount, voRefId: id, isUo: false, visible: true, compCode: data.compCode })
       }
       if (data.tdsAccountId) {
         ledger.push({ accountName: data.tdsAccountId, date: data.date, particular: data.supliersId, refNo: data.no, voType: "Expense", credit: data.tdsamount, voRefId: id, isUo: false, visible: true, compCode: data.compCode })
       }
-      if (data.itemTable.length >0) {
+      if (data.itemTable.length > 0) {
         for (var i = 0; i < itemTable.length; i++) {
           ledger.push({ accountName: itemTable[i].accountId, date: data.date, particular: data.supliersId, refNo: data.no, voType: "Expense", debit: Number(itemTable[i].amount), voRefId: id, isUo: false, visible: true, compCode: data.compCode })
         }
       }
-      if (data.accountTable.length >0) {
+      if (data.accountTable.length > 0) {
         for (var i = 0; i < accountTable.length; i++) {
           ledger.push({ accountName: accountTable[i].accountId, date: data.date, particular: data.supliersId, refNo: data.no, voType: "Expense", debit: Number(accountTable[i].amount), voRefId: id, isUo: false, visible: true, compCode: data.compCode })
         }
       }
     }
     if (data.role == 'UO') {
-      if (data.itemTable.length >0) {
+      if (data.itemTable.length > 0) {
         ledger.push({ accountName: data.supliersId, date: data.date, particular: itemTable[0].accountId, refNo: data.no, voType: "Expense", credit: data.amount, voRefId: id, isUo: true, visible: true, compCode: data.compCode })
       }
       if (data.tdsAccountName) {
         ledger.push({ accountName: data.tdsAccountId, date: data.date, particular: data.supliersId, refNo: data.no, voType: "Expense", credit: data.tdsamount, voRefId: id, isUo: true, visible: true, compCode: data.compCode })
       }
-      if (data.itemTable.length >0) {
+      if (data.itemTable.length > 0) {
         for (var i = 0; i < itemTable.length; i++) {
           ledger.push({ accountName: itemTable[i].accountId, date: data.date, particular: data.supliersId, refNo: data.no, voType: "Expense", debit: Number(itemTable[i].amount), voRefId: id, isUo: true, visible: true, isUo: true, visible: true, compCode: data.compCode })
         }
       }
-      if (data.accountTable.length >0) {
+      if (data.accountTable.length > 0) {
         for (var i = 0; i < accountTable.length; i++) {
           ledger.push({ accountName: accountTable[i].accountId, date: data.date, particular: data.supliersId, refNo: data.no, voType: "Expense", debit: Number(accountTable[i].amount), voRefId: id, isUo: true, visible: true, compCode: data.compCode })
         }
@@ -1688,91 +1745,91 @@ function validateAvailableQtyOnCreate(data,res,callback){
     voucherTransaction.getDataSource().connector.connect(function (err, db) {
       var collection = db.collection('voucherTransaction');
       // isBillExist(db, function (result) {
-        if (billId != 'null') {
+      if (billId != 'null') {
         // if (result > 0) {
-          updateBill(db, data, function (result) {
-            if (result) {
-              console.log("Bill Updated", result)
-              var lineItem;
-              var visible;
-              var isUo;
-              if (data.role == 'O') {
-                lineItem = data.transactionData.manualLineItem
-                visible = true;
-                isUo = false
+        updateBill(db, data, function (result) {
+          if (result) {
+            console.log("Bill Updated", result)
+            var lineItem;
+            var visible;
+            var isUo;
+            if (data.role == 'O') {
+              lineItem = data.transactionData.manualLineItem
+              visible = true;
+              isUo = false
 
-              }
-              if (data.role == 'UO') {
-                lineItem = data.transactionData.itemDetail
-                visible = false;
-                isUo = true
-              }
-              var ledger = createLedgerJson(data.transactionData, billId);
-              accountEntry(ledger, isUo, new mongodb.ObjectId(billId));
-              updateInventory(db, visible, function (result) {
-                if (result) {
-                  console.log("inventory removed")
-                  isInventoryExist(db, function (result) {
-                    console.log("checking inventory ...")
-                    if (result > 0) {
-                      console.log("inventory Count", result);
-                      var inventoryData = createInventoryData(lineItem, visible, data.no, billId, result, compCode);
-                      //console.log("inventory data", inventoryData)
-                    }
-                    else {
-                      var inventoryData = createInventoryData(lineItem, visible, data.no, billId, 0, compCode);
-                    }
-                    createInventory(db, inventoryData, function (result) {
-                      if (result) {
-                        //console.log("inventory created", result)
-                        res.status(200).send(billId);
-                      }
-                    });
-                  });
-                }
-              });
             }
-          });
-        }
-
-        else {
-          createBill(db, data, function (result) {
-            if (result) {
-              console.log("Bill Created", result)
-              var ledger = createLedgerJson(data.transactionData, result.ops[0]._id);
-              accountEntry(ledger, false, new mongodb.ObjectId(result.ops[0]._id));
-              var billId = result.ops[0]._id
-              var lineItem;
-              if (data.role == 'O') {
-                lineItem = data.transactionData.manualLineItem
-              }
-              if (data.role == 'UO') {
-                lineItem = data.transactionData.itemDetail
-              }
-
-              isInventoryExist(db, function (result) {
-                console.log("checking inventory ...")
-                if (result > 0) {
-                  console.log(result);
-                  var inventoryData = createInventoryData(lineItem, true, data.no, billId.toHexString(), result, compCode);
-                  console.log("inventory data", inventoryData)
-                }
-                else {
-                  var inventoryData = createInventoryData(lineItem, true, data.no, billId.toHexString(), 0, compCode);
-                }
-
-                createInventory(db, inventoryData, function (result) {
-                  if (result) {
-                    console.log("inventory created", result)
-                    res.status(200).send(billId);
-
+            if (data.role == 'UO') {
+              lineItem = data.transactionData.itemDetail
+              visible = false;
+              isUo = true
+            }
+            var ledger = createLedgerJson(data.transactionData, billId);
+            accountEntry(ledger, isUo, new mongodb.ObjectId(billId));
+            updateInventory(db, visible, function (result) {
+              if (result) {
+                console.log("inventory removed")
+                isInventoryExist(db, function (result) {
+                  console.log("checking inventory ...")
+                  if (result > 0) {
+                    console.log("inventory Count", result);
+                    var inventoryData = createInventoryData(lineItem, visible, data.no, billId, result, compCode);
+                    //console.log("inventory data", inventoryData)
                   }
+                  else {
+                    var inventoryData = createInventoryData(lineItem, visible, data.no, billId, 0, compCode);
+                  }
+                  createInventory(db, inventoryData, function (result) {
+                    if (result) {
+                      //console.log("inventory created", result)
+                      res.status(200).send(billId);
+                    }
+                  });
                 });
+              }
+            });
+          }
+        });
+      }
 
-              });
+      else {
+        createBill(db, data, function (result) {
+          if (result) {
+            console.log("Bill Created", result)
+            var ledger = createLedgerJson(data.transactionData, result.ops[0]._id);
+            accountEntry(ledger, false, new mongodb.ObjectId(result.ops[0]._id));
+            var billId = result.ops[0]._id
+            var lineItem;
+            if (data.role == 'O') {
+              lineItem = data.transactionData.manualLineItem
             }
-          });
-        }
+            if (data.role == 'UO') {
+              lineItem = data.transactionData.itemDetail
+            }
+
+            isInventoryExist(db, function (result) {
+              console.log("checking inventory ...")
+              if (result > 0) {
+                console.log(result);
+                var inventoryData = createInventoryData(lineItem, true, data.no, billId.toHexString(), result, compCode);
+                console.log("inventory data", inventoryData)
+              }
+              else {
+                var inventoryData = createInventoryData(lineItem, true, data.no, billId.toHexString(), 0, compCode);
+              }
+
+              createInventory(db, inventoryData, function (result) {
+                if (result) {
+                  console.log("inventory created", result)
+                  res.status(200).send(billId);
+
+                }
+              });
+
+            });
+          }
+        });
+      }
 
     });
 
@@ -1943,7 +2000,7 @@ function validateAvailableQtyOnCreate(data,res,callback){
       });
     });
 
-    var getData = function (db, role,type, callback) {
+    var getData = function (db, role, type, callback) {
       var collection = db.collection('voucherTransaction');
       var invoiceType = type;
       if (role == 'O') {
@@ -1957,7 +2014,7 @@ function validateAvailableQtyOnCreate(data,res,callback){
 
       var cursor = collection.aggregate(
         { $match: { compCode, compCode } },
-        { $match: { type: invoiceType }},
+        { $match: { type: invoiceType } },
         {
           $project:
           {
@@ -1967,7 +2024,7 @@ function validateAvailableQtyOnCreate(data,res,callback){
             amount: amount,
             balance: balance,
             supplier: "$transactionData.supliersId",
-            email:"$transactionData.email",
+            email: "$transactionData.email",
             compCode: "$compCode",
             id: "$_id"
 
@@ -2226,7 +2283,7 @@ function validateAvailableQtyOnCreate(data,res,callback){
 
         });
 
-      } else {//if(callback1) 
+      } else {//if(callback1)
         processPayments(0);
       }
 
@@ -2310,7 +2367,7 @@ function validateAvailableQtyOnCreate(data,res,callback){
 
           });
         }
-      } else {//if(callback1) 
+      } else {//if(callback1)
         processPayments(0);
       }
 
@@ -2653,7 +2710,7 @@ function validateAvailableQtyOnCreate(data,res,callback){
     delete data._id;
     user.getDataSource().connector.connect(function (err, db) {
       var collection = db.collection('CompanyMaster');
-      collection.update({ CompanyId: data.CompanyId},data, function (err, instance) {
+      collection.update({ CompanyId: data.CompanyId }, data, function (err, instance) {
         if (err) console.log(err);
         else {
           console.log("company assigned");
@@ -2663,48 +2720,48 @@ function validateAvailableQtyOnCreate(data,res,callback){
       });
     });
   });
-    router.get('/getUserCompanies/:id', function (req, res) {
-      var id = req.params.id;
-      user.getDataSource().connector.connect(function (err, db) {
-        var collection = db.collection('User');
-        collection.findOne({ _id: mongodb.ObjectId(id) }, function (err, instance) {
-          if (err)
-            console.log(err);
-          else {
-            var userComp = instance.companies;
-            console.log(userComp);
-            var companies = db.collection('CompanyMaster');
-            var qry = { IsActive: 1, CompanyId: { $in: userComp } };
-            console.log(qry);
-            companies.find(qry).toArray(function (err, data) {
-              if (err) {
-                console.log(err);
-              } else {
-                res.status(200).send(data);
-              }
-            });
-          }
-        });
+  router.get('/getUserCompanies/:id', function (req, res) {
+    var id = req.params.id;
+    user.getDataSource().connector.connect(function (err, db) {
+      var collection = db.collection('User');
+      collection.findOne({ _id: mongodb.ObjectId(id) }, function (err, instance) {
+        if (err)
+          console.log(err);
+        else {
+          var userComp = instance.companies;
+          console.log(userComp);
+          var companies = db.collection('CompanyMaster');
+          var qry = { IsActive: 1, CompanyId: { $in: userComp } };
+          console.log(qry);
+          companies.find(qry).toArray(function (err, data) {
+            if (err) {
+              console.log(err);
+            } else {
+              res.status(200).send(data);
+            }
+          });
+        }
       });
     });
+  });
 
 
-    // save jouranal 
+  // save jouranal 
 
-     router.post('/savejournal/:id', function (req, res){
-        var voId = req.params.id
-        var journalData = req.body
-         voucherTransaction.getDataSource().connector.connect(function (err, db) {
-          if(voId!= 'null'){
-          updateJournal(db, journalData,voId, function (result) {
+  router.post('/savejournal/:id', function (req, res) {
+    var voId = req.params.id
+    var journalData = req.body
+    voucherTransaction.getDataSource().connector.connect(function (err, db) {
+      if (voId != 'null') {
+        updateJournal(db, journalData, voId, function (result) {
           if (result) {
             ledger = ledgerCreationforjournal(journalData, voId);
             accountEntry(ledger, false, new mongodb.ObjectId(voId));
             res.status(200).send({ id: voId });
           }
         });
-      }else{
-          createJournal(db, journalData, function (result) {
+      } else {
+        createJournal(db, journalData, function (result) {
           if (result) {
             ledger = ledgerCreationforjournal(journalData, result.ops[0]._id);
             accountEntry(ledger, false, new mongodb.ObjectId(result.ops[0]._id));
@@ -2713,27 +2770,27 @@ function validateAvailableQtyOnCreate(data,res,callback){
         });
 
       }
-     });
-      var createJournal = function (db, journalData, callback) {
+    });
+    var createJournal = function (db, journalData, callback) {
       var collection = db.collection('voucherTransaction');
-      var cursor = collection.insert(journalData ,function (err, result) {
+      var cursor = collection.insert(journalData, function (err, result) {
         assert.equal(err, null);
         callback(result);
       });
     }
-      var updateJournal = function (db, journalData, id, callback) {
+    var updateJournal = function (db, journalData, id, callback) {
       var collection = db.collection('voucherTransaction');
-      var cursor = collection.update({_id:new mongodb.ObjectId(id)},journalData ,function (err, result) {
+      var cursor = collection.update({ _id: new mongodb.ObjectId(id) }, journalData, function (err, result) {
         assert.equal(err, null);
         callback(result);
       });
     }
-   
-    function ledgerCreationforjournal(data,id){
+
+    function ledgerCreationforjournal(data, id) {
       var ledgerData = data.journalData
       var ledger = [];
-      for(var i=0;i<ledgerData.length;i++){
-         ledger.push({ accountName: ledgerData[i].accountId, date: data.date, particular: "Journal", refNo: data.no, voType: "Journal Entry", credit: ledgerData[i].credit, debit:ledgerData[i].debit, voRefId: id, isUo: false, visible: true, compCode: data.compCode })
+      for (var i = 0; i < ledgerData.length; i++) {
+        ledger.push({ accountName: ledgerData[i].accountId, date: data.date, particular: "Journal", refNo: data.no, voType: "Journal Entry", credit: ledgerData[i].credit, debit: ledgerData[i].debit, voRefId: id, isUo: false, visible: true, compCode: data.compCode })
       }
       return ledger;
     }
@@ -2759,8 +2816,8 @@ function validateAvailableQtyOnCreate(data,res,callback){
       });
     }
 
-
     
  });
     server.use(router);
   };
+
