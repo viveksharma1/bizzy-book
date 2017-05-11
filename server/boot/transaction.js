@@ -2489,7 +2489,7 @@ function validateAvailableQtyOnCreate(data,res,callback){
             supplier: "$transactionData.supliersId",
             date: "$date",
             totalLineItemData: "$transactionData.manualLineItem",
-            totalAmount: "$amount",
+            totalAmount: "$transactionData.amount",
             accountData: "$transactionData.accountlineItem"
           }
         }
@@ -2537,17 +2537,12 @@ function validateAvailableQtyOnCreate(data,res,callback){
     var type = req.params.type
     voucherTransaction.getDataSource().connector.connect(function (err, db) {
       getCount(db, type, function (result) {
-        if (result) {
-          res.status(200).send({ count: result });
-        }
-        else {
-          res.status(200).send();
-        }
+        res.status(200).send({ count: result + 1 });
       });
     });
     var getCount = function (db, type, callback) {
       var collection = db.collection('voucherTransaction');
-      var cursor = collection.count({ type: type }, function (err, result) {
+      var cursor = collection.count({type: type }, function (err, result) {
         assert.equal(err, null);
         callback(result);
       });
@@ -2585,7 +2580,7 @@ function validateAvailableQtyOnCreate(data,res,callback){
       var thirdLedger = data.ledgerDataThird
       var ledger = [];
       var paritcular = "Purchase Settelment" + data.invoiceNo
-      ledger.push({ accountName: firstLedger.accountId, date: data.date, particular: paritcular, refNo: data.voRefNo, voType: "Purchase Settelment", credit: Number(firstLedger.amount), voRefId: id, isUo: true, visible: true, compCode: data.compCode })
+      ledger.push({ accountName: firstLedger.accountId, date: data.date, particular: secondLedger.accountId,particular1:thirdLedger.accountId, refNo: data.voRefNo, voType: "Purchase Settelment", credit: Number(firstLedger.amount), voRefId: id, isUo: true, visible: true, compCode: data.compCode })
       ledger.push({ accountName: secondLedger.accountId, date: data.date, particular: firstLedger.accountId, refNo: data.voRefNo, voType: "Purchase Settelment", debit: Number(secondLedger.amount), voRefId: id, isUo: true, visible: true, compCode: data.compCode })
       ledger.push({ accountName: thirdLedger.accountId, date: data.date, particular: firstLedger.accountId, refNo: data.voRefNo, voType: "Purchase Settelment", debit: Number(thirdLedger.amount), voRefId: id, isUo: true, visible: true, compCode: data.compCode })
       return ledger;
@@ -2741,11 +2736,31 @@ function validateAvailableQtyOnCreate(data,res,callback){
          ledger.push({ accountName: ledgerData[i].accountId, date: data.date, particular: "Journal", refNo: data.no, voType: "Journal Entry", credit: ledgerData[i].credit, debit:ledgerData[i].debit, voRefId: id, isUo: false, visible: true, compCode: data.compCode })
       }
       return ledger;
+    }
+ });
 
-
+ router.get('/checkSalesInventory/:invId', function (req, res){
+   var invId = req.params.invId
+    voucherTransaction.getDataSource().connector.connect(function (err, db) {
+       checkInventory(db, invId, function (result) {
+          if (result) {
+              if(result.salesTransaction){
+                 res.status(200).send({ status: "can not update" });
+              }
+               res.status(200).send({ status: "sales transaction does not exist" });
+          }
+        });
+      });
+       var checkInventory = function (db, invId, callback) {
+       var collection = db.collection('inventory');
+       var cursor = collection.findOne({invId:invId} ,function (err, result) {
+          assert.equal(err, null);
+          callback(result);
+      });
     }
 
 
-     });
+    
+ });
     server.use(router);
   };
