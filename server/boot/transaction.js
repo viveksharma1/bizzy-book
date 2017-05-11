@@ -79,17 +79,24 @@ module.exports = function (server) {
         count = instance;
         console.log(count)
         if (count > 0) {
-          Ledgers.remove({ voRefId: voRefId, isUo: isUo }, function (err, instance) {
+          Ledgers.remove({voRefId: voRefId, isUo: isUo }, function (err, instance) {
             console.log("ledger removed")
+             Ledgers.create(data, function (err, instance) {
+               if (err) {
+                console.log(err)
+              } else {
+                console.log("ledger updated")
+              }
+          });
           })
         }
-        if (data != null) {
-          Ledgers.create(data, function (err, instance) {
-            if (err) {
-              console.log(err)
-            } else {
-              console.log("ledger updated")
-            }
+        else{
+           Ledgers.create(data, function (err, instance) {
+               if (err) {
+                console.log(err)
+              } else {
+                console.log("ledger created")
+              }
           });
         }
       }
@@ -1570,22 +1577,23 @@ function validateAvailableQtyOnCreate(data,res,callback){
     var expenseId = req.params.expenseId;
     var query;
     if (expenseId != 'null') {
-      var query = { _id: new mongodb.ObjectId(expenseId) }
-    }
-    else {
-      query = { no: data.transactionData.no }
+       query = { _id: new mongodb.ObjectId(expenseId) }
     }
     voucherTransaction.getDataSource().connector.connect(function (err, db) {
       var collection = db.collection('voucherTransaction');
-      isExpenseExist(db, function (result) {
-        console.log(result)
-        console.log(query)
-        if (result > 0) {
+       if (expenseId != 'null') {
           updateExpence(db, data, function (result) {
             if (result) {
+              var isUo
               console.log("Expense Updated")
-              var ledger = createLedgerJson(data.transactionData, expenseId);
-              accountEntry(ledger, false, new mongodb.ObjectId(expenseId));
+               if (data.role == 'O') {
+                 isUo = false 
+               }
+                if (data.role == 'UO') {
+                 isUo = true 
+               }
+              var ledger = createLedgerJsonExpense(data.transactionData, expenseId);
+              accountEntry(ledger, isUo, new mongodb.ObjectId(expenseId));
               res.status(200).send(expenseId);
             }
           });
@@ -1595,28 +1603,17 @@ function validateAvailableQtyOnCreate(data,res,callback){
             console.log(result.ops[0]._id);
             if (result) {
               console.log("Expense Created")
-              var ledger = createLedgerJson(data.transactionData, result.ops[0]._id);
-              accountEntry(ledger, false, new mongodb.ObjectId(result.ops[0]._id));
+              var ledger = createLedgerJsonExpense(data.transactionData, result.ops[0]._id);
+              accountEntry(ledger, isUo, new mongodb.ObjectId(result.ops[0]._id));
               res.status(200).send(result.ops[0]._id);
             }
           });
         }
-      });
+     
     });
-    var isExpenseExist = function (db, callback) {
-      var collection = db.collection('voucherTransaction');
-      console.log("query in is ", query)
-      var cursor = collection.count(query, function (err, result) {
-        ;
-        assert.equal(err, null);
-        console.log(result);
-        callback(result);
-      });
-    }
     var updateExpence = function (db, expenseData, callback) {
       var collection = db.collection('voucherTransaction');
       var cursor = collection.update(query, expenseData, function (err, result) {
-        ;
         assert.equal(err, null);
         callback(result);
       });
@@ -1624,7 +1621,6 @@ function validateAvailableQtyOnCreate(data,res,callback){
     var createExpence = function (db, expenseData, callback) {
       var collection = db.collection('voucherTransaction');
       var cursor = collection.insert(expenseData, function (err, result) {
-        ;
         assert.equal(err, null);
         callback(result);
       });
@@ -1632,42 +1628,42 @@ function validateAvailableQtyOnCreate(data,res,callback){
 
   });
   "createLedgerJson"
-  function createLedgerJson(data, id) {
+  function createLedgerJsonExpense(data, id) {
     var accountTable = data.accountTable
     var itemTable = data.itemTable
     console.log()
     var ledger = [];
     if (data.role == 'O') {
-      if (data.itemTable != "[]") {
+      if (data.itemTable.length >0) {
         ledger.push({ accountName: data.supliersId, date: data.date, particular: itemTable[0].accountId, refNo: data.no, voType: "Expense", credit: data.amount, voRefId: id, isUo: false, visible: true, compCode: data.compCode })
       }
       if (data.tdsAccountId) {
         ledger.push({ accountName: data.tdsAccountId, date: data.date, particular: data.supliersId, refNo: data.no, voType: "Expense", credit: data.tdsamount, voRefId: id, isUo: false, visible: true, compCode: data.compCode })
       }
-      if (data.itemTable != []) {
+      if (data.itemTable.length >0) {
         for (var i = 0; i < itemTable.length; i++) {
           ledger.push({ accountName: itemTable[i].accountId, date: data.date, particular: data.supliersId, refNo: data.no, voType: "Expense", debit: Number(itemTable[i].amount), voRefId: id, isUo: false, visible: true, compCode: data.compCode })
         }
       }
-      if (data.accountTable != []) {
+      if (data.accountTable.length >0) {
         for (var i = 0; i < accountTable.length; i++) {
           ledger.push({ accountName: accountTable[i].accountId, date: data.date, particular: data.supliersId, refNo: data.no, voType: "Expense", debit: Number(accountTable[i].amount), voRefId: id, isUo: false, visible: true, compCode: data.compCode })
         }
       }
     }
     if (data.role == 'UO') {
-      if (data.itemTable != []) {
+      if (data.itemTable.length >0) {
         ledger.push({ accountName: data.supliersId, date: data.date, particular: itemTable[0].accountId, refNo: data.no, voType: "Expense", credit: data.amount, voRefId: id, isUo: true, visible: true, compCode: data.compCode })
       }
       if (data.tdsAccountName) {
         ledger.push({ accountName: data.tdsAccountId, date: data.date, particular: data.supliersId, refNo: data.no, voType: "Expense", credit: data.tdsamount, voRefId: id, isUo: true, visible: true, compCode: data.compCode })
       }
-      if (data.itemTable != []) {
+      if (data.itemTable.length >0) {
         for (var i = 0; i < itemTable.length; i++) {
           ledger.push({ accountName: itemTable[i].accountId, date: data.date, particular: data.supliersId, refNo: data.no, voType: "Expense", debit: Number(itemTable[i].amount), voRefId: id, isUo: true, visible: true, isUo: true, visible: true, compCode: data.compCode })
         }
       }
-      if (data.accountTable != []) {
+      if (data.accountTable.length >0) {
         for (var i = 0; i < accountTable.length; i++) {
           ledger.push({ accountName: accountTable[i].accountId, date: data.date, particular: data.supliersId, refNo: data.no, voType: "Expense", debit: Number(accountTable[i].amount), voRefId: id, isUo: true, visible: true, compCode: data.compCode })
         }
@@ -1938,16 +1934,18 @@ function validateAvailableQtyOnCreate(data,res,callback){
   router.get('/getTransactionData/:compCode', function (req, res) {
     var compCode = req.params.compCode;
     var role = req.query.role;
+    var type = req.query.type;
     voucherTransaction.getDataSource().connector.connect(function (err, db) {
-      getData(db, role, function (result) {
+      getData(db, role, type, function (result) {
         if (result) {
           res.status(200).send(result);
         }
       });
     });
 
-    var getData = function (db, role, callback) {
+    var getData = function (db, role,type, callback) {
       var collection = db.collection('voucherTransaction');
+      var invoiceType = type;
       if (role == 'O') {
         var amount = "$transactionData.amount"
         var balance = "$transactionData.balance"
@@ -1959,7 +1957,7 @@ function validateAvailableQtyOnCreate(data,res,callback){
 
       var cursor = collection.aggregate(
         { $match: { compCode, compCode } },
-        { $match: { $or: [{ type: "Purchase Invoice" }, { type: "EXPENSE" }] } },
+        { $match: { type: invoiceType }},
         {
           $project:
           {
@@ -1969,6 +1967,7 @@ function validateAvailableQtyOnCreate(data,res,callback){
             amount: amount,
             balance: balance,
             supplier: "$transactionData.supliersId",
+            email:"$transactionData.email",
             compCode: "$compCode",
             id: "$_id"
 
@@ -2693,5 +2692,60 @@ function validateAvailableQtyOnCreate(data,res,callback){
         });
       });
     });
+
+
+    // save jouranal 
+
+     router.post('/savejournal/:id', function (req, res){
+        var voId = req.params.id
+        var journalData = req.body
+         voucherTransaction.getDataSource().connector.connect(function (err, db) {
+          if(voId!= 'null'){
+          updateJournal(db, journalData,voId, function (result) {
+          if (result) {
+            ledger = ledgerCreationforjournal(journalData, voId);
+            accountEntry(ledger, false, new mongodb.ObjectId(voId));
+            res.status(200).send({ id: voId });
+          }
+        });
+      }else{
+          createJournal(db, journalData, function (result) {
+          if (result) {
+            ledger = ledgerCreationforjournal(journalData, result.ops[0]._id);
+            accountEntry(ledger, false, new mongodb.ObjectId(result.ops[0]._id));
+            res.status(200).send({ id: result.ops[0]._id });
+          }
+        });
+
+      }
+     });
+      var createJournal = function (db, journalData, callback) {
+      var collection = db.collection('voucherTransaction');
+      var cursor = collection.insert(journalData ,function (err, result) {
+        assert.equal(err, null);
+        callback(result);
+      });
+    }
+      var updateJournal = function (db, journalData, id, callback) {
+      var collection = db.collection('voucherTransaction');
+      var cursor = collection.update({_id:new mongodb.ObjectId(id)},journalData ,function (err, result) {
+        assert.equal(err, null);
+        callback(result);
+      });
+    }
+   
+    function ledgerCreationforjournal(data,id){
+      var ledgerData = data.journalData
+      var ledger = [];
+      for(var i=0;i<ledgerData.length;i++){
+         ledger.push({ accountName: ledgerData[i].accountId, date: data.date, particular: "Journal", refNo: data.no, voType: "Journal Entry", credit: ledgerData[i].credit, debit:ledgerData[i].debit, voRefId: id, isUo: false, visible: true, compCode: data.compCode })
+      }
+      return ledger;
+
+
+    }
+
+
+     });
     server.use(router);
   };
