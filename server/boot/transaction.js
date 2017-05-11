@@ -381,15 +381,24 @@ module.exports = function (server) {
   });
   "Delete Receipt"
   router.post('/deleteReceipt', function (req, res) {
-    var id = req.query.id
+    // check if any dependent exist then send err message 
+    var id = req.query.id;
     var data = req.body;
-    //remove any dependent vouchers like 'badla' and there ledgers
-    removeBadlaVoucher(id, data.role)
-    //remove receipt and ledger.
-    removeVoucherTransaction(id, data.role);
-    //update balance and payment log.
-    updateBalanceAndTransactionLog(new mongodb.ObjectId(id), data.role);
-    res.send({ status: '200' });
+    voucherTransaction.findOne({ where: { receiptId: new mongodb.ObjectID(id), type: "Badla Voucher" }},  function (err, instance) {
+      if (err) {
+        console.log(err);
+      }
+      else if (instance.paymentLog && instance.paymentLog.length > 0) {
+        res.send({ err: "Badla exists", status: 200 });
+        return;
+      } else {
+        //remove receipt and ledger.
+        removeVoucherTransaction(id, data.role);
+        //update balance and payment log.
+        updateBalanceAndTransactionLog(new mongodb.ObjectId(id), data.role);
+        res.send({ status: '200' });
+      }
+    })
   });
   "Delete Payment"
   router.post('/deletePayment', function (req, res) {
@@ -1103,7 +1112,7 @@ module.exports = function (server) {
     // else {
     //   query = { type:data.type,vochNo: data.vochNo }
     // }
-    if (id == null) {
+    if (id == 'null') {
         validateAvailableQtyOnCreate(data, res, function () {
         createSalesInvoiceVoucher(data, res);
       });
