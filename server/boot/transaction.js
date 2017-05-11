@@ -71,16 +71,19 @@ module.exports = function (server) {
 
   function accountEntry(data, isUo, voRefId) {
     var acData = data;
-    Ledgers.count({ voRefId: voRefId, isUo: isUo }, function (err, instance) {
+    console.log(isUo);
+    console.log(voRefId)
+    Ledgers.find({voRefId: voRefId, isUo: isUo}, function (err, instance) {
       if (err) {
         console.log(err)
       }
       else {
-        count = instance;
-        console.log(count)
-        if (count > 0) {
-          Ledgers.remove({ voRefId: voRefId, isUo: isUo }, function (err, instance) {
-            console.log("ledger removed")
+        var count = instance;
+        console.log(instance.length)
+        if (instance.length > 0) {
+          Ledgers.destroyAll({voRefId: voRefId, isUo: isUo }, function (err, instance) {
+            console.log(instance)
+            console.log("ledger removed in account Entry")
             Ledgers.create(data, function (err, instance) {
               if (err) {
                 console.log(err)
@@ -95,7 +98,7 @@ module.exports = function (server) {
             if (err) {
               console.log(err)
             } else {
-              console.log("ledger created")
+              console.log("ledger created in account entry")
             }
           });
         }
@@ -1774,7 +1777,7 @@ module.exports = function (server) {
               isUo = true
             }
             var ledger = createLedgerJson(data.transactionData, billId);
-            accountEntry(ledger, isUo, new mongodb.ObjectId(billId));
+            accountEntry(ledger, isUo, billId);
             updateInventory(db, visible, function (result) {
               if (result) {
                 console.log("inventory removed")
@@ -2809,17 +2812,30 @@ module.exports = function (server) {
    var invId = req.params.invId
     voucherTransaction.getDataSource().connector.connect(function (err, db) {
        checkInventory(db, invId, function (result) {
+         console.log(result)
+         Ledgers.count({voRefId: '59125d75310b0d0f5c7e0120', isUo: true }, function (err, instance) {
+           if (err) {
+                 console.log(err)
+         }
+         console.log(instance)
+         });
+           
           if (result) {
               if(result.salesTransaction){
                  res.status(200).send({ status: "can not update" });
               }
-               res.status(200).send({ status: "sales transaction does not exist" });
+               else{
+                 res.status(200).send({ status: "sales transaction does not exist" });
+               }
           }
+          else{
+                res.status(200).send({ status: "invalid invoice Id" });
+               }
         });
       });
        var checkInventory = function (db, invId, callback) {
        var collection = db.collection('inventory');
-       var cursor = collection.findOne({invId:invId} ,function (err, result) {
+       collection.findOne({invId:invId} ,function (err, result) {
           assert.equal(err, null);
           callback(result);
       });
