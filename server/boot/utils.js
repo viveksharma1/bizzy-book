@@ -7,3 +7,11 @@ exports.getItembyId = function(array,id){
          }
          return null;
     }
+    exports.getItembyId2 = function(array,id){
+         for(var i=0;i<array.length;i++){
+           if(id.equals(ObjectID(array[i].id)))
+            return array[i];
+         }
+         return null;
+    }
+    
