@@ -62,7 +62,7 @@ module.exports = function (server) {
             res.send({ "status": "200" });
           }
         })
-        
+
       }
     });
   });
@@ -73,7 +73,7 @@ module.exports = function (server) {
     var acData = data;
     console.log(isUo);
     console.log(voRefId)
-    Ledgers.find({voRefId: voRefId, isUo: isUo}, function (err, instance) {
+    Ledgers.find({ voRefId: voRefId, isUo: isUo }, function (err, instance) {
       if (err) {
         console.log(err)
       }
@@ -81,7 +81,7 @@ module.exports = function (server) {
         var count = instance;
         console.log(instance.length)
         if (instance.length > 0) {
-          Ledgers.destroyAll({voRefId: voRefId, isUo: isUo }, function (err, instance) {
+          Ledgers.destroyAll({ voRefId: voRefId, isUo: isUo }, function (err, instance) {
             console.log(instance)
             console.log("ledger removed in account Entry")
             Ledgers.create(data, function (err, instance) {
@@ -93,7 +93,7 @@ module.exports = function (server) {
             });
           })
         }
-        else {
+        else if (data != null) {
           Ledgers.create(data, function (err, instance) {
             if (err) {
               console.log(err)
@@ -387,20 +387,21 @@ module.exports = function (server) {
     // check if any dependent exist then send err message 
     var id = req.query.id;
     var data = req.body;
-    voucherTransaction.findOne({ where: { receiptId: new mongodb.ObjectID(id), type: "Badla Voucher" }},  function (err, instance) {
+    voucherTransaction.findOne({ where: { receiptId: new mongodb.ObjectID(id), type: "Badla Voucher" } }, function (err, instance) {
       if (err) {
         console.log(err);
       }
-      else if (instance.paymentLog && instance.paymentLog.length > 0) {
-        res.send({ err: "Badla exists", status: 200 });
-        return;
-      } else {
-        //remove receipt and ledger.
-        removeVoucherTransaction(id, data.role);
-        //update balance and payment log.
-        updateBalanceAndTransactionLog(new mongodb.ObjectId(id), data.role);
-        res.send({ status: '200' });
-      }
+       else if (instance && instance.paymentLog && instance.paymentLog.length > 0) {
+          res.send({ err: "Badla exists", status: 200 });
+          return;
+        } else {
+          //remove receipt and ledger.
+          removeVoucherTransaction(id, data.role);
+          //update balance and payment log.
+          updateBalanceAndTransactionLog(new mongodb.ObjectId(id), data.role);
+          res.send({ status: '200' });
+        }
+      
     })
   });
   "Delete Payment"
@@ -1116,7 +1117,7 @@ module.exports = function (server) {
     //   query = { type:data.type,vochNo: data.vochNo }
     // }
     if (id == 'null') {
-        validateAvailableQtyOnCreate(data, res, function () {
+      validateAvailableQtyOnCreate(data, res, function () {
         createSalesInvoiceVoucher(data, res);
       });
     } else {
@@ -2611,7 +2612,7 @@ module.exports = function (server) {
     });
     var getCount = function (db, type, callback) {
       var collection = db.collection('voucherTransaction');
-      var cursor = collection.count({type: type }, function (err, result) {
+      var cursor = collection.count({ type: type }, function (err, result) {
         assert.equal(err, null);
         callback(result);
       });
@@ -2649,7 +2650,7 @@ module.exports = function (server) {
       var thirdLedger = data.ledgerDataThird
       var ledger = [];
       var paritcular = "Purchase Settelment" + data.invoiceNo
-      ledger.push({ accountName: firstLedger.accountId, date: data.date, particular: secondLedger.accountId,particular1:thirdLedger.accountId, refNo: data.voRefNo, voType: "Purchase Settelment", credit: Number(firstLedger.amount), voRefId: id, isUo: true, visible: true, compCode: data.compCode })
+      ledger.push({ accountName: firstLedger.accountId, date: data.date, particular: secondLedger.accountId, particular1: thirdLedger.accountId, refNo: data.voRefNo, voType: "Purchase Settelment", credit: Number(firstLedger.amount), voRefId: id, isUo: true, visible: true, compCode: data.compCode })
       ledger.push({ accountName: secondLedger.accountId, date: data.date, particular: firstLedger.accountId, refNo: data.voRefNo, voType: "Purchase Settelment", debit: Number(secondLedger.amount), voRefId: id, isUo: true, visible: true, compCode: data.compCode })
       ledger.push({ accountName: thirdLedger.accountId, date: data.date, particular: firstLedger.accountId, refNo: data.voRefNo, voType: "Purchase Settelment", debit: Number(thirdLedger.amount), voRefId: id, isUo: true, visible: true, compCode: data.compCode })
       return ledger;
@@ -2806,43 +2807,43 @@ module.exports = function (server) {
       }
       return ledger;
     }
- });
+  });
 
- router.get('/checkSalesInventory/:invId', function (req, res){
-   var invId = req.params.invId
+  router.get('/checkSalesInventory/:invId', function (req, res) {
+    var invId = req.params.invId
     voucherTransaction.getDataSource().connector.connect(function (err, db) {
-       checkInventory(db, invId, function (result) {
-         console.log(result)
-         Ledgers.count({voRefId: '59125d75310b0d0f5c7e0120', isUo: true }, function (err, instance) {
-           if (err) {
-                 console.log(err)
-         }
-         console.log(instance)
-         });
-           
-          if (result) {
-              if(result.salesTransaction){
-                 res.status(200).send({ status: "can not update" });
-              }
-               else{
-                 res.status(200).send({ status: "sales transaction does not exist" });
-               }
+      checkInventory(db, invId, function (result) {
+        console.log(result)
+        Ledgers.count({ voRefId: '59125d75310b0d0f5c7e0120', isUo: true }, function (err, instance) {
+          if (err) {
+            console.log(err)
           }
-          else{
-                res.status(200).send({ status: "invalid invoice Id" });
-               }
+          console.log(instance)
         });
+
+        if (result) {
+          if (result.salesTransaction) {
+            res.status(200).send({ status: "can not update" });
+          }
+          else {
+            res.status(200).send({ status: "sales transaction does not exist" });
+          }
+        }
+        else {
+          res.status(200).send({ status: "invalid invoice Id" });
+        }
       });
-       var checkInventory = function (db, invId, callback) {
-       var collection = db.collection('inventory');
-       collection.findOne({invId:invId} ,function (err, result) {
-          assert.equal(err, null);
-          callback(result);
+    });
+    var checkInventory = function (db, invId, callback) {
+      var collection = db.collection('inventory');
+      collection.findOne({ invId: invId }, function (err, result) {
+        assert.equal(err, null);
+        callback(result);
       });
     }
 
-    
- });
-    server.use(router);
-  };
+
+  });
+  server.use(router);
+};
 
