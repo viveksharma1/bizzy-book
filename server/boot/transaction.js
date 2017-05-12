@@ -17,9 +17,7 @@ module.exports = function (server) {
   var colors = require('colors');
   var test = require('./voucherDelete');
   var utils = require('./utils');
-  //test.getData();
-  //var cron = require('node-cron');
-
+ 
   "rest Api Starts here"
   router.post('/updateAccount', function (req, res) {
     var id = req.body.id;
@@ -31,7 +29,6 @@ module.exports = function (server) {
       res.send({ status: "200" });
     });
   });
-
   "get expense data"
   router.post('/getExpense', function (req, res) {
     var refNo = req.query.refNo
@@ -42,7 +39,6 @@ module.exports = function (server) {
       });
     });
   });
-
   "save inventory Item"
   router.post('/saveItem', function (req, res) {
     var DESCRIPTION = req.body
@@ -62,18 +58,16 @@ module.exports = function (server) {
             res.send({ "status": "200" });
           }
         })
-        
+
       }
     });
   });
-
   "Account Entry function"
-
   function accountEntry(data, isUo, voRefId) {
     var acData = data;
     console.log(isUo);
     console.log(voRefId)
-    Ledgers.find({voRefId: voRefId, isUo: isUo}, function (err, instance) {
+    Ledgers.find({ voRefId: voRefId, isUo: isUo }, function (err, instance) {
       if (err) {
         console.log(err)
       }
@@ -81,7 +75,7 @@ module.exports = function (server) {
         var count = instance;
         console.log(instance.length)
         if (instance.length > 0) {
-          Ledgers.destroyAll({voRefId: voRefId, isUo: isUo }, function (err, instance) {
+          Ledgers.destroyAll({ voRefId: voRefId, isUo: isUo }, function (err, instance) {
             console.log(instance)
             console.log("ledger removed in account Entry")
             Ledgers.create(data, function (err, instance) {
@@ -105,7 +99,6 @@ module.exports = function (server) {
       }
     });
   }
-
   "custom Payement"
   router.post('/payement', function (req, res) {
     var data = req.body
@@ -151,7 +144,6 @@ module.exports = function (server) {
       });
     });
   });
-
   "create new Account"
   router.post('/createAccount', function (req, res) {
     var id = req.query.id
@@ -188,8 +180,6 @@ module.exports = function (server) {
       }
     });
   });
-
-
   "update account"
   router.post('/updateAccount/:id', function (req, res) {
     var id = req.params.id
@@ -208,7 +198,6 @@ module.exports = function (server) {
       });
     });
   });
-
   "create group"
   router.post('/createGroup', function (req, res) {
     var groupData = req.body
@@ -242,7 +231,6 @@ module.exports = function (server) {
       }
     });
   });
-
   "get supplier count "
   router.get('/getSupplierCount/:compCode', function (req, res) {
     var compCode = req.params.compCode
@@ -306,65 +294,6 @@ module.exports = function (server) {
     });
   });
 
-
-  // router.post('/saveBadlaVoucher', function (req, res) {
-  //   var id = req.query.id
-  //   var data = req.body;
-  //   console.log(req.body);
-  //   var data = req.body[0];
-  //   var dataBadla = req.body[1];
-  //   if (id != 'null') {
-  //     var query = { id: id }
-  //     console.log(id);
-  //     updateReceipt(req.body, id);
-  //     //res.send({status:'200'});
-  //     voucherTransaction.update({ _id: new mongodb.ObjectId(id) }, dataBadla, function (err, instance) {
-  //       if (err)
-  //         console.log(err);
-  //       else {
-  //         var ledger = [];
-  //         if (dataBadla.role == 'UO') {
-  //           ledger.push({ accountName: dataBadla.vo_badla.badlaAccountId, compCode: dataBadla.compCode, date: dataBadla.date, particular: dataBadla.vo_badla.partyAccountId, remarks: " badla for Inv No(" + dataBadla.vo_badla.billDetail[0].vochNo + ")", refNo: dataBadla.vochNo, voType: "Badla", credit: Number(dataBadla.amount), voRefId: id, isUo: true, visible: true });
-  //           accountEntry(ledger, true, id);
-  //         }
-  //         else if (dataBadla.role == 'O') {
-
-  //           ledger.push({ accountName: dataBadla.vo_badla.badlaAccountId, compCode: dataBadla.compCode, date: dataBadla.date, particular: dataBadla.vo_badla.partyAccountId, remarks: " badla for Inv No(" + dataBadla.vo_badla.billDetail[0].vochNo + ")", refNo: dataBadla.vochNo, voType: "Badla", credit: Number(dataBadla.amount), voRefId: id, isUo: false });
-  //           accountEntry(ledger, false, id);
-  //         }
-  //         res.send({ status: '200' });
-  //       }
-  //     });
-  //   }
-  //   else {
-  //     createReceipt(data);
-  //     voucherTransaction.create(dataBadla, function (err, instance) {
-  //       if (err) {
-  //         console.log(err);
-  //       } else {
-  //         var vochID = instance.id
-  //         var ledger = [];
-  //         if (dataBadla.role == 'UO') {
-  //           ledger.push({ accountName: dataBadla.vo_badla.badlaAccountId, compCode: dataBadla.compCode, date: dataBadla.date, particular: dataBadla.vo_badla.partyAccountId, remarks: " badla for Inv No(" + dataBadla.vo_badla.billDetail[0].vochNo + ")", refNo: dataBadla.vochNo, voType: "Badla", credit: Number(dataBadla.amount), voRefId: instance.id, isUo: true, visible: true });
-  //           console.log(ledger);
-  //           accountEntry(ledger, true, instance.id);
-  //         }
-  //         else if (dataBadla.role == 'O') {
-
-  //           ledger.push({ accountName: dataBadla.vo_badla.badlaAccountId, compCode: dataBadla.compCode, date: dataBadla.date, particular: dataBadla.vo_badla.partyAccountId, remarks: " badla for Inv No(" + dataBadla.vo_badla.billDetail[0].vochNo + ")", refNo: dataBadla.vochNo, voType: "Badla", credit: Number(dataBadla.amount), voRefId: instance.id, isUo: false });
-  //           console.log(ledger);
-  //           accountEntry(ledger, false, instance.id);
-  //         }
-  //         //updateTransactions(data.vo_payment.billDetail,data.date,data.vochNo,vochID,data.role);
-  //         res.send({ status: '200' });
-  //       }
-  //     });
-
-  //   }
-  // });
-  // function removeVoucherTransaction(){
-
-  // }
   "delete sales invoice"
   router.post('/deleteSalesInvoice', function (req, res) {
     var id = req.query.id
@@ -707,7 +636,6 @@ module.exports = function (server) {
     //});
   }
 
-
   "update voucherTransaction"
   function updateTransactions(data, date, vochNo, vochID, role) {
     voucherTransaction.getDataSource().connector.connect(function (err, db) {
@@ -741,7 +669,7 @@ module.exports = function (server) {
 
     });
   }
-  " payment voucherTransaction"
+  "payment voucherTransaction"
   router.post('/payment', function (req, res) {
     var data = req.body;
     //createPayment(data,true);
@@ -970,7 +898,6 @@ module.exports = function (server) {
     res.send({ status: '200' });
   });
 
-
   router.get('/getAggregateInventories', function (req, res) {
     var visible = req.query.visible;
     var columns = req.query.columns;
@@ -1014,8 +941,6 @@ module.exports = function (server) {
       }
     });
   });
-
-
 
   function validateAvailableQtyOnCreate(data, res, callback) {
     var aggLineItems = data.aggLineItems;
@@ -1094,8 +1019,6 @@ module.exports = function (server) {
 
     });
   }
-
-
   "save voucherTransaction"
   router.post('/salesInvoiceVoucher', function (req, res) {
     var data = req.body
@@ -1107,7 +1030,7 @@ module.exports = function (server) {
     //   query = { type:data.type,vochNo: data.vochNo }
     // }
     if (id == null) {
-        validateAvailableQtyOnCreate(data, res, function () {
+      validateAvailableQtyOnCreate(data, res, function () {
         createSalesInvoiceVoucher(data, res);
       });
     } else {
@@ -1135,7 +1058,7 @@ module.exports = function (server) {
       });
     }
   });
-  //});
+ 
   "create voucher"
   function createSalesInvoiceVoucher(data, res) {
     delete data.aggLineItems;
@@ -1188,10 +1111,6 @@ module.exports = function (server) {
 
     });
   }
-
-
-
-
   "update voucherTransaction"
   function updateSalesInvoiceVoucher(data, id, dataOld, res) {
     if (id) {
@@ -1258,8 +1177,7 @@ module.exports = function (server) {
     });
 
   }
-  //});
-
+  
   "update inventory balance"
   function reversingSalesTransactionLogOfCreate(vochID, dataOld, callback) {
     console.log(vochID);
@@ -1282,8 +1200,6 @@ module.exports = function (server) {
       if (callback) callback();
     });
   }
-
-
   "update inventory balance"
   function updateInventoryValueOnCreate(data, id, date, vochNo) {
     Inventory.getDataSource().connector.connect(function (err, db) {
@@ -1352,8 +1268,6 @@ module.exports = function (server) {
     });
   }
 
-
-
   "Get outstanding voucher detail by customer name "
   router.get('/getVoucherData', function (req, res) {
     var customerId = req.query.customerId
@@ -1385,8 +1299,6 @@ module.exports = function (server) {
         });
     });
   });
-
-
 
   "get key value pair of account"
   router.get('/getAccountNameById', function (req, res) {
@@ -1479,57 +1391,7 @@ module.exports = function (server) {
     });
   });
 
-  // router.get('/dateWiseAccountDetail/:compCode', function (req, res) {
-  //   var compCode = req.params.compCode
-  //   var toDate = new Date(req.query.date);
-  //   console.log(toDate)
-  //   console.log(compCode)
-  //   Ledgers.getDataSource().connector.connect(function (err, db) {
-  //     var collection = db.collection('ledger');
-  //     collection.aggregate(
-  //       {
-  //         $match: {
-  //           date: {
-  //             $lte: toDate
-
-  //           },
-  //           compCode: compCode,
-  //         }
-  //       },
-  //       {
-  //         $group:
-  //         {
-  //           _id: { accountName: "$accountName" },
-  //           credit: { $sum: "$credit" },
-  //           debit: { $sum: "$debit" }
-  //         }
-  //       }
-  //       , function (err, instance) {
-  //         var ledgerDatalessThan = instance
-  //         var ledgerDatagreaterThan = instance
-  //         console.log(instance);
-  //         Accounts.find({ where: { isActive: true } }, function (err, instance) {
-  //           var accountData = instance
-  //           ledgerData = ledgerDatalessThan
-  //           if (ledgerDatalessThan.length > 0) {
-  //             for (var i = 0; i < accountData.length; i++) {
-  //               for (var j = 0; j < ledgerData.length; j++) {
-  //                 if (accountData[i].id == ledgerDatalessThan[j]._id.accountName) {
-  //                   accountData[i].credit = ledgerDatalessThan[j].credit
-  //                   accountData[i].debit = ledgerDatalessThan[j].debit
-  //                   //accountData[i].openingBalance = (ledgerDatalessThan[j].credit - ledgerDatalessThan[j].debit)
-  //                 }
-  //               }
-  //             }
-  //           }
-  //          reate
-  //         });
-  //       });
-  //   });
-  // });
-
-
-
+  // get opening balance
   router.post('/getOpeningBalnce/:accountName', function (req, res) {
     var compCode = req.body
     var fromDate = new Date(req.query.date)
@@ -1687,7 +1549,7 @@ module.exports = function (server) {
     }
 
   });
-  "createLedgerJson"
+  "createLedgerJson for expense"
   function createLedgerJsonExpense(data, id) {
     var accountTable = data.accountTable
     var itemTable = data.itemTable
@@ -1733,10 +1595,7 @@ module.exports = function (server) {
 
     return ledger;
   }
-
-
   "save bill new"
-
   router.post('/saveBillTest/:billId', function (req, res) {
     var data = req.body;
     var compCode = data.compCode
@@ -1892,7 +1751,7 @@ module.exports = function (server) {
     }
 
   });
-  " return Inventory data "
+  " create Inventory data "
   function createInventoryData(data, visible, no, id, count, compCode) {
     for (var i = 0; i < data.length; i++) {
       data[i].isActive = true;
@@ -1947,7 +1806,6 @@ module.exports = function (server) {
   }
 
   "get Sales invoice transaction data"
-
   router.get('/getInvoiceData/:compCode', function (req, res) {
     var compCode = req.params.compCode;
     var role = req.query.role;
@@ -1987,10 +1845,7 @@ module.exports = function (server) {
 
   });
 
-
-
   "get transaction data"
-
   router.get('/getTransactionData/:compCode', function (req, res) {
     var compCode = req.params.compCode;
     var role = req.query.role;
@@ -2040,7 +1895,7 @@ module.exports = function (server) {
 
   });
 
-  " get all transaction of a particular supplier"
+  "get all transaction of a particular supplier"
   router.get('/getAllTransaction/:supliersId', function (req, res) {
     var supliersId = req.params.supliersId;
     voucherTransaction.getDataSource().connector.connect(function (err, db) {
@@ -2076,8 +1931,7 @@ module.exports = function (server) {
 
   });
 
-  "get all open bill of a particular supplier"
-
+  "get opening balance ledger entry"
   router.get('/openingBalanceLedgerEntrynew/:compCode', function (req, res) {
     var compCode = req.params.compCode;
     voucherTransaction.getDataSource().connector.connect(function (err, db) {
@@ -2121,7 +1975,6 @@ module.exports = function (server) {
       return ledger;
     }
   });
-
   var ledgerEntry = function (db, data, callback) {
     var collection = db.collection('ledger');
     var cursor = collection.insertMany(data, function (err, result) {
@@ -2192,7 +2045,7 @@ module.exports = function (server) {
       callback(result);
     });
   }
-
+   // ledger entry of opening balance when account is created
   router.post('/openingBalanceLedgerEntry/:compCode', function (req, res) {
     var accountData = req.body;
     var compCode = req.params.compCode;
@@ -2243,9 +2096,7 @@ module.exports = function (server) {
 
 
   })
-
-  " rosemate"
-
+  "rosemate"
   router.post('/saveRosemate', function (req, res) {
     var id = req.query.id
     var data = req.body;
@@ -2423,7 +2274,6 @@ module.exports = function (server) {
     }
 
   }
-
   "getAccountOpeningBalnce"
   router.get('/getAccountOpeningBalnce/:compCode', function (req, res) {
     var compCode = req.params.compCode
@@ -2463,9 +2313,6 @@ module.exports = function (server) {
       });
     }
   });
-
-
-
   "account delete"
   router.post('/deleteAccount/:accountId', function (req, res) {
     var accountId = req.params.accountId
@@ -2488,7 +2335,6 @@ module.exports = function (server) {
     }
 
   });
-
   "purchase voucher delete"
   router.post('/deleteVoucher/:voucherId', function (req, res) {
     var accountId = req.params.accountId
@@ -2602,7 +2448,7 @@ module.exports = function (server) {
     });
     var getCount = function (db, type, callback) {
       var collection = db.collection('voucherTransaction');
-      var cursor = collection.count({type: type }, function (err, result) {
+      var cursor = collection.count({ type: type }, function (err, result) {
         assert.equal(err, null);
         callback(result);
       });
@@ -2640,7 +2486,7 @@ module.exports = function (server) {
       var thirdLedger = data.ledgerDataThird
       var ledger = [];
       var paritcular = "Purchase Settelment" + data.invoiceNo
-      ledger.push({ accountName: firstLedger.accountId, date: data.date, particular: secondLedger.accountId,particular1:thirdLedger.accountId, refNo: data.voRefNo, voType: "Purchase Settelment", credit: Number(firstLedger.amount), voRefId: id, isUo: true, visible: true, compCode: data.compCode })
+      ledger.push({ accountName: firstLedger.accountId, date: data.date, particular: secondLedger.accountId, particular1: thirdLedger.accountId, refNo: data.voRefNo, voType: "Purchase Settelment", credit: Number(firstLedger.amount), voRefId: id, isUo: true, visible: true, compCode: data.compCode })
       ledger.push({ accountName: secondLedger.accountId, date: data.date, particular: firstLedger.accountId, refNo: data.voRefNo, voType: "Purchase Settelment", debit: Number(secondLedger.amount), voRefId: id, isUo: true, visible: true, compCode: data.compCode })
       ledger.push({ accountName: thirdLedger.accountId, date: data.date, particular: firstLedger.accountId, refNo: data.voRefNo, voType: "Purchase Settelment", debit: Number(thirdLedger.amount), voRefId: id, isUo: true, visible: true, compCode: data.compCode })
       return ledger;
@@ -2660,7 +2506,6 @@ module.exports = function (server) {
       });
     }
   });
-
   router.post('/userActivityLog', function (req, res) {
     var data = req.body;
     voucherTransaction.getDataSource().connector.connect(function (err, db) {
@@ -2680,8 +2525,6 @@ module.exports = function (server) {
       });
     }
   });
-
-  // change by vivek
   router.post('/assignCompany', function (req, res) {
     var data = req.body;
     var role = data.role;
@@ -2706,8 +2549,6 @@ module.exports = function (server) {
       }
     });
   });
-
-
   router.post('/editCompany', function (req, res) {
     var data = req.body;
     delete data._id;
@@ -2747,10 +2588,7 @@ module.exports = function (server) {
       });
     });
   });
-
-
   // save jouranal 
-
   router.post('/savejournal/:id', function (req, res) {
     var voId = req.params.id
     var journalData = req.body
@@ -2797,43 +2635,36 @@ module.exports = function (server) {
       }
       return ledger;
     }
- });
-
- router.get('/checkSalesInventory/:invId', function (req, res){
-   var invId = req.params.invId
+  }); 
+   // check  Inventory if sales invoice created or not
+  router.get('/checkSalesInventory/:invId', function (req, res) {
+    var invId = req.params.invId
     voucherTransaction.getDataSource().connector.connect(function (err, db) {
-       checkInventory(db, invId, function (result) {
-         console.log(result)
-         Ledgers.count({voRefId: '59125d75310b0d0f5c7e0120', isUo: true }, function (err, instance) {
-           if (err) {
-                 console.log(err)
-         }
-         console.log(instance)
-         });
-           
-          if (result) {
-              if(result.salesTransaction){
-                 res.status(200).send({ status: "can not update" });
-              }
-               else{
-                 res.status(200).send({ status: "sales transaction does not exist" });
-               }
+      checkInventory(db, invId, function (result) {
+        console.log(result)
+        if (result) {
+          if (result.salesTransaction) {
+            res.status(200).send({ status: "can not update" });
           }
-          else{
-                res.status(200).send({ status: "invalid invoice Id" });
-               }
-        });
+          else {
+            res.status(200).send({ status: "sales transaction does not exist" });
+          }
+        }
+        else {
+          res.status(200).send({ status: "invalid invoice Id" });
+        }
       });
-       var checkInventory = function (db, invId, callback) {
-       var collection = db.collection('inventory');
-       collection.findOne({invId:invId} ,function (err, result) {
-          assert.equal(err, null);
-          callback(result);
+    });
+    var checkInventory = function (db, invId, callback) {
+      var collection = db.collection('inventory');
+      collection.findOne({ invId: invId }, function (err, result) {
+        assert.equal(err, null);
+        callback(result);
       });
     }
 
-    
- });
-    server.use(router);
-  };
+
+  });
+  server.use(router);
+};
 
