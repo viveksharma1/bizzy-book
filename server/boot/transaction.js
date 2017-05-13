@@ -17,7 +17,7 @@ module.exports = function (server) {
   var colors = require('colors');
   var test = require('./voucherDelete');
   var utils = require('./utils');
- 
+
   "rest Api Starts here"
   router.post('/updateAccount', function (req, res) {
     var id = req.body.id;
@@ -67,7 +67,7 @@ module.exports = function (server) {
     var acData = data;
     console.log(isUo);
     console.log(voRefId)
-    Ledgers.count({voRefId: voRefId, isUo: isUo }, function (err, instance) {
+    Ledgers.count({ voRefId: voRefId, isUo: isUo }, function (err, instance) {
       if (err) {
         console.log(err)
       }
@@ -271,7 +271,7 @@ module.exports = function (server) {
 
     });
   });
-"get purchase Account "
+  "get purchase Account "
   router.get('/getpurchaseAccount/:compCode', function (req, res) {
     var compCode = req.params.compCode
     Accounts.find({ where: { ancestor: 'PURCHASE ACCOUNTS', isActive: true } }, function (err, instance) {
@@ -324,33 +324,53 @@ module.exports = function (server) {
     // check if any dependent exist then send err message 
     var id = req.query.id;
     var data = req.body;
-    voucherTransaction.findOne({ where: { receiptId: new mongodb.ObjectID(id), type: "Badla Voucher" } }, function (err, instance) {
+    deleteReceipt(id, data, false, function (err) {
+      if (err) res.send(err);
+      else res.send({ status: '200' });
+    });
+  });
+  function deleteReceipt(id, data, isMock, callback) {
+    voucherTransaction.findOne({ where: { receiptId: typeof id == 'object' ? id : new mongodb.ObjectID(id), type: "Badla Voucher" } }, function (err, instance) {
       if (err) {
         console.log(err);
       }
-      else if (instance && instance.paymentLog && instance.paymentLog.length > 0) {
-        res.send({ err: "Badla exists", status: 200 });
-        return;
+      else if (instance) { //to check badla exists for receipts. 
+        //else if (instance && instance.paymentLog && instance.paymentLog.length > 0) { //to check if there is any transaction on dependent badla voucher. 
+        //res.send({ err: "Badla exists", status: 200 });
+        if (callback) callback({ err: "Badla exists", status: 200 });
       } else {
-        //remove receipt and ledger.
-        removeVoucherTransaction(id, data.role);
-        //update balance and payment log.
-        updateBalanceAndTransactionLog(new mongodb.ObjectId(id), data.role);
-        res.send({ status: '200' });
+        if (isMock) {
+          if (callback) callback();
+        } else {
+          //remove badla..
+          //removeBadlaVoucher(id, data.role, function () { //uncomment if want to check transaction on badla else comment.
+            //remove receipt and ledger.
+            removeVoucherTransaction(id, data.role);
+            //update balance and payment log.
+            updateBalanceAndTransactionLog(new mongodb.ObjectId(id), data.role);
+            if (callback) callback();
+          //})
+        }
       }
 
     })
-  });
+  }
+
   "Delete Payment"
   router.post('/deletePayment', function (req, res) {
     var id = req.query.id
     var data = req.body;
+    deletePayment(id, data, function () {
+      res.send({ status: '200' });
+    });
+  });
+  function deletePayment(id, data, callback) {
     //remove payment and ledger.
     removeVoucherTransaction(id, data.role);
     //update balance and payment log.
     updateBalanceAndTransactionLog(new mongodb.ObjectId(id), data.role);
-    res.send({ status: '200' });
-  });
+    if (callback) callback();
+  }
 
   "Receipt"
   router.post('/receipt', function (req, res) {
@@ -426,9 +446,10 @@ module.exports = function (server) {
           voucherTransaction.remove({ receiptId: new mongodb.ObjectID(id), type: "Badla Voucher" }, function (err, instance) {
             if (err) console.log(err);
             else console.log(instance);
-            if (callback) callback();
+
           });
         }
+        if (callback) callback();
       }
     })
   }
@@ -608,7 +629,7 @@ module.exports = function (server) {
     //voucherTransaction.getDataSource().connector.connect(function (err, db) {
     // var collection = db.collection('voucherTransaction');
     console.log(vochID);
-    voucherTransaction.find({ where: { "paymentLog.id": new mongodb.ObjectID(vochID) } }, { amount: 1, balance: 1, paymentLog: 1 }, function (err, instance) {
+    voucherTransaction.find({ where: { "paymentLog.id": vochID } }, { amount: 1, balance: 1, paymentLog: 1 }, function (err, instance) {
       if (err) {
         console.log(err);
         if (callback) callback();
@@ -627,10 +648,10 @@ module.exports = function (server) {
                 }
 
               }
-              var query1 = { $set: { 'transactionData.adminBalance': Number(data[i].balance) + paymentLogAmt } }
+              var query1 = { $set: { 'transactionData.adminBalance': Number(data[i].transactionData.balance) + paymentLogAmt } }
               var query2 = { $pull: { 'paymentLog': { id: vochID } } }
-            }else if(role == 'UO' && data[i].type == 'EXPENSE'){
-              var query1 = { $set: { 'transactionData.adminBalance': Number(data[i].balance) + paymentLogAmt,'transactionData.balance': Number(data[i].balance) + paymentLogAmt } }
+            } else if (role == 'UO' && data[i].type == 'EXPENSE') {
+              var query1 = { $set: { 'transactionData.adminBalance': Number(data[i].transactionData.balance) + paymentLogAmt, 'transactionData.balance': Number(data[i].transactionData.balance) + paymentLogAmt } }
               var query2 = { $pull: { 'paymentLog': { id: vochID } } }
             }
             else {
@@ -685,7 +706,7 @@ module.exports = function (server) {
         }
         else {
           var query1 = { $set: { balance: Number(data[i].balance) } }
-          var query2 = { $push: { 'paymentLog': { id: vochID, date: date, vochNo: vochNo, amount: data[i].amountPaid, isUo: false } } }
+          var query2 = { $push: { 'paymentLog': { id: vochID, date: date, vochNo: vochNo, amount: data[i].amountPaid,interest:data[i].interest, isUo: false } } }
 
         }
         //_id: new mongodb.ObjectId(id)
@@ -722,7 +743,7 @@ module.exports = function (server) {
     }
 
   });
-  function updatePayment(data, id, res) {
+  function updatePayment(data, id, res, callback) {
     console.log(id);
     voucherTransaction.update({ _id: new mongodb.ObjectId(id) }, data, function (err, instance) {
       if (err)
@@ -774,12 +795,13 @@ module.exports = function (server) {
           }
           updateTransactions(data.vo_payment.billDetail, data.date, data.vochNo, new mongodb.ObjectId(id), data.role);
           if (res) res.send(instance);
+          if (callback) callback();
         });
       }
 
     });
   }
-  function createPayment(data, res) {
+  function createPayment(data, res, callback) {
     voucherTransaction.create(data, function (err, instance) {
       if (instance) {
         var vochID = instance.id
@@ -827,6 +849,7 @@ module.exports = function (server) {
         }
         updateTransactions(data.vo_payment.billDetail, data.date, data.vochNo, vochID, data.role);
         if (res) res.send(instance);
+        if (callback) callback();
       }
 
     });
@@ -1068,7 +1091,7 @@ module.exports = function (server) {
     // }
 
     if (id == 'null') {
-       validateAvailableQtyOnCreate(data, res, function () {
+      validateAvailableQtyOnCreate(data, res, function () {
         createSalesInvoiceVoucher(data, res);
       });
     } else {
@@ -1096,7 +1119,7 @@ module.exports = function (server) {
       });
     }
   });
- 
+
   "create voucher"
   function createSalesInvoiceVoucher(data, res) {
     delete data.aggLineItems;
@@ -1215,7 +1238,7 @@ module.exports = function (server) {
     });
 
   }
-  
+
   "update inventory balance"
   function reversingSalesTransactionLogOfCreate(vochID, dataOld, callback) {
     console.log(vochID);
@@ -2214,7 +2237,7 @@ module.exports = function (server) {
       callback(result);
     });
   }
-   // ledger entry of opening balance when account is created
+  // ledger entry of opening balance when account is created
   router.post('/openingBalanceLedgerEntry/:compCode', function (req, res) {
     var accountData = req.body;
     var compCode = req.params.compCode;
@@ -2265,45 +2288,76 @@ module.exports = function (server) {
 
 
   })
+
   "rosemate"
+  router.post('/deleteRosemate', function (req, res) {
+    var id = req.query.id
+    var data = req.body;
+    deleteRosemate(data, id, true, function (err) {
+        if (err)
+          res.send(err);
+        else
+          res.send({ status: '200' });
+    });
+  });
   router.post('/saveRosemate', function (req, res) {
     var id = req.query.id
     var data = req.body;
     //console.log(req.body);
     if (id != 'null') {
-      var query = { id: id }
-      updateRosemate(req.body, id, function () {
-        res.send({ status: '200' });
-      });
+      //var query = { id: id }
+      deleteRosemate(data, id, false, function (err) {
+        if (err)
+          res.send(err);
+        else {
+          createRosemate(data, id, function () {
+            res.send({ status: '200' });
+          });
+        }
+
+      })
+      // updateRosemate(req.body, id, function () {
+      //   res.send({ status: '200' });
+      // });
 
     }
     else {
-      createRosemate(data, function () {
+      createRosemate(data, id, function () {
         res.send({ status: '200' });
       });
 
     }
   });
-  function createRosemate(data, callback) {
-
+  function createRosemate(data, id, callback) {
     var receipts = data.vo_rosemate.receipts;
     var payments = data.vo_rosemate.payments;
     //var newReceipts=
-
     function processReceipts(i) {
       if (i < receipts.length) {
         var id = receipts[i].id;
-
         voucherTransaction.count({ type: 'Receipt' }, function (err, instance) {
-
-          //console.log(instance);
           var cVouchNo = instance + 1;
           receipts[i].vochNo = cVouchNo;
           receipts[i].id = mmongoose.Types.ObjectId();
-          console.log(receipts[i] + " creating");
-          createReceipt(receipts[i]);
-          processReceipts(i + 1);
+          console.log("creating receipt with vouchNo: " + cVouchNo);
+          var dataBadla;
+          //var isBadla=false;
+          if (receipts[i].vo_badla) {
+            //badla payment
+            dataBadla = receipts[i].vo_badla;
+            delete receipts[i].vo_badla;
+          }
+          createReceipt(receipts[i], function (dataInstance) {
+            if (dataBadla) {
+              dataBadla.receiptId = dataInstance.id;
+              createBadlaVoucher(dataBadla, function () {
+                processReceipts(i + 1);
+              });
+            } else {
+              processReceipts(i + 1);
+            }
 
+          });
         });
 
       } else {//if(callback1)
@@ -2312,26 +2366,22 @@ module.exports = function (server) {
 
     }
     processReceipts(0);
-
-
     function processPayments(i) {
       if (i < payments.length) {
-
         voucherTransaction.count({ type: 'Payment' }, function (err, instance) {
-
           console.log(instance);
           var cVouchNo = instance + 1;
           payments[i].vochNo = cVouchNo;
           payments[i].id = mmongoose.Types.ObjectId();
           //console.log(payments[i]);
-          console.log(payments[i] + " creating");
-          createPayment(payments[i]);
-          processPayments(i + 1);
-
+          console.log("creating payment with vouchNo: " + cVouchNo);
+          createPayment(payments[i], null, function () {
+            processPayments(i + 1);
+          });
 
         });
       } else {
-        createRosemateEntry();
+        createRosemateEntry(id);
       }
     }
     //}
@@ -2339,110 +2389,181 @@ module.exports = function (server) {
 
 
 
-    function createRosemateEntry() {
-      console.log("Inside Create Rosemate");
-      voucherTransaction.count({ type: 'Rosemate' }, function (err, instance) {
-        console.log(data);
-        data.vochNo = instance + 1;
-        voucherTransaction.create(data, function (err, instance) {
+    function createRosemateEntry(id) {
+      if (id != 'null') {
+        //update entry...
+        voucherTransaction.update({ _id: new mongodb.ObjectId(id) }, data, function (err, instance) {
           if (err) {
             console.log(err);
           }
           else {
-            console.log("Returning Result");
             if (callback) callback();
           }
         });
-      });
-    }
-
-
-  }
-  function updateRosemate(data, id, callback) {
-    //get all receipts and check if has id
-    //then update receipts and update related ledger and logs
-    //if not then create new receipts and create ledger entries.
-    //
-    //function createReceiptEntries(callback1){
-    var receipts = data.vo_rosemate.receipts;
-    var payments = data.vo_rosemate.payments;
-    //var newReceipts=
-
-    function processReceipts(i) {
-      if (i < receipts.length) {
-        var id = receipts[i].id;
-        if (id) {
-          //console.log(receipts[i]+"updating");
-          updateReceipt(receipts[i], receipts[i].id);
-          receipts[i].id = mmongoose.Types.ObjectId(id);
-          processReceipts(i + 1);
-        }
-        else {
-          voucherTransaction.count({ type: 'Receipt' }, function (err, instance) {
-
-            //console.log(instance);
-            var cVouchNo = instance + 1;
-            receipts[i].vochNo = cVouchNo;
-            receipts[i].id = mmongoose.Types.ObjectId();
-            console.log(receipts[i] + " creating");
-            createReceipt(receipts[i]);
-            processReceipts(i + 1);
-
-          });
-        }
-      } else {//if(callback1)
-        processPayments(0);
-      }
-
-    }
-    processReceipts(0);
-
-
-    function processPayments(i) {
-      if (i < payments.length) {
-        if (payments[i].id) {
-          updatePayment(payments[i], payments[i].id);
-          payments[i].id = mmongoose.Types.ObjectId(id);
-          processPayments(i + 1);
-        }
-        else {
-          voucherTransaction.count({ type: 'Payment' }, function (err, instance) {
-
-            //console.log(instance);
-            var cVouchNo = instance + 1;
-            payments[i].vochNo = cVouchNo;
-            payments[i].id = mmongoose.Types.ObjectId();
-            //console.log(payments[i]);
-            console.log(payments[i] + " creating");
-            createPayment(payments[i]);
-            processPayments(i + 1);
-
-
-          });
-        }
       } else {
-        createRosemateEntry();
+        //create entry.
+        console.log("Inside Create Rosemate");
+        voucherTransaction.count({ type: 'Rosemate' }, function (err, instance) {
+          console.log(data);
+          data.vochNo = instance + 1;
+          voucherTransaction.create(data, function (err, instance) {
+            if (err) {
+              console.log(err);
+            }
+            else {
+              console.log("Returning Result");
+              if (callback) callback();
+            }
+          });
+        });
+      }
+
+    }
+  }
+  function validateRosemate(receiptsOld, callback) {
+    deleteReceiptOld(0);
+    function deleteReceiptOld(i) {
+      if (i < receiptsOld.length) {
+        deleteReceipt(receiptsOld[i].id.toString(), receiptsOld[i], true, function (err) {
+          if (err) {
+            callback(err);
+            return;
+          } else
+            deleteReceiptOld(i + 1);
+        })
+      } else {
+        callback();
       }
     }
-    //}
-    //var newReceipts=
-
-
-
-    function createRosemateEntry() {
-      voucherTransaction.update({ _id: new mongodb.ObjectId(id) }, data, function (err, instance) {
-        if (err) {
-          console.log(err);
-        }
-        else {
-
-
-          if (callback) callback();
-        }
-      });
-    }
-
   }
+
+  function deleteRosemate(data, id, deleteVoucher, callback) {
+    //get previous rosemate entry and delete all receipt,payments and their respective ledgers.
+    voucherTransaction.findOne({ "where": { "_id": ObjectID(id) } }, function (err, resultOld) {
+      if (err) {
+        console.log(err);
+      } else {
+        /////
+        //validate is there any badla with receipt on it exists... 
+        var receiptsOld = resultOld.vo_rosemate.receipts;
+        var paymentsOld = resultOld.vo_rosemate.payments;
+        validateRosemate(receiptsOld, function (err) {
+          if (err) {
+            if (callback)
+              callback(err);
+            return;
+          } else {
+            deleteReceiptOld(0);
+            function deleteReceiptOld(i) {
+              if (i < receiptsOld.length) {
+                deleteReceipt(receiptsOld[i].id.toString(), receiptsOld[i], true, function (err) {
+                  if (err) {
+                    if (callback)
+                      callback(err);
+                    return;
+                  } else
+                    deleteReceiptOld(i + 1);
+                })
+              } else {
+                deletePaymentOld(0);
+              }
+            }
+            function deletePaymentOld(i) {
+              if (i < paymentsOld.length) {
+                deletePayment(paymentsOld[i].id.toString(), paymentsOld[i], function () {
+                  deletePaymentOld(i + 1);
+                })
+              } else {
+                if (deleteVoucher)
+                  removeVoucherTransaction(id, data.role);
+                if (callback) callback();
+              }
+            }
+          }
+        });
+      }
+    });
+  }
+
+  // function updateRosemate(data, id, callback) {
+  //   //get previous rosemate entry and delete all receipt,payments and their respective ledgers.
+  //   //get all receipts and check if has id
+  //   //then update receipts and update related ledger and logs
+  //   //if not then create new receipts and create ledger entries.
+  //   //
+  //   //function createReceiptEntries(callback1){
+  //   var receipts = data.vo_rosemate.receipts;
+  //   var payments = data.vo_rosemate.payments;
+  //   //var newReceipts=
+
+  //   function processReceipts(i) {
+  //     if (i < receipts.length) {
+  //       var id = receipts[i].id;
+  //       if (id) {
+  //         //console.log(receipts[i]+"updating");
+  //         updateReceipt(receipts[i], receipts[i].id, function () {
+  //           receipts[i].id = mmongoose.Types.ObjectId(id);
+  //           processReceipts(i + 1);
+  //         });
+
+  //       }
+  //       else {
+  //         voucherTransaction.count({ type: 'Receipt' }, function (err, instance) {
+  //           //console.log(instance);
+  //           var cVouchNo = instance + 1;
+  //           receipts[i].vochNo = cVouchNo;
+  //           receipts[i].id = mmongoose.Types.ObjectId();
+  //           console.log(receipts[i] + " creating");
+  //           createReceipt(receipts[i], function () {
+  //             processReceipts(i + 1);
+  //           });
+
+
+  //         });
+  //       }
+  //     } else {//if(callback1)
+  //       processPayments(0);
+  //     }
+
+  //   }
+  //   processReceipts(0);
+  //   function processPayments(i) {
+  //     if (i < payments.length) {
+  //       if (payments[i].id) {
+  //         updatePayment(payments[i], payments[i].id, null, function () {
+  //           payments[i].id = mmongoose.Types.ObjectId(id);
+  //           processPayments(i + 1);
+  //         });
+
+  //       }
+  //       else {
+  //         voucherTransaction.count({ type: 'Payment' }, function (err, instance) {
+  //           //console.log(instance);
+  //           var cVouchNo = instance + 1;
+  //           payments[i].vochNo = cVouchNo;
+  //           payments[i].id = mmongoose.Types.ObjectId();
+  //           //console.log(payments[i]);
+  //           console.log(payments[i] + " creating");
+  //           createPayment(payments[i], null, function () {
+  //             processPayments(i + 1);
+  //           });
+  //         });
+  //       }
+  //     } else {
+  //       createRosemateEntry();
+  //     }
+  //   }
+  //   function createRosemateEntry() {
+  //     voucherTransaction.update({ _id: new mongodb.ObjectId(id) }, data, function (err, instance) {
+  //       if (err) {
+  //         console.log(err);
+  //       }
+  //       else {
+  //         if (callback) callback();
+  //       }
+  //     });
+  //   }
+  // }
   "getAccountOpeningBalnce"
   router.get('/getAccountOpeningBalnce/:compCode', function (req, res) {
     var compCode = req.params.compCode
@@ -2544,7 +2665,7 @@ module.exports = function (server) {
 
   });
 
-   "get invoice for purchase Settelment"
+  "get invoice for purchase Settelment"
   router.get('/getInvoiceSett/:invoiceNo', function (req, res) {
     var invoiceNo = req.params.invoiceNo;
     voucherTransaction.getDataSource().connector.connect(function (err, db) {
@@ -2578,8 +2699,8 @@ module.exports = function (server) {
     }
   });
 
-   "get invoice for sales settelment"
-   router.get('/getSalesInvoice/:invoiceNo', function (req, res) {
+  "get invoice for sales settelment"
+  router.get('/getSalesInvoice/:invoiceNo', function (req, res) {
     var invoiceNo = req.params.invoiceNo;
     voucherTransaction.getDataSource().connector.connect(function (err, db) {
       getInvoice(db, invoiceNo, function (result) {
@@ -2630,7 +2751,7 @@ module.exports = function (server) {
     })
     var getId = function (db, refNo, callback) {
       var collection = db.collection('voucherTransaction');
-      var cursor = collection.find({invoiceNo: refNo }).toArray(function (err, result) {
+      var cursor = collection.find({ invoiceNo: refNo }).toArray(function (err, result) {
         assert.equal(err, null);
         callback(result);
       });
@@ -2841,7 +2962,7 @@ module.exports = function (server) {
     }
 
 
-   // check  Inventory if sales invoice created or not
+    // check  Inventory if sales invoice created or not
 
   });
 
@@ -2875,7 +2996,7 @@ module.exports = function (server) {
 
 
   });
-  
+
   server.use(router);
 };
 
