@@ -822,8 +822,8 @@ module.exports = function (server) {
               }
             }
           }
-          ledger.push({ accountName: data.vo_payment.partyAccountId, date: data.date, particular: data.vo_payment.bankAccountId, refNo: data.vochNo, voType: data.type, debit: Number(data.amount), voRefId: instance.id, isUo: true, visible: true },
-            { accountName: data.vo_payment.bankAccountId, date: data.date, particular: data.vo_payment.partyAccountId, refNo: data.vochNo, voType: data.type, credit: Number(data.amount), voRefId: instance.id, isUo: true, visible: true }
+          ledger.push({ accountName: data.vo_payment.partyAccountId,compCode: data.compCode, date: data.date, particular: data.vo_payment.bankAccountId, refNo: data.vochNo, voType: data.type, debit: Number(data.amount), voRefId: instance.id, isUo: true, visible: true },
+            { accountName: data.vo_payment.bankAccountId,compCode: data.compCode, date: data.date, particular: data.vo_payment.partyAccountId, refNo: data.vochNo, voType: data.type, credit: Number(data.amount), voRefId: instance.id, isUo: true, visible: true }
           )
           accountEntry(ledger, true, instance.id);
         }
@@ -842,8 +842,8 @@ module.exports = function (server) {
               }
             }
           }
-          ledger.push({ accountName: data.vo_payment.partyAccountId, date: data.date, particular: data.vo_payment.bankAccountId, refNo: data.vochNo, voType: data.type, debit: Number(data.amount), voRefId: instance.id, isUo: false },
-            { accountName: data.vo_payment.bankAccountId, date: data.date, particular: data.vo_payment.partyAccountId, refNo: data.vochNo, voType: data.type, credit: Number(data.amount), voRefId: instance.id, isUo: false }
+          ledger.push({ accountName: data.vo_payment.partyAccountId,compCode: data.compCode, date: data.date, particular: data.vo_payment.bankAccountId, refNo: data.vochNo, voType: data.type, debit: Number(data.amount), voRefId: instance.id, isUo: false },
+            { accountName: data.vo_payment.bankAccountId,compCode: data.compCode, date: data.date, particular: data.vo_payment.partyAccountId, refNo: data.vochNo, voType: data.type, credit: Number(data.amount), voRefId: instance.id, isUo: false }
           )
           accountEntry(ledger, false, instance.id);
         }
@@ -1079,17 +1079,10 @@ module.exports = function (server) {
 
     });
   }
-  "save voucherTransaction"
+  "Save Sales Invoice"
   router.post('/salesInvoiceVoucher', function (req, res) {
     var data = req.body
     var id = req.query.id;
-    // if (id) {
-    //   var query = {type:data.type, id: "6913f4be1402843c38fceb1e" }
-    // }
-    // else {
-    //   query = { type:data.type,vochNo: data.vochNo }
-    // }
-
     if (id == 'null') {
       validateAvailableQtyOnCreate(data, res, function () {
         createSalesInvoiceVoucher(data, res);
@@ -1232,6 +1225,119 @@ module.exports = function (server) {
           // }
           console.log({ "message": "voucher Updated", "id": id });
           //if (res.headersSent) return;
+          res.send({ "message": "voucher Updated", "id": id });
+        }
+      });
+    });
+
+  }
+  "Save General Invoice"
+  router.post('/generalInvoiceVoucher', function (req, res) {
+    var data = req.body
+    var id = req.query.id;
+    if (id == 'null') {
+      validateAvailableQtyOnCreate(data, res, function () {
+        createGeneralInvoiceVoucher(data, res);
+      });
+    } else {
+      voucherTransaction.findOne({ "where": { type: data.type, id: id } }, function (err, instance, count) {
+        if (err) {
+          console.log(err)
+        }
+        else {
+          console.log(instance)
+          if (instance) {
+            //also check is there any receipt against this invoice then send err message invoice has some receipts.
+            if (instance.paymentLog && instance.paymentLog.length > 0) {
+              res.send({ err: "Receipt exists", status: 200 });
+              return;
+            } else {
+              validateAvailableQtyOnUpdate(data, id, res, function (result) {
+                updateGeneralInvoiceVoucher(data, id, result, res);
+              });
+              //updateVoucher(data, id);
+            }
+          }
+        }
+      });
+    }
+  });
+
+  "create voucher"
+  function createGeneralInvoiceVoucher(data, res) {
+    delete data.aggLineItems;
+    voucherTransaction.create(data, function (err, instance) {
+      if (err) {
+        console.log(err);
+      }
+      else {
+        console.log("voucher created")
+        console.log(instance)
+        if (data.role == 'UO') { //Sales Invoice can be created by Un Official
+          var invData = data.invoiceData.billData;
+          var vochNo = data.vochNo
+          var date = data.date
+          var id = instance.id
+          var accountData = data.invoiceData.accountlineItem;
+          var ledger = [];
+          if (accountData) {
+            for (var i = 0; i < accountData.length; i++) {
+              ledger.push({ accountName: accountData[i].accountId, date: data.date, particular: data.invoiceData.ledgerAccountId, refNo: data.vochNo, voType: data.type, credit: Number(accountData[i].amount), voRefId: instance.id, isUo: false })
+            }
+          }
+          ledger.push({ accountName: data.invoiceData.ledgerAccountId, date: data.date, particular: data.invoiceData.customerAccountId, refNo: data.vochNo, voType: data.type, credit: Number(data.invoiceData.saleAmount), voRefId: instance.id, isUo: false, visible: false, compCode: data.compCode },
+            { accountName: data.invoiceData.customerAccountId, date: data.date, particular: data.invoiceData.ledgerAccountId, refNo: data.vochNo, voType: data.type, debit: Number(data.invoiceData.saleAmount), voRefId: instance.id, isUo: false, visible: false, compCode: data.compCode }
+
+          )
+          accountEntry(ledger, false, instance.id);
+          updateInventoryValueOnCreate(invData, id, date, vochNo);
+        }
+        console.log({ "message": "voucher Created", "id": instance.id });
+        res.send({ "message": "voucher Created", "id": instance.id });
+      }
+
+    });
+  }
+  "update voucherTransaction"
+  function updateGeneralInvoiceVoucher(data, id, dataOld, res) {
+    if (id) {
+      var query = { id: id }
+    }
+    else {
+      query = { vochNo: data.vochNo }
+    }
+    //update inventory and balance and pull transactionLog.....
+    reversingSalesTransactionLogOfCreate(ObjectID(id), dataOld, function () {
+      delete data.aggLineItems;
+      voucherTransaction.update(query, data, function (err, instance) {
+        if (err) {
+          console.log(err)
+        }
+        else {
+          console.log(instance);
+          if (data.role == 'UO') {
+            var invDataSales = data.invoiceData.billData;
+            var vochNo = data.vochNo
+            var date = data.date
+            var accountData = data.invoiceData.accountlineItem;
+            var accountData = data.invoiceData.accountlineItem;
+            var objectId = new mongodb.ObjectId(id)
+            var ledger = [];
+            if (accountData) {
+              for (var i = 0; i < accountData.length; i++) {
+                ledger.push({ accountName: accountData[i].accountId, date: data.date, particular: data.invoiceData.ledgerAccountId, refNo: data.vochNo, voType: data.type, debit: Number(accountData[i].amount), voRefId: objectId, isUo: false, visible: false, compCode: data.compCode })
+              }
+            }
+            ledger.push({ accountName: data.invoiceData.ledgerAccountId, date: data.date, particular: data.invoiceData.customerAccountId, refNo: data.vochNo, voType: data.type, credit: Number(data.invoiceData.saleAmount), voRefId: objectId, isUo: false, visible: false, compCode: data.compCode },
+              { accountName: data.invoiceData.customerAccountId, date: data.date, particular: data.invoiceData.ledgerAccountId, refNo: data.vochNo, voType: data.type, debit: Number(data.invoiceData.saleAmount), voRefId: objectId, isUo: false, visible: false, compCode: data.compCode }
+
+            )
+            console.log(ledger);
+            accountEntry(ledger, false, objectId);
+            updateInventoryValueOnCreate(invDataSales, ObjectID(id), date, vochNo);
+
+          }
+          console.log({ "message": "voucher Updated", "id": id });
           res.send({ "message": "voucher Updated", "id": id });
         }
       });
