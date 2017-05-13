@@ -67,14 +67,13 @@ module.exports = function (server) {
     var acData = data;
     console.log(isUo);
     console.log(voRefId)
-    Ledgers.find({ voRefId: voRefId, isUo: isUo }, function (err, instance) {
+    Ledgers.count({voRefId: voRefId, isUo: isUo }, function (err, instance) {
       if (err) {
         console.log(err)
       }
       else {
         var count = instance;
-        console.log(instance.length)
-        if (instance.length > 0) {
+        if (count > 0) {
           Ledgers.destroyAll({ voRefId: voRefId, isUo: isUo }, function (err, instance) {
             console.log(instance)
             console.log("ledger removed in account Entry")
@@ -87,7 +86,7 @@ module.exports = function (server) {
             });
           })
         }
-        else {
+        else if (data != null) {
           Ledgers.create(data, function (err, instance) {
             if (err) {
               console.log(err)
@@ -272,7 +271,16 @@ module.exports = function (server) {
 
     });
   });
+"get purchase Account "
+  router.get('/getpurchaseAccount/:compCode', function (req, res) {
+    var compCode = req.params.compCode
+    Accounts.find({ where: { ancestor: 'PURCHASE ACCOUNTS', isActive: true } }, function (err, instance) {
+      if (instance) {
+        res.send(instance);
+      };
 
+    });
+  });
   "get tax account "
   router.get('/getPaymentAccount/:compCode', function (req, res) {
     var compCode = req.params.compCode
@@ -313,15 +321,25 @@ module.exports = function (server) {
   });
   "Delete Receipt"
   router.post('/deleteReceipt', function (req, res) {
-    var id = req.query.id
+    // check if any dependent exist then send err message 
+    var id = req.query.id;
     var data = req.body;
-    //remove any dependent vouchers like 'badla' and there ledgers
-    removeBadlaVoucher(id, data.role)
-    //remove receipt and ledger.
-    removeVoucherTransaction(id, data.role);
-    //update balance and payment log.
-    updateBalanceAndTransactionLog(new mongodb.ObjectId(id), data.role);
-    res.send({ status: '200' });
+    voucherTransaction.findOne({ where: { receiptId: new mongodb.ObjectID(id), type: "Badla Voucher" } }, function (err, instance) {
+      if (err) {
+        console.log(err);
+      }
+       else if (instance && instance.paymentLog && instance.paymentLog.length > 0) {
+          res.send({ err: "Badla exists", status: 200 });
+          return;
+        } else {
+          //remove receipt and ledger.
+          removeVoucherTransaction(id, data.role);
+          //update balance and payment log.
+          updateBalanceAndTransactionLog(new mongodb.ObjectId(id), data.role);
+          res.send({ status: '200' });
+        }
+      
+    })
   });
   "Delete Payment"
   router.post('/deletePayment', function (req, res) {
@@ -1029,8 +1047,9 @@ module.exports = function (server) {
     // else {
     //   query = { type:data.type,vochNo: data.vochNo }
     // }
-    if (id == null) {
-      validateAvailableQtyOnCreate(data, res, function () {
+
+    if (id == 'null') {
+       validateAvailableQtyOnCreate(data, res, function () {
         createSalesInvoiceVoucher(data, res);
       });
     } else {
@@ -1524,6 +1543,12 @@ module.exports = function (server) {
         createExpence(db, data, function (result) {
           console.log(result.ops[0]._id);
           if (result) {
+            if (data.role == 'O') {
+              isUo = false
+            }
+            if (data.role == 'UO') {
+              isUo = true
+            }
             console.log("Expense Created")
             var ledger = createLedgerJsonExpense(data.transactionData, result.ops[0]._id);
             accountEntry(ledger, isUo, new mongodb.ObjectId(result.ops[0]._id));
@@ -2374,6 +2399,8 @@ module.exports = function (server) {
     }
 
   });
+
+   "get invoice for purchase Settelment"
   router.get('/getInvoiceSett/:invoiceNo', function (req, res) {
     var invoiceNo = req.params.invoiceNo;
     voucherTransaction.getDataSource().connector.connect(function (err, db) {
@@ -2406,6 +2433,39 @@ module.exports = function (server) {
         });
     }
   });
+
+   "get invoice for sales settelment"
+   router.get('/getSalesInvoice/:invoiceNo', function (req, res) {
+    var invoiceNo = req.params.invoiceNo;
+    voucherTransaction.getDataSource().connector.connect(function (err, db) {
+      getInvoice(db, invoiceNo, function (result) {
+        if (result.length > 0) {
+          res.status(200).send(result);
+        }
+        else {
+          res.status(200).send({ 'status': "Not Found" });
+        }
+      });
+    });
+    var getInvoice = function (db, invoiceNo, callback) {
+      var collection = db.collection('voucherTransaction');
+      var cursor = collection.aggregate(
+        { $match: { vochNo: invoiceNo } },
+        {
+          $project: {
+            customer: "$invoiceData.customerAccountId",
+            date: "$date",
+            totalLineItemData: "$invoiceData.billData",
+            totalAmount: "$amount",
+            accountData: "$invoiceData.accountlineItem"
+          }
+        }
+        , function (err, result) {
+          assert.equal(err, null);
+          callback(result);
+        });
+    }
+  });
   // purchaseSettelment count
   router.post('/voucherTransactionsExist/:refNo', function (req, res) {
     var refNo = req.params.refNo
@@ -2426,7 +2486,7 @@ module.exports = function (server) {
     })
     var getId = function (db, refNo, callback) {
       var collection = db.collection('voucherTransaction');
-      var cursor = collection.find({ invoiceNo: refNo }).toArray(function (err, result) {
+      var cursor = collection.find({invoiceNo: refNo }).toArray(function (err, result) {
         assert.equal(err, null);
         callback(result);
       });
@@ -2635,8 +2695,12 @@ module.exports = function (server) {
       }
       return ledger;
     }
-  }); 
+
+
    // check  Inventory if sales invoice created or not
+
+  });
+
   router.get('/checkSalesInventory/:invId', function (req, res) {
     var invId = req.params.invId
     voucherTransaction.getDataSource().connector.connect(function (err, db) {
@@ -2646,6 +2710,8 @@ module.exports = function (server) {
           if (result.salesTransaction) {
             res.status(200).send({ status: "can not update" });
           }
+
+
           else {
             res.status(200).send({ status: "sales transaction does not exist" });
           }
@@ -2665,6 +2731,7 @@ module.exports = function (server) {
 
 
   });
+  
   server.use(router);
 };
 
