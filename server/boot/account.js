@@ -34,7 +34,6 @@ exports.dateWiseAccountDetail = function (req, res) {
     var role = req.query.role
     voucherTransaction.getDataSource().connector.connect(function (err, db) {
          getLedger(db,function (result) {
-             console.log(query)
              if(result){
                  var ledgerData = result
                  getAccount(db ,function (result) {
@@ -96,6 +95,91 @@ var getLedger = function (db, callback) {
            });
       }
 };
+exports.getBalanceSheettest = function (req, res) {
+    var compCode = req.body 
+    voucherTransaction.getDataSource().connector.connect(function (err, db) {
+         getAccountaggregate(db,function (result) {
+             if(result){
+                 console.log(result)
+                 var accountData = result;
+                 getLedgerForReport(db, compCode,function (result) {
+                     if(result){
+                         var ledgerdata = result
+                         var reportdata = []
+                         for(var i=0;i<accountData.length;i++){
+                             for(var j=0;j<ledgerdata.length;j++){
+                                 if((accountData[i]._id.id).toHexString() == ledgerdata[j]._id.accountName) {
+                                     var under = accountData[i]._id.accountName
+                                     console.log(under)
+                                     var output = {};
+                                     output["account"]= under;
+                                     if(accountData[i]._id.balanceType == 'credit'){
+                                         output["amount"]= ledgerdata[j].credit - ledgerdata[j].debit;
+                                     }if(accountData[i]._id.balanceType == 'debit'){
+                                         output["amount"]= ledgerdata[j].debit - ledgerdata[j].credit ;
+                                     }
+                                    
+                                      if(accountData[i]._id.ancestor[0] == "PRIMARY"){
+                                      var index = accountData[i]._id.ancestor.indexOf("PRIMARY");
+                                      if (index > -1) {
+                                            accountData[i]._id.ancestor.splice(index, 1);
+                                      }
+                                      }
+                                      output["ancestor"]= accountData[i]._id.ancestor;
+                                      output["balanceType"]= accountData[i]._id.balanceType;
+                                      reportdata.push(output);
+                                      //console.log(reportdata)
+                                 }
+                             }
+                         }
+                         res.send(reportdata)
+
+                     }
+             });
+             }
+         });
+    });
+     var getAccountaggregate = function (db, callback) {
+          var  ancestors = [ "BRANCH / DIVISIONS",
+                        "CAPITAL ACCOUNT",
+                        "CURRENT ASSETS",
+                        "CURRENT LIABILITIES",
+                        "FIXED ASSETS",
+                        "INVESTMENTS",
+                        "LOANS (LIABILITY)",
+                        "MISC. EXPENSES (ASSET)",
+                        "SUSPENSE A/C",
+                    ]
+       var collection = db.collection('account');
+        var cursor = collection.aggregate(  
+        {$match: {ancestor:{$in:ancestors}}},   
+         {
+           $group:
+            {
+              _id: {accountName: "$Under",id:"$_id",balanceType:"$balanceType",ancestor:"$ancestor"}
+           }
+         },  function(err, result) {
+                assert.equal(err, null);
+                callback(result);
+      });
+     }
+     var getLedgerForReport = function (db,compCode, callback) {
+       var collection = db.collection('ledger');
+       var cursor = collection.aggregate( 
+         {$match: {compCode:{$in:compCode},isUo:false}},    
+         {       
+           $group:
+            {
+              _id: { accountName: "$accountName" },
+               credit: { $sum: "$credit" },
+               debit: { $sum: "$debit" }
+           }
+         },  function(err, result) {
+                assert.equal(err, null);
+                callback(result);
+      });
+     }
+}
 
 exports.getBalanceSheet = function (req, res) {
     var toDate = new Date(req.query.date);

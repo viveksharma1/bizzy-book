@@ -2189,14 +2189,14 @@ module.exports = function (server) {
     var isUo;
     var visible;
     if (role == 'UO') {
-      isUo = false
+      isUo = true
       visible = true
     }
     if (role == 'O') {
-      isUo = true
+      isUo = false
       visible = false
     }
-    var currentDate = new Date("02/02/2017")
+    var currentDate = new Date("02/02/2016")
     for (var i = 0; i < data.length; i++) {
       if (data[i].balanceType == 'credit' && data[i].openingBalance) {
         ledger.push({ accountName: accountId, date: currentDate, particular: accountId, refNo: '', voType: "Balance", credit: Number(data[i].openingBalance), voRefId: '', isUo: isUo, visible: visible, compCode: compCode })
@@ -2227,10 +2227,11 @@ module.exports = function (server) {
         var openingLedger = result;
         console.log('Account Info '.green, result);
         checkOpeningLedger(db, accountId, compCode, function (result) {
+          var exist = result
           console.log("is exist".green, result)
           var data = createJson(openingLedger, compCode, accountId, role)
           console.log("data for ledgerEntry".red, data)
-          if (result > 0) {
+          if (exist > 0) {
             console.log('opening Balance ledger exist'.green);
             console.log('updating existing ledger...'.yellow);
             if (data.length > 0) {
@@ -2242,7 +2243,8 @@ module.exports = function (server) {
               })
 
             }
-            if (result == 0) {
+          }
+            if (exist == 0) {
               console.log('opening Balance ledger does not exist'.red);
               console.log('creating opening balance ledger...'.green);
               ledgerEntry(db, data, function (result) {
@@ -2253,11 +2255,7 @@ module.exports = function (server) {
               })
 
             }
-          }
-          else {
-            console.log('opening Balance is empty'.green);
-            res.status(200).send();
-          }
+          
         });
 
       })
