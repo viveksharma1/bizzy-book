@@ -34,7 +34,7 @@ exports.dateWiseAccountDetail = function (req, res) {
     var role = req.query.role
     voucherTransaction.getDataSource().connector.connect(function (err, db) {
          getLedger(db,function (result) {
-             console.log(query)
+            
              if(result){
                  var ledgerData = result
                  getAccount(db ,function (result) {
