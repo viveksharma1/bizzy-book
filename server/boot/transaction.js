@@ -2175,10 +2175,10 @@ module.exports = function (server) {
 
   }
 
-  var checkOpeningLedger = function (db, accountId, compCode, callback) {
+  var checkOpeningLedger = function (db, accountId, compCode, isUo, callback) {
     var collection = db.collection('ledger');
     console.log('checking data with query'.red, accountId, compCode)
-    var cursor = collection.count({ accountName: accountId, compCode: compCode, voType: "Balance" }, function (err, result) {
+    var cursor = collection.count({ accountName: accountId, compCode: compCode, voType: "Balance",isUo:isUo }, function (err, result) {
       assert.equal(err, null);
       callback(result);
     });
@@ -2220,13 +2220,19 @@ module.exports = function (server) {
     var compCode = req.params.compCode;
     var accountId = req.query.accountId;
     var role = req.query.role;
+     if (role == 'UO') {
+      isUo = true
+    }
+    if (role == 'O') {
+      isUo = false  
+    }
     console.log('>request processing...'.yellow)
     console.log("Role is", req.query)
     voucherTransaction.getDataSource().connector.connect(function (err, db) {
       getAccount(db, accountId, function (result) {
         var openingLedger = result;
         console.log('Account Info '.green, result);
-        checkOpeningLedger(db, accountId, compCode, function (result) {
+        checkOpeningLedger(db, accountId, compCode,isUo, function (result) {
           var exist = result
           console.log("is exist".green, result)
           var data = createJson(openingLedger, compCode, accountId, role)
