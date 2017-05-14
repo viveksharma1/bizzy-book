@@ -2144,22 +2144,21 @@ module.exports = function (server) {
       return ledger;
     }
   });
-  var ledgerEntry = function (db, data, callback) {
+  var ledgerEntropeningBalanceLedgerEntryy = function (db, data, callback) {
     var collection = db.collection('ledger');
     var cursor = collection.insertMany(data, function (err, result) {
       assert.equal(err, null);
       callback(result);
     });
   }
-  var updateledgerEntry = function (db, data, callback) {
+  var updateledgerEntry = function (db, data, isUo, callback) {
     var collection = db.collection('ledger');
-
     var credit;
     var query;
     if (data[0].credit) {
       credit = data[0].credit
       console.log("new balance is".yellow, credit)
-      var cursor = collection.update({ accountName: data[0].accountName, compCode: data[0].compCode, voType: "Balance" }, { $set: { credit: credit } }, function (err, result) {
+      var cursor = collection.update({ accountName: data[0].accountName, compCode: data[0].compCode, voType: "Balance",isUo:isUo }, { $set: { credit: credit } }, function (err, result) {
         assert.equal(err, null);
         callback(result);
       });
@@ -2167,7 +2166,7 @@ module.exports = function (server) {
     else {
       debit = data[0].debit
       console.log("new balance is".yellow, debit)
-      var cursor = collection.update({ accountName: data[0].accountName, compCode: data[0].compCode, voType: "Balance" }, { $set: { debit: debit } }, function (err, result) {
+      var cursor = collection.update({ accountName: data[0].accountName, compCode: data[0].compCode, voType: "Balance",isUo:isUo }, { $set: { debit: debit } }, function (err, result) {
         assert.equal(err, null);
         callback(result);
       });
@@ -2241,7 +2240,7 @@ module.exports = function (server) {
             console.log('opening Balance ledger exist'.green);
             console.log('updating existing ledger...'.yellow);
             if (data.length > 0) {
-              updateledgerEntry(db, data, function (result) {
+              updateledgerEntry(db, data,isUo, function (result) {
                 if (result) {
                   console.log('ledger entry done sucessfully'.green, result.result);
                   res.status(200).send(result);
