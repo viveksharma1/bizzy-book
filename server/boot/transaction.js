@@ -2167,22 +2167,21 @@ module.exports = function (server) {
       return ledger;
     }
   });
-  var ledgerEntry = function (db, data, callback) {
+  var ledgerEntropeningBalanceLedgerEntryy = function (db, data, callback) {
     var collection = db.collection('ledger');
     var cursor = collection.insertMany(data, function (err, result) {
       assert.equal(err, null);
       callback(result);
     });
   }
-  var updateledgerEntry = function (db, data, callback) {
+  var updateledgerEntry = function (db, data, isUo, callback) {
     var collection = db.collection('ledger');
-
     var credit;
     var query;
     if (data[0].credit) {
       credit = data[0].credit
       console.log("new balance is".yellow, credit)
-      var cursor = collection.update({ accountName: data[0].accountName, compCode: data[0].compCode, voType: "Balance" }, { $set: { credit: credit } }, function (err, result) {
+      var cursor = collection.update({ accountName: data[0].accountName, compCode: data[0].compCode, voType: "Balance",isUo:isUo }, { $set: { credit: credit } }, function (err, result) {
         assert.equal(err, null);
         callback(result);
       });
@@ -2190,7 +2189,7 @@ module.exports = function (server) {
     else {
       debit = data[0].debit
       console.log("new balance is".yellow, debit)
-      var cursor = collection.update({ accountName: data[0].accountName, compCode: data[0].compCode, voType: "Balance" }, { $set: { debit: debit } }, function (err, result) {
+      var cursor = collection.update({ accountName: data[0].accountName, compCode: data[0].compCode, voType: "Balance",isUo:isUo }, { $set: { debit: debit } }, function (err, result) {
         assert.equal(err, null);
         callback(result);
       });
@@ -2198,10 +2197,10 @@ module.exports = function (server) {
 
   }
 
-  var checkOpeningLedger = function (db, accountId, compCode, callback) {
+  var checkOpeningLedger = function (db, accountId, compCode, isUo, callback) {
     var collection = db.collection('ledger');
     console.log('checking data with query'.red, accountId, compCode)
-    var cursor = collection.count({ accountName: accountId, compCode: compCode, voType: "Balance" }, function (err, result) {
+    var cursor = collection.count({ accountName: accountId, compCode: compCode, voType: "Balance",isUo:isUo }, function (err, result) {
       assert.equal(err, null);
       callback(result);
     });
@@ -2212,14 +2211,14 @@ module.exports = function (server) {
     var isUo;
     var visible;
     if (role == 'UO') {
-      isUo = false
+      isUo = true
       visible = true
     }
     if (role == 'O') {
-      isUo = true
+      isUo = false
       visible = false
     }
-    var currentDate = new Date("02/02/2017")
+    var currentDate = new Date("02/02/2016")
     for (var i = 0; i < data.length; i++) {
       if (data[i].balanceType == 'credit' && data[i].openingBalance) {
         ledger.push({ accountName: accountId, date: currentDate, particular: accountId, refNo: '', voType: "Balance", credit: Number(data[i].openingBalance), voRefId: '', isUo: isUo, visible: visible, compCode: compCode })
@@ -2243,21 +2242,28 @@ module.exports = function (server) {
     var compCode = req.params.compCode;
     var accountId = req.query.accountId;
     var role = req.query.role;
+     if (role == 'UO') {
+      isUo = true
+    }
+    if (role == 'O') {
+      isUo = false  
+    }
     console.log('>request processing...'.yellow)
     console.log("Role is", req.query)
     voucherTransaction.getDataSource().connector.connect(function (err, db) {
       getAccount(db, accountId, function (result) {
         var openingLedger = result;
         console.log('Account Info '.green, result);
-        checkOpeningLedger(db, accountId, compCode, function (result) {
+        checkOpeningLedger(db, accountId, compCode,isUo, function (result) {
+          var exist = result
           console.log("is exist".green, result)
           var data = createJson(openingLedger, compCode, accountId, role)
           console.log("data for ledgerEntry".red, data)
-          if (result > 0) {
+          if (exist > 0) {
             console.log('opening Balance ledger exist'.green);
             console.log('updating existing ledger...'.yellow);
             if (data.length > 0) {
-              updateledgerEntry(db, data, function (result) {
+              updateledgerEntry(db, data,isUo, function (result) {
                 if (result) {
                   console.log('ledger entry done sucessfully'.green, result.result);
                   res.status(200).send(result);
@@ -2265,7 +2271,8 @@ module.exports = function (server) {
               })
 
             }
-            if (result == 0) {
+          }
+            if (exist == 0) {
               console.log('opening Balance ledger does not exist'.red);
               console.log('creating opening balance ledger...'.green);
               ledgerEntry(db, data, function (result) {
@@ -2276,11 +2283,7 @@ module.exports = function (server) {
               })
 
             }
-          }
-          else {
-            console.log('opening Balance is empty'.green);
-            res.status(200).send();
-          }
+          
         });
 
       })
