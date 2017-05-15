@@ -1855,9 +1855,11 @@ module.exports = function (server) {
             var billId = result.ops[0]._id
             var lineItem;
             if (data.role == 'O') {
+               visible = true;
               lineItem = data.transactionData.manualLineItem
             }
             if (data.role == 'UO') {
+               visible = false;
               lineItem = data.transactionData.itemDetail
             }
 
@@ -1865,11 +1867,11 @@ module.exports = function (server) {
               console.log("checking inventory ...")
               if (result > 0) {
                 console.log(result);
-                var inventoryData = createInventoryData(lineItem, true, data.no, billId.toHexString(), result, compCode);
+                var inventoryData = createInventoryData(lineItem, visible, data.no, billId.toHexString(), result, compCode);
                 console.log("inventory data", inventoryData)
               }
               else {
-                var inventoryData = createInventoryData(lineItem, true, data.no, billId.toHexString(), 0, compCode);
+                var inventoryData = createInventoryData(lineItem, visible, data.no, billId.toHexString(), 0, compCode);
               }
 
               createInventory(db, inventoryData, function (result) {
