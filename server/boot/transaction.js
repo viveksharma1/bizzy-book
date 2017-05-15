@@ -2167,7 +2167,8 @@ module.exports = function (server) {
       return ledger;
     }
   });
-  var ledgerEntropeningBalanceLedgerEntryy = function (db, data, callback) {
+  var ledgerEntry = function (db, data, callback) {
+    console.log(data)
     var collection = db.collection('ledger');
     var cursor = collection.insertMany(data, function (err, result) {
       assert.equal(err, null);
@@ -2275,12 +2276,16 @@ module.exports = function (server) {
             if (exist == 0) {
               console.log('opening Balance ledger does not exist'.red);
               console.log('creating opening balance ledger...'.green);
+               if (data.length > 0) {
               ledgerEntry(db, data, function (result) {
                 if (result) {
                   console.log('ledger entry done sucessfully'.green);
                   res.status(200).send(result);
                 }
               })
+               }else{
+                 res.status(200).send();
+               }
 
             }
           
