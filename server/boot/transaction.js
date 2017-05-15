@@ -2669,8 +2669,8 @@ module.exports = function (server) {
   });
 
   "get invoice for purchase Settelment"
-  router.get('/getInvoiceSett/:invoiceNo', function (req, res) {
-    var invoiceNo = req.params.invoiceNo;
+  router.get('/getInvoiceSett', function (req, res) {
+    var invoiceNo = req.query.invoiceNo;
     voucherTransaction.getDataSource().connector.connect(function (err, db) {
       getInvoice(db, invoiceNo, function (result) {
         if (result.length > 0) {
@@ -2735,8 +2735,9 @@ module.exports = function (server) {
     }
   });
   // purchaseSettelment count
-  router.post('/voucherTransactionsExist/:refNo', function (req, res) {
-    var refNo = req.params.refNo
+  router.post('/voucherTransactionsExist', function (req, res) {
+   // var refNo = req.params.refNo
+     var refNo = req.body.refNo
     voucherTransaction.getDataSource().connector.connect(function (err, db) {
       isExist(db, refNo, function (result) {
         if (result > 0) {
