@@ -74,7 +74,7 @@ module.exports = function (server) {
       else {
         var count = instance;
         if (count > 0) {
-          Ledgers.destroyAll({ voRefId: voRefId, isUo: isUo }, function (err, instance) {
+          Ledgers.remove({ voRefId: voRefId, isUo: isUo }, function (err, instance) {
             console.log(instance)
             console.log("ledger removed in account Entry")
             Ledgers.create(data, function (err, instance) {
