@@ -18,9 +18,9 @@ var voucherTransaction = server.models.voucherTransaction;
                   deleteLedger(db, voId,function (result) {
                     if(result.result.n){
                       console.log("ledger deleted",result.result.n);
-                      res.status(200).send("Deleted");
+                      res.status(200).send({status:"deleted"});
                     }else{
-                       res.status(200).send("Deleted");
+                         res.status(200).send({status:"deleted"});
                      }
                 });        
              }
@@ -67,7 +67,14 @@ var voucherTransaction = server.models.voucherTransaction;
                     }
                 });    
               }else{
-                  res.status(200).send("Voucher Deleted");
+                 deleteLedger(db, voId,function (result) {
+                    if(result.result.n){
+                      console.log("ledger deleted",result.result.n);
+                      res.status(200).send("Voucher Deleted");
+                    }else{
+                        res.status(200).send("Voucher Deleted");
+                    }
+                });  
               }
           });    
        }

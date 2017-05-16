@@ -2710,8 +2710,8 @@ module.exports = function (server) {
   });
 
   "get invoice for sales settelment"
-  router.get('/getSalesInvoice/:invoiceNo', function (req, res) {
-    var invoiceNo = req.params.invoiceNo;
+  router.get('/getSalesInvoice', function (req, res) {
+    var invoiceNo = req.query.invoiceNo;
     voucherTransaction.getDataSource().connector.connect(function (err, db) {
       getInvoice(db, invoiceNo, function (result) {
         if (result.length > 0) {
@@ -2793,12 +2793,13 @@ module.exports = function (server) {
   // purchaseSettelment api
   router.post('/purchaseSettelment/:id', function (req, res) {
     var id = req.params.id
+    var type = req.query.type
     var settelmentData = req.body
     voucherTransaction.getDataSource().connector.connect(function (err, db) {
       if (id != "null") {
         updatePurchaseSettelment(db, settelmentData, new mongodb.ObjectId(id), function (result) {
           if (result) {
-            ledger = ledgerCreation(settelmentData, id);
+            ledger = ledgerCreation(settelmentData, id, type);
             accountEntry(ledger, true, id);
             res.status(200).send({ id: id });
           }
@@ -2809,23 +2810,32 @@ module.exports = function (server) {
           var ledger;
           if (result) {
             console.log(result.ops[0]._id)
-            ledger = ledgerCreation(settelmentData, result.ops[0]._id);
+            ledger = ledgerCreation(settelmentData, result.ops[0]._id,type);
             accountEntry(ledger, false, result.ops[0]._id);
             res.status(200).send({ id: result.ops[0]._id });
           }
         });
       }
     });
-    function ledgerCreation(data, id) {
+    function ledgerCreation(data, id,type) {
       var firstLedger = data.ledgerDataFirst
       var secondLedger = data.ledgerDataSecond
       var thirdLedger = data.ledgerDataThird
       var ledger = [];
+      if(type == 'purchase'){
       var paritcular = "Purchase Settelment" + data.invoiceNo
       ledger.push({ accountName: firstLedger.accountId, date: data.date, particular: secondLedger.accountId, particular1: thirdLedger.accountId, refNo: data.voRefNo, voType: "Purchase Settelment", credit: Number(firstLedger.amount), voRefId: id, isUo: true, visible: true, compCode: data.compCode })
       ledger.push({ accountName: secondLedger.accountId, date: data.date, particular: firstLedger.accountId, refNo: data.voRefNo, voType: "Purchase Settelment", debit: Number(secondLedger.amount), voRefId: id, isUo: true, visible: true, compCode: data.compCode })
       ledger.push({ accountName: thirdLedger.accountId, date: data.date, particular: firstLedger.accountId, refNo: data.voRefNo, voType: "Purchase Settelment", debit: Number(thirdLedger.amount), voRefId: id, isUo: true, visible: true, compCode: data.compCode })
       return ledger;
+    }
+     if(type == 'sales'){
+        var paritcular = "Purchase Settelment" + data.invoiceNo
+      ledger.push({ accountName: firstLedger.accountId, date: data.date, particular: secondLedger.accountId, particular1: thirdLedger.accountId, refNo: data.voRefNo, voType: "Purchase Settelment", debit: Number(firstLedger.amount), voRefId: id, isUo: true, visible: true, compCode: data.compCode })
+      ledger.push({ accountName: secondLedger.accountId, date: data.date, particular: firstLedger.accountId, refNo: data.voRefNo, voType: "Purchase Settelment", credit: Number(secondLedger.amount), voRefId: id, isUo: true, visible: true, compCode: data.compCode })
+      ledger.push({ accountName: thirdLedger.accountId, date: data.date, particular: firstLedger.accountId, refNo: data.voRefNo, voType: "Purchase Settelment", credit: Number(thirdLedger.amount), voRefId: id, isUo: true, visible: true, compCode: data.compCode })
+      return ledger;
+     }
     }
     var savePurchaseSettelment = function (db, settelmentData, id, callback) {
       var collection = db.collection('voucherTransaction');
@@ -3007,7 +3017,7 @@ module.exports = function (server) {
 
 
   });
-
+  
   server.use(router);
 };
 
