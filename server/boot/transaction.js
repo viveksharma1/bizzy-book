@@ -233,7 +233,7 @@ module.exports = function (server) {
   "get supplier count "
   router.get('/getSupplierCount/:compCode', function (req, res) {
     var compCode = req.params.compCode
-    Accounts.find({ where: { ancestor: 'SUNDRY CREDITORS', isActive: true } }, function (err, instance) {
+    Accounts.find({ where: {isActive: true } }, function (err, instance) {
       if (instance) {
         var count = instance.length;
         res.send({ count: count });
@@ -244,7 +244,7 @@ module.exports = function (server) {
   "get sundry creditor account"
   router.get('/getSupplierAccount/:compCode', function (req, res) {
     var compCode = req.params.compCode
-    Accounts.find({ where: { ancestor: 'SUNDRY CREDITORS', isActive: true } }, function (err, instance) {
+    Accounts.find({ where: {isActive: true } }, function (err, instance) {
       if (instance) {
         res.send(instance);
       };
@@ -254,7 +254,7 @@ module.exports = function (server) {
   "get sales account"
   router.get('/getSaleAccount/:compCode', function (req, res) {
     var compCode = req.params.compCode
-    Accounts.find({ where: { ancestor: 'SALES ACCOUNTS', isActive: true } }, function (err, instance) {
+    Accounts.find({ where: {isActive: true } }, function (err, instance) {
       if (instance) {
         res.send(instance);
       };
@@ -264,7 +264,7 @@ module.exports = function (server) {
   "get sundry debitor account"
   router.get('/getPartytAccount/:compCode', function (req, res) {
     var compCode = req.params.compCode
-    Accounts.find({ where: { ancestor: 'SUNDRY DEBTORS', isActive: true } }, function (err, instance) {
+    Accounts.find({ where: {isActive: true } } , function (err, instance) {
       if (instance) {
         res.send(instance);
       };
@@ -274,7 +274,7 @@ module.exports = function (server) {
   "get purchase Account "
   router.get('/getpurchaseAccount/:compCode', function (req, res) {
     var compCode = req.params.compCode
-    Accounts.find({ where: { ancestor: 'PURCHASE ACCOUNTS', isActive: true } }, function (err, instance) {
+    Accounts.find({ where: {isActive: true } }, function (err, instance) {
       if (instance) {
         res.send(instance);
       };
@@ -284,7 +284,7 @@ module.exports = function (server) {
   "get tax account "
   router.get('/getPaymentAccount/:compCode', function (req, res) {
     var compCode = req.params.compCode
-    Accounts.find({ where: { or: [{ ancestor: 'BANK ACCOUNTS' }, { ancestor: 'CASH-IN-HAND' }], isActive: true } }, function (err, instance) {
+    Accounts.find({ where: {isActive: true } }, function (err, instance) {
       if (instance) {
         res.send(instance);
       };
@@ -294,7 +294,7 @@ module.exports = function (server) {
   "getExpenseAccount"
   router.get('/getExpenseAccount/:compCode', function (req, res) {
     var compCode = req.params.compCode
-    Accounts.find({ where: { or: [{ ancestor: 'DIRECT EXPENSES' }, { ancestor: 'INDIRECT EXPENSES' }], isActive: true } }, function (err, instance) {
+    Accounts.find({ where: {isActive: true } }, function (err, instance) {
       if (instance) {
         res.send(instance);
       };
