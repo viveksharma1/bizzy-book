@@ -1900,8 +1900,9 @@ module.exports = function (server) {
     "get inventory count of visible item"
     var isInventoryExist = function (db, callback) {
       var collection = db.collection('inventory');
-      var cursor = collection.count({ visible: true, isActive: true }, function (err, result) {
+      var cursor = collection.count({ visible: true }, function (err, result) {
         assert.equal(err, null);
+        console.log("inventory count",result)
         callback(result);
       });
     }
@@ -2015,7 +2016,7 @@ module.exports = function (server) {
       var collection = db.collection('voucherTransaction');
 
       var cursor = collection.aggregate(
-        { $match: { compCode, compCode } },
+        { $match: { compCode: compCode } },
         { $match: { $or: [{ type: "General Invoice" }, { type: "Sales Invoice" }] } },
         {
           $project:
@@ -2065,7 +2066,7 @@ module.exports = function (server) {
       }
 
       var cursor = collection.aggregate(
-        { $match: { compCode, compCode } },
+        { $match: { compCode: compCode } },
         { $match: { type: invoiceType } },
         {
           $project:
@@ -2078,7 +2079,8 @@ module.exports = function (server) {
             supplier: "$transactionData.supliersId",
             email: "$transactionData.email",
             compCode: "$compCode",
-            id: "$_id"
+            id: "$_id",
+            refNo:"$refNo"
 
           }
         }, function (err, result) {
