@@ -972,6 +972,7 @@ module.exports = function (server) {
           if (err) console.log(err);
           else {
             console.log(instance);
+            console.log(instance.length);
             res.send(instance);
           }
 
@@ -1680,9 +1681,10 @@ module.exports = function (server) {
 
 
   "create Expense and save Expense"
-  router.post('/saveExpensetest/:expenseId', function (req, res) {
+  router.post('/saveExpensetest/:expenseId/:uoVisible', function (req, res) {
     var data = req.body;
     var expenseId = req.params.expenseId;
+    var uoVisible = req.params.uoVisible;
     var query;
     if (expenseId != 'null') {
       query = { _id: new mongodb.ObjectId(expenseId) }
@@ -1700,7 +1702,7 @@ module.exports = function (server) {
             if (data.role == 'UO') {
               isUo = true
             }
-            var ledger = createLedgerJsonExpense(data.transactionData, expenseId);
+            var ledger = createLedgerJsonExpense(data.transactionData, expenseId,uoVisible);
             accountEntry(ledger, isUo, new mongodb.ObjectId(expenseId));
             res.status(200).send(expenseId);
           }
@@ -1742,12 +1744,32 @@ module.exports = function (server) {
 
   });
   "createLedgerJson for expense"
-  function createLedgerJsonExpense(data, id) {
+  function createLedgerJsonExpense(data, id,uoVisible) {
     var accountTable = data.accountTable
     var itemTable = data.itemTable
     console.log()
     var ledger = [];
-    if (data.role == 'O') {
+    console.log(uoVisible)
+    if (data.role == 'O' && uoVisible == 'false' ) {
+      if (data.itemTable.length > 0) {
+        ledger.push({ accountName: data.supliersId, date: data.date, particular: itemTable[0].accountId, refNo: data.no, voType: "Expense", credit: data.amount, voRefId: id, isUo: false, visible: false, compCode: data.compCode })
+      }
+      if (data.tdsAccountId) {
+        ledger.push({ accountName: data.tdsAccountId, date: data.date, particular: data.supliersId, refNo: data.no, voType: "Expense", credit: data.tdsamount, voRefId: id, isUo: false, visible: false, compCode: data.compCode })
+      }
+      if (data.itemTable.length > 0) {
+        for (var i = 0; i < itemTable.length; i++) {
+          ledger.push({ accountName: itemTable[i].accountId, date: data.date, particular: data.supliersId, refNo: data.no, voType: "Expense", debit: Number(itemTable[i].amount), voRefId: id, isUo: false, visible: false, compCode: data.compCode })
+        }
+      }
+      if (data.accountTable.length > 0) {
+        for (var i = 0; i < accountTable.length; i++) {
+          ledger.push({ accountName: accountTable[i].accountId, date: data.date, particular: data.supliersId, refNo: data.no, voType: "Expense", debit: Number(accountTable[i].amount), voRefId: id, isUo: false, visible: false, compCode: data.compCode })
+        }
+      }
+       return ledger;
+    }
+    if (data.role == 'O' ) {
       if (data.itemTable.length > 0) {
         ledger.push({ accountName: data.supliersId, date: data.date, particular: itemTable[0].accountId, refNo: data.no, voType: "Expense", credit: data.amount, voRefId: id, isUo: false, visible: true, compCode: data.compCode })
       }
@@ -1764,6 +1786,7 @@ module.exports = function (server) {
           ledger.push({ accountName: accountTable[i].accountId, date: data.date, particular: data.supliersId, refNo: data.no, voType: "Expense", debit: Number(accountTable[i].amount), voRefId: id, isUo: false, visible: true, compCode: data.compCode })
         }
       }
+       return ledger;
     }
     if (data.role == 'UO') {
       if (data.itemTable.length > 0) {
@@ -1782,10 +1805,10 @@ module.exports = function (server) {
           ledger.push({ accountName: accountTable[i].accountId, date: data.date, particular: data.supliersId, refNo: data.no, voType: "Expense", debit: Number(accountTable[i].amount), voRefId: id, isUo: true, visible: true, compCode: data.compCode })
         }
       }
-
+         return ledger;
     }
 
-    return ledger;
+    
   }
   "save bill new"
   router.post('/saveBillTest/:billId', function (req, res) {
@@ -2060,6 +2083,7 @@ module.exports = function (server) {
         var amount = "$transactionData.amount"
         var balance = "$transactionData.balance"
       }
+     
       if (role == 'UO') {
         var amount = "$transactionData.adminAmount"
         var balance = "$transactionData.adminBalance"
@@ -2090,6 +2114,87 @@ module.exports = function (server) {
     }
 
   });
+
+//get transaction data of expense
+  router.get('/getTransactionDataExpense/:compCode', function (req, res) {
+    var compCode = req.params.compCode;
+    var role = req.query.role;
+    var type = req.query.type;
+    voucherTransaction.getDataSource().connector.connect(function (err, db) {
+      getData(db, role, type, function (result) {
+        if (result) {
+          res.status(200).send(result);
+        }
+      });
+    });
+
+    var getData = function (db, role, type, callback) {
+      var collection = db.collection('voucherTransaction');
+      var invoiceType = type;
+      if (role == 'O') {
+        var amount = "$transactionData.amount"
+        var balance = "$transactionData.balance"
+        
+           var cursor = collection.aggregate(
+        { $match: { compCode: compCode } },
+        { $match: { type: invoiceType} },
+        {
+          $project:
+          {
+            type: "$type",
+            invoiceNo: "$no",
+            date: "$date",
+            amount: amount,
+            balance: balance,
+            supplier: "$transactionData.supliersId",
+            email: "$transactionData.email",
+            compCode: "$compCode",
+            id: "$_id",
+            refNo:"$refNo"
+
+          }
+        }, function (err, result) {
+          assert.equal(err, null);
+          callback(result);
+        });
+    }
+
+      
+     
+      if (role == 'UO') {
+        var amount = "$transactionData.adminAmount"
+        var balance = "$transactionData.adminBalance"
+        var uoVisible = [true]
+         var cursor = collection.aggregate(
+        { $match: { compCode: compCode } },
+        { $match: { type: invoiceType,uoVisible:true}},
+        {
+          $project:
+          {
+            type: "$type",
+            invoiceNo: "$no",
+            date: "$date",
+            amount: amount,
+            balance: balance,
+            supplier: "$transactionData.supliersId",
+            email: "$transactionData.email",
+            compCode: "$compCode",
+            id: "$_id",
+            refNo:"$refNo"
+
+          }
+        }, function (err, result) {
+          assert.equal(err, null);
+          callback(result);
+        });
+    }
+
+      
+
+    
+  }
+  });
+
 
   "get all transaction of a particular supplier"
   router.get('/getAllTransaction/:supliersId', function (req, res) {
