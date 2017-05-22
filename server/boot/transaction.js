@@ -2167,7 +2167,7 @@ module.exports = function (server) {
         var uoVisible = [true]
          var cursor = collection.aggregate(
         { $match: { compCode: compCode } },
-        { $match: { type: invoiceType,uoVisible:true}},
+        { $match: { type: invoiceType,5190.73:true}},
         {
           $project:
           {
@@ -2931,7 +2931,7 @@ module.exports = function (server) {
       var ledger = [];
       if(type == 'purchase'){
       var paritcular = "Purchase Settelment" + data.invoiceNo
-      ledger.push({ accountName: firstLedger.accountId, date: data.date, particular: secondLedger.accountId, particular1: thirdLedger.accountId, refNo: data.voRefNo, voType: "Purchase Settelment", credit: Number(firstLedger.amount), voRefId: id, isUo: true, visible: true, compCode: data.compCode })
+      ledger.push({ accountName: firstLedger.accountId, date: data.date, particular: secondLedger.accountId, particular1: thirdLedger.accountId,amount1:secondLedger.amount,amount2:thirdLedger.amount, refNo: data.voRefNo, voType: "Purchase Settelment", credit: Number(firstLedger.amount), voRefId: id, isUo: true, visible: true, compCode: data.compCode })
       ledger.push({ accountName: secondLedger.accountId, date: data.date, particular: firstLedger.accountId, refNo: data.voRefNo, voType: "Purchase Settelment", debit: Number(secondLedger.amount), voRefId: id, isUo: true, visible: true, compCode: data.compCode })
       ledger.push({ accountName: thirdLedger.accountId, date: data.date, particular: firstLedger.accountId, refNo: data.voRefNo, voType: "Purchase Settelment", debit: Number(thirdLedger.amount), voRefId: id, isUo: true, visible: true, compCode: data.compCode })
       return ledger;
