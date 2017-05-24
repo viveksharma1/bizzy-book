@@ -822,8 +822,8 @@ module.exports = function (server) {
               }
             }
           }
-          ledger.push({ accountName: data.vo_payment.partyAccountId, date: data.date, particular: data.vo_payment.bankAccountId, refNo: data.vochNo, voType: data.type, debit: Number(data.amount), voRefId: instance.id, isUo: true, visible: true },
-            { accountName: data.vo_payment.bankAccountId, date: data.date, particular: data.vo_payment.partyAccountId, refNo: data.vochNo, voType: data.type, credit: Number(data.amount), voRefId: instance.id, isUo: true, visible: true }
+          ledger.push({ accountName: data.vo_payment.partyAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.bankAccountId, refNo: data.vochNo, voType: data.type, debit: Number(data.amount), voRefId: instance.id, isUo: true, visible: true },
+            { accountName: data.vo_payment.bankAccountId,  compCode: data.compCode,date: data.date, particular: data.vo_payment.partyAccountId, refNo: data.vochNo, voType: data.type, credit: Number(data.amount), voRefId: instance.id, isUo: true, visible: true }
           )
           accountEntry(ledger, true, instance.id);
         }
@@ -2284,11 +2284,62 @@ module.exports = function (server) {
       callback(result);
     });
   }
-  var updateledgerEntry = function (db, data, isUo, callback) {
+  var updateledgerEntry = function (db, data, isUo, role,balanceVisible,callback) {
     var collection = db.collection('ledger');
     var credit;
     var query;
-    if (data[0].credit) {
+    if(role == 'UO'){
+     var visible = true
+     if(balanceVisible == 'true'){
+      var isUo = false
+      if (data[0].credit) {
+      credit = data[0].credit
+      console.log("new balance is".yellow, credit)
+      var cursor = collection.update({ accountName: data[0].accountName, compCode: data[0].compCode, voType: "Balance",visible:visible}, { $set: { credit: credit,isUo:isUo } }, function (err, result) {
+        assert.equal(err, null);
+        callback(result);
+      });
+      var cursor = collection.remove({ accountName: data[0].accountName, compCode: data[0].compCode, voType: "Balance",isUo:isUo,visible:false}, function (err, result) {
+        assert.equal(err, null);
+       
+      });
+    }
+    else {
+      debit = data[0].debit
+      console.log("new balance is".yellow, debit)
+      var cursor = collection.update({ accountName: data[0].accountName, compCode: data[0].compCode, voType: "Balance",visible:visible }, { $set: { debit: debit, isUo:isUo} }, function (err, result) {
+        assert.equal(err, null);
+        callback(result);
+      });
+       var cursor = collection.remove({ accountName: data[0].accountName, compCode: data[0].compCode, voType: "Balance",isUo:isUo,visible:false}, function (err, result) {
+        assert.equal(err, null);
+       
+      });
+    }
+     }
+     if(balanceVisible == 'false'){
+       var isUo = true;
+       if (data[0].credit) {
+      credit = data[0].credit
+      console.log("new balance is".yellow, credit)
+      var cursor = collection.update({ accountName: data[0].accountName, compCode: data[0].compCode, voType: "Balance",visible:visible }, { $set: { credit: credit ,isUo:isUo} }, function (err, result) {
+        assert.equal(err, null);
+        callback(result);
+      });
+    }
+    else {
+      debit = data[0].debit
+      console.log("new balance is".yellow, debit)
+      var cursor = collection.update({ accountName: data[0].accountName, compCode: data[0].compCode, voType: "Balance",visible:visible }, { $set: { debit: debit,isUo:isUo } }, function (err, result) {
+        assert.equal(err, null);
+        callback(result);
+      });
+    }
+     }
+    }
+     if(role == 'O'){
+       var isUO = false
+      if (data[0].credit) {
       credit = data[0].credit
       console.log("new balance is".yellow, credit)
       var cursor = collection.update({ accountName: data[0].accountName, compCode: data[0].compCode, voType: "Balance",isUo:isUo }, { $set: { credit: credit } }, function (err, result) {
@@ -2305,24 +2356,47 @@ module.exports = function (server) {
       });
     }
 
-  }
 
-  var checkOpeningLedger = function (db, accountId, compCode, isUo, callback) {
+     }
+    }
+    
+
+  
+
+  var checkOpeningLedger = function (db, accountId, compCode, isUo,role, callback) {
     var collection = db.collection('ledger');
-    console.log('checking data with query'.red, accountId, compCode)
-    var cursor = collection.count({ accountName: accountId, compCode: compCode, voType: "Balance",isUo:isUo }, function (err, result) {
+     if (role == 'O') {
+      var isUo = false
+     var  visible = false
+       console.log('checking data with query'.red, accountId, compCode)
+       var cursor = collection.count({ accountName: accountId, compCode: compCode, voType: "Balance",isUo:isUo }, function (err, result) {
       assert.equal(err, null);
       callback(result);
     });
   }
-  function createJson(data, compCode, accountId, role) {
+   if (role == 'UO') {
+      var isUo = true
+     var  visible = true
+       console.log('checking data with query'.red, accountId, compCode)
+       var cursor = collection.count({ accountName: accountId, compCode: compCode, voType: "Balance",visible:visible }, function (err, result) {
+      assert.equal(err, null);
+      callback(result);
+    });
+    
+   
+  }
+  }
+  function createJson(data, compCode, accountId, role,balanceVisible) {
     console.log("Role is".green, role)
     var ledger = [];
     var isUo;
     var visible;
-    if (role == 'UO') {
+    if (role == 'UO' && balanceVisible == 'false') {
       isUo = true
       visible = true
+    }else if(role == 'UO' && balanceVisible == 'true'){
+       isUo = false
+       visible = true
     }
     if (role == 'O') {
       isUo = false
@@ -2351,6 +2425,7 @@ module.exports = function (server) {
     var accountData = req.body;
     var compCode = req.params.compCode;
     var accountId = req.query.accountId;
+     var balanceVisible = req.query.visible;
     var role = req.query.role;
      if (role == 'UO') {
       isUo = true
@@ -2364,16 +2439,16 @@ module.exports = function (server) {
       getAccount(db, accountId, function (result) {
         var openingLedger = result;
         console.log('Account Info '.green, result);
-        checkOpeningLedger(db, accountId, compCode,isUo, function (result) {
+        checkOpeningLedger(db, accountId, compCode,isUo,role, function (result) {
           var exist = result
           console.log("is exist".green, result)
-          var data = createJson(openingLedger, compCode, accountId, role)
+          var data = createJson(openingLedger, compCode, accountId, role,balanceVisible)
           console.log("data for ledgerEntry".red, data)
           if (exist > 0) {
             console.log('opening Balance ledger exist'.green);
             console.log('updating existing ledger...'.yellow);
             if (data.length > 0) {
-              updateledgerEntry(db, data,isUo, function (result) {
+              updateledgerEntry(db, data,isUo,role,balanceVisible, function (result) {
                 if (result) {
                   console.log('ledger entry done sucessfully'.green, result.result);
                   res.status(200).send(result);
@@ -2708,16 +2783,23 @@ module.exports = function (server) {
     var getBalance = function (db, compCode, role, accountId, callback) {
       var collection = db.collection('ledger');
       var isUo
+      var visible
       if (role == 'UO') {
-        isUo = true
-      }
-      if (role == 'O') {
-        isUo = false
-      }
-      var cursor = collection.find({ accountName: accountId, compCode: compCode, isUo: isUo, voType: "Balance" }).toArray(function (err, result) {
+        isUo = true;
+        visible = true;
+        var cursor = collection.find({ accountName: accountId, compCode: compCode, visible: visible, voType: "Balance" }).toArray(function (err, result) {
         assert.equal(err, null);
         callback(result);
       });
+      }
+      if (role == 'O') {
+        isUo = false
+         var cursor = collection.find({ accountName: accountId, compCode: compCode, isUo: isUo, voType: "Balance" }).toArray(function (err, result) {
+        assert.equal(err, null);
+        callback(result);
+      });
+      }
+     
     }
   });
   "account delete"
