@@ -2439,10 +2439,10 @@ module.exports = function (server) {
     }
     var currentDate = new Date("02/02/2016")
     for (var i = 0; i < data.length; i++) {
-      if (data[i].balanceType == 'credit' && data[i].openingBalance) {
+      if (data[i].obType == 'credit' && data[i].openingBalance) {
         ledger.push({ accountName: accountId, date: currentDate, particular: accountId, refNo: '', voType: "Balance", credit: Number(data[i].openingBalance), voRefId: '', isUo: isUo, visible: visible, compCode: compCode })
       }
-      if (data[i].balanceType == 'debit' && data[i].openingBalance) {
+      if (data[i].obType == 'debit' && data[i].openingBalance) {
         ledger.push({ accountName: accountId, date: currentDate, particular: accountId, refNo: '', voType: "Balance", debit: Number(data[i].openingBalance), voRefId: '', isUo: isUo, visible: visible, compCode: compCode })
       }
     }
