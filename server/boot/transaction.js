@@ -29,6 +29,19 @@ module.exports = function (server) {
       res.send({ status: "200" });
     });
   });
+  //get inventory count
+  router.post('/getInventoryCount', function (req, res) {
+    var name = req.body.name;
+    Accounts.getDataSource().connector.connect(function (err, db) {
+      var collection = db.collection('inventory');
+      collection.count({GODOWN:name}, function (err, instance) {
+        console.log(instance);
+        console.log("account updated ");
+        res.send({ count: instance });
+      });
+      
+    });
+  });
   "get expense data"
   router.post('/getExpense', function (req, res) {
     var refNo = req.query.refNo
