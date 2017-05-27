@@ -708,7 +708,7 @@ module.exports = function (server) {
     voucherTransaction.getDataSource().connector.connect(function (err, db) {
       var collection = db.collection('voucherTransaction');
       for (var i = 0; i < data.length; i++) {
-         if(custom){
+         if(custom == true){
          var query1 = { $set: { 'customBalance': Number(data[i].balance) } }
           var query2 = { $push: { 'customPaymentLog': { id: vochID, date: date, vochNo: vochNo, amount: data[i].amountPaid,interest:data[i].interest, isUo: false } } }
         }else{
@@ -722,7 +722,8 @@ module.exports = function (server) {
           var query2 = { $push: { 'paymentLog': { id: vochID, date: date, vochNo: vochNo, amount: data[i].amountPaid, isUo: true } } }
         }
         else {
-          var query1 = { $set: { 'transactionData.balance': Number(data[i].balance) ,'transactionData.balanceInDollar': Number(data[i].balanceInDollar)} }
+          var balanceInDollar = Number(data[i].balanceInDollar) - Number(data[i].amountPaidInDollar)
+          var query1 = { $set: { 'transactionData.balance': Number(data[i].balance) ,'transactionData.balanceInDollar': Number(balanceInDollar)} }
           var query2 = { $push: { 'paymentLog': { id: vochID, date: date, vochNo: vochNo, amount: data[i].amountPaid,interest:data[i].interest, isUo: false } } }
 
         }
@@ -794,6 +795,15 @@ module.exports = function (server) {
               { accountName: data.vo_payment.bankAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.partyAccountId, refNo: data.vochNo, voType: data.type, credit: Number(data.totalBankAmount), voRefId: id, isUo: true, visible: data.visible }
             )
             console.log(ledger);
+            if(data.forexAmount && data.forexCredit == true){
+               ledger.push({ accountName: data.vo_payment.forexAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.partyAccountId, refNo: data.vochNo, voType: data.type, credit: Number(data.forexAmount), voRefId: id, isUo: true, visible: data.visible }
+            )
+            }
+             if(data.forexAmount && data.forexCredit == false){
+               ledger.push({ accountName: data.vo_payment.forexAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.partyAccountId, refNo: data.vochNo, voType: data.type, debit: Number(data.forexAmount), voRefId: id, isUo: true, visible: data.visible }
+            )
+          }
+            
            ledger.push(createBankChargesLedger(data,id));
 
             accountEntry(ledger, true, instanceId);
@@ -820,9 +830,18 @@ module.exports = function (server) {
               ledger.push(createBankChargesLedger(data,id));
               accountEntry(ledger, false, instanceId);
               console.log(ledger);
+               if(data.forexAmount && data.forexCredit == true){
+               ledger.push({ accountName: data.vo_payment.forexAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.partyAccountId, refNo: data.vochNo, voType: data.type, credit: Number(data.forexAmount), voRefId: id, isUo: false, visible: data.visible }
+            )
+               }
+             if(data.forexAmount && data.forexCredit == false){
+               ledger.push({ accountName: data.vo_payment.forexAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.partyAccountId, refNo: data.vochNo, voType: data.type, debit: Number(data.forexAmount), voRefId: id, isUo: false, visible: data.visible }
+            )
+          }
+            
 
           }
-          if(custom){
+          if(custom == true){
           updateTransactions(data.vo_payment.billDetail, data.date, data.vochNo, new mongodb.ObjectId(id), data.role,true);
         }
         else{
@@ -862,6 +881,15 @@ module.exports = function (server) {
           )
          ledger.push(createBankChargesLedger(data,instance.id));
           accountEntry(ledger, true, instanceId);
+           if(data.forexAmount && data.forexCredit == true){
+               ledger.push({ accountName: data.vo_payment.forexAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.partyAccountId, refNo: data.vochNo, voType: data.type, credit: Number(data.forexAmount), voRefId: instance.id, isUo: true, visible: true }
+            )
+           }
+             if(data.forexAmount && data.forexCredit == false){
+               ledger.push({ accountName: data.vo_payment.forexAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.partyAccountId, refNo: data.vochNo, voType: data.type, debit: Number(data.forexAmount), voRefId: instance.id, isUo: true, visible: true }
+            )
+          }
+            
         }
         if (data.role == 'O') {
           for (var m = 0; m < data.vo_payment.billDetail.length; m++) {
@@ -883,9 +911,19 @@ module.exports = function (server) {
           )
            ledger.push(createBankChargesLedger(data,instance.id));
           accountEntry(ledger, false, instanceId);
+           if(data.forexAmount && data.forexCredit == true){
+               ledger.push({ accountName: data.vo_payment.forexAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.partyAccountId, refNo: data.vochNo, voType: data.type, credit: Number(data.forexAmount), voRefId: instance.id, isUo: false}
+            )
+
+           }
+             if(data.forexAmount && data.forexCredit == false){
+               ledger.push({ accountName: data.vo_payment.forexAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.partyAccountId, refNo: data.vochNo, voType: data.type, debit: Number(data.forexAmount), voRefId: instance.id, isUo: false }
+            )
+          }
+            
 
         }
-         if(custom){
+         if(custom == "true"){
           updateTransactions(data.vo_payment.billDetail, data.date, data.vochNo, new mongodb.ObjectId(instance.id), data.role,true);
         }else{
          updateTransactions(data.vo_payment.billDetail, data.date, data.vochNo, new mongodb.ObjectId(instance.id), data.role);
