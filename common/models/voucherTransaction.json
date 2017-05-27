@@ -40,6 +40,10 @@
     "vo_payment": {
       "type": "object"
     },
+    "customPaymentLog": {
+      "type": "object"
+    },
+    
     "invoiceData": {
       "type": "object"
     }

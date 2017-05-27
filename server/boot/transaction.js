@@ -704,13 +704,17 @@ module.exports = function (server) {
   }
 
   "update voucherTransaction"
-  function updateTransactions(data, date, vochNo, vochID, role) {
+  function updateTransactions(data, date, vochNo, vochID, role,custom) {
     voucherTransaction.getDataSource().connector.connect(function (err, db) {
       var collection = db.collection('voucherTransaction');
       for (var i = 0; i < data.length; i++) {
+         if(custom){
+         var query1 = { $set: { 'customBalance': Number(data[i].balance) } }
+          var query2 = { $push: { 'customPaymentLog': { id: vochID, date: date, vochNo: vochNo, amount: data[i].amountPaid,interest:data[i].interest, isUo: false } } }
+        }else{
         if (role == 'UO') {
           if (data[i].type == 'Purchase Invoice')
-            var query1 = { $set: { 'transactionData.adminBalance': Number(data[i].balance) } };
+            var query1 = { $set: { 'transactionData.adminBalance': Number(data[i].balance)} };
           else if (data[i].type == 'EXPENSE')
             var query1 = { $set: { 'transactionData.adminBalance': Number(data[i].balance), 'transactionData.balance': Number(data[i].balance) } };
           else
@@ -718,10 +722,12 @@ module.exports = function (server) {
           var query2 = { $push: { 'paymentLog': { id: vochID, date: date, vochNo: vochNo, amount: data[i].amountPaid, isUo: true } } }
         }
         else {
-          var query1 = { $set: { 'transactionData.balance': Number(data[i].balance) } }
+          var query1 = { $set: { 'transactionData.balance': Number(data[i].balance) ,'transactionData.balanceInDollar': Number(data[i].balanceInDollar)} }
           var query2 = { $push: { 'paymentLog': { id: vochID, date: date, vochNo: vochNo, amount: data[i].amountPaid,interest:data[i].interest, isUo: false } } }
 
         }
+        }
+       
         //_id: new mongodb.ObjectId(id)
         collection.update({ _id: new mongodb.ObjectId(data[i].id) }, query1, function (err, instance) {
           if (instance) {
@@ -741,6 +747,8 @@ module.exports = function (server) {
   "payment voucherTransaction"
   router.post('/payment', function (req, res) {
     var data = req.body;
+    var custom = req.query.custom
+    console.log(custom)
     console.log("payment voucher".green,data)
     //createPayment(data,true);
     var id = req.query.id
@@ -749,16 +757,16 @@ module.exports = function (server) {
     //console.log(req.body);
     if (id != 'null') {
       //var query = { id: id }
-      updatePayment(req.body, id, res);
+      updatePayment(req.body, id, res,custom);
       //res.send({status:'200'});
     }
     else {
-      createPayment(data, res);
+      createPayment(data, res,custom);
       //res.send({status:'200'});
     }
 
   });
-  function updatePayment(data, id, res, callback) {
+  function updatePayment(data, id, res,custom, callback) {
     console.log(id);
    var instanceId =  ObjectID(id)
     voucherTransaction.update({ _id: instanceId }, data, function (err, instance) {
@@ -814,7 +822,12 @@ module.exports = function (server) {
               console.log(ledger);
 
           }
-          updateTransactions(data.vo_payment.billDetail, data.date, data.vochNo, new mongodb.ObjectId(id), data.role);
+          if(custom){
+          updateTransactions(data.vo_payment.billDetail, data.date, data.vochNo, new mongodb.ObjectId(id), data.role,true);
+        }
+        else{
+         updateTransactions(data.vo_payment.billDetail, data.date, data.vochNo, new mongodb.ObjectId(id), data.role);
+        }
           if (res) res.send(instance);
           if (callback) callback();
         });
@@ -822,7 +835,7 @@ module.exports = function (server) {
 
     });
   }
-  function createPayment(data, res, callback) {
+  function createPayment(data, res,custom, callback) {
     voucherTransaction.create(data, function (err, instance) {
       if (instance) {
         var vochID = instance.id
@@ -872,7 +885,11 @@ module.exports = function (server) {
           accountEntry(ledger, false, instanceId);
 
         }
-        updateTransactions(data.vo_payment.billDetail, data.date, data.vochNo, vochID, data.role);
+         if(custom){
+          updateTransactions(data.vo_payment.billDetail, data.date, data.vochNo, new mongodb.ObjectId(instance.id), data.role,true);
+        }else{
+         updateTransactions(data.vo_payment.billDetail, data.date, data.vochNo, new mongodb.ObjectId(instance.id), data.role);
+        }
         if (res) res.send(instance);
         if (callback) callback();
       }
@@ -1408,9 +1425,12 @@ module.exports = function (server) {
               date: "$date",
               duedate: "$transactionData.billDueDate",
               amount: "$transactionData.adminAmount",
+              amountInDollar: "$transactionData.adminAmountInDollar",
+              balanceInDollar: "$transactionData.adminBalanceInDollar", 
               vochNo: "$vochNo",
               type: "$type",
               balance: "$transactionData.adminBalance",
+              exchangeRate:"$ExchangeRate",
               invoiceType: "$transactionData.invoiceType",
               id: "$_id"
             }
@@ -1436,9 +1456,12 @@ module.exports = function (server) {
               date: "$date",
               duedate: "$transactionData.billDueDate",
               amount: "$amount",
+              amountInDollar: "$transactionData.amountInDollar",
+              balanceInDollar: "$transactionData.balanceInDollar", 
               vochNo: "$vochNo",
               type: "$type",
               balance: "$transactionData.balance",
+               exchangeRate:"$transactionData.ExchangeRate",
               invoiceType: "$transactionData.invoiceType",
               id: "$_id"
             }
@@ -1452,6 +1475,43 @@ module.exports = function (server) {
           });
       });
     }
+  });
+
+   "Get outstanding custom for payment by accountId "
+  router.get('/getVouchersforCustomPayment', function (req, res) {
+    var supliersId = req.query.customerId;
+    var usertype = req.query.role;
+    var compCode = req.query.compCode
+    console.log(supliersId);
+    if (usertype == 'O') {
+      voucherTransaction.getDataSource().connector.connect(function (err, db) {
+        var collection = db.collection('voucherTransaction');
+        collection.aggregate(
+         
+          { $match: { customBalance: { $gt: 0 } } },
+           { $match: { compCode: compCode }},
+          { $match: { type: "Purchase Invoice" } },
+          {
+            $project: {
+              date: "$date",
+              duedate: "$transactionData.billDueDate",
+              amount: "$customAmount",
+              vochNo: "$vochNo",
+              type: "$type",
+              balance: "$customBalance",
+              invoiceType: "$transactionData.invoiceType",
+              id: "$_id"
+            }
+          }
+          , function (err, instance) {
+            if (instance) {
+              res.send(instance)
+            }
+            else
+              console.log(err);
+          });
+      });
+    } 
   });
   "Get outstanding voucher for recipt by accountId "
   router.get('/getVouchersforReceipt', function (req, res) {
