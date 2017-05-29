@@ -2923,18 +2923,22 @@ function createBankChargesLedger(data, id) {
     voucherTransaction.getDataSource().connector.connect(function (err, db) {
       getBalance(db, compCode, role, accountId, function (result) {
         if (result.length > 0) {
-          var balance
+          var balance;
+          var type;
           if (result[0].credit) {
             balance = result[0].credit
+            type = 'credit'
+
           }
           else {
             balance = result[0].debit
+             type = 'debit'
           }
           console.log('balance is'.green, balance);
-          res.status(200).send({ 'balance': balance });
+          res.status(200).send({ 'balance': balance ,type:type});
         }
         else {
-          res.status(200).send({ 'balance': 0 });
+          res.status(200).send({ 'balance': 0});
         }
 
       })
