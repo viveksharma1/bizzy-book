@@ -1800,7 +1800,7 @@ module.exports = function (server) {
           console.log("opening balance".green, ledgerOpeningBalnce)
         }
         else {
-          ledgerOpeningBalnce = '';
+          ledgerOpeningBalnce =  ledgerOpeningBalnce = { credit: 0, debit: 0 }
         }
         getLedgerData(db, role, function (data) {
           res.send({ openingBalance: ledgerOpeningBalnce, ledgerData: data })
