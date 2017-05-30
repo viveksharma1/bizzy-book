@@ -32,9 +32,10 @@ module.exports = function (server) {
   //get inventory count
   router.post('/getInventoryCount', function (req, res) {
     var name = req.body.name;
+     var compCode = req.query.compCode;
     Accounts.getDataSource().connector.connect(function (err, db) {
       var collection = db.collection('inventory');
-      collection.count({GODOWN:name}, function (err, instance) {
+      collection.count({GODOWN:name,compCode:compCode}, function (err, instance) {
         console.log(instance);
         console.log("account updated ");
         res.send({ count: instance });
