@@ -797,11 +797,13 @@ module.exports = function (server) {
             )
             console.log(ledger);
             if(data.forexAmount && data.forexCredit == true){
-               ledger.push({ accountName: data.vo_payment.forexAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.partyAccountId, refNo: data.vochNo, voType: data.type, credit: Number(data.forexAmount), voRefId: id, isUo: true, visible: data.visible }
-            )
+               ledger.push({ accountName: data.vo_payment.forexAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.partyAccountId, refNo: data.vochNo, voType: data.type, credit: Number(data.forexAmount), voRefId: id, isUo: true, visible: data.visible },
+                { accountName: data.vo_payment.partyAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.forexAccountId, refNo: data.vochNo, voType: data.type, debit: Number(data.amount), voRefId: id, isUo: true, visible: data.visible }
+               )
             }
              if(data.forexAmount && data.forexCredit == false){
-               ledger.push({ accountName: data.vo_payment.forexAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.partyAccountId, refNo: data.vochNo, voType: data.type, debit: Number(data.forexAmount), voRefId: id, isUo: true, visible: data.visible }
+               ledger.push({ accountName: data.vo_payment.forexAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.partyAccountId, refNo: data.vochNo, voType: data.type, debit: Number(data.forexAmount), voRefId: id, isUo: true, visible: data.visible },
+              { accountName: data.vo_payment.partyAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.forexAccountId, refNo: data.vochNo, voType: data.type, credit: Number(data.amount), voRefId: id, isUo: true, visible: data.visible }
             )
           }
             
@@ -832,11 +834,13 @@ module.exports = function (server) {
               accountEntry(ledger, false, instanceId);
               console.log(ledger);
                if(data.forexAmount && data.forexCredit == true){
-               ledger.push({ accountName: data.vo_payment.forexAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.partyAccountId, refNo: data.vochNo, voType: data.type, credit: Number(data.forexAmount), voRefId: id, isUo: false, visible: data.visible }
+               ledger.push({ accountName: data.vo_payment.forexAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.partyAccountId, refNo: data.vochNo, voType: data.type, credit: Number(data.forexAmount), voRefId: id, isUo: false, visible: data.visible },
+                { accountName: data.vo_payment.partyAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.forexAccountId, refNo: data.vochNo, voType: data.type, debit: Number(data.amount), voRefId: id, isUo: false, visible: data.visible }
             )
                }
              if(data.forexAmount && data.forexCredit == false){
-               ledger.push({ accountName: data.vo_payment.forexAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.partyAccountId, refNo: data.vochNo, voType: data.type, debit: Number(data.forexAmount), voRefId: id, isUo: false, visible: data.visible }
+               ledger.push({ accountName: data.vo_payment.forexAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.partyAccountId, refNo: data.vochNo, voType: data.type, debit: Number(data.forexAmount), voRefId: id, isUo: false, visible: data.visible },
+              { accountName: data.vo_payment.partyAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.forexAccountId, refNo: data.vochNo, voType: data.type, credit: Number(data.amount), voRefId: id, isUo: false, visible: data.visible }
             )
           }
             
@@ -883,11 +887,13 @@ module.exports = function (server) {
          ledger.push(createBankChargesLedger(data,instance.id));
           accountEntry(ledger, true, instanceId);
            if(data.forexAmount && data.forexCredit == true){
-               ledger.push({ accountName: data.vo_payment.forexAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.partyAccountId, refNo: data.vochNo, voType: data.type, credit: Number(data.forexAmount), voRefId: instance.id, isUo: true, visible: true }
+               ledger.push({ accountName: data.vo_payment.forexAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.partyAccountId, refNo: data.vochNo, voType: data.type, credit: Number(data.forexAmount), voRefId: instance.id, isUo: true, visible: true },
+               { accountName: data.vo_payment.partyAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.forexAccountId, refNo: data.vochNo, voType: data.type, debit: Number(data.amount), voRefId: instance.id, isUo: true, visible: true }
             )
            }
              if(data.forexAmount && data.forexCredit == false){
-               ledger.push({ accountName: data.vo_payment.forexAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.partyAccountId, refNo: data.vochNo, voType: data.type, debit: Number(data.forexAmount), voRefId: instance.id, isUo: true, visible: true }
+               ledger.push({ accountName: data.vo_payment.forexAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.partyAccountId, refNo: data.vochNo, voType: data.type, debit: Number(data.forexAmount), voRefId: instance.id, isUo: true, visible: true },
+                 { accountName: data.vo_payment.partyAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.forexAccountId, refNo: data.vochNo, voType: data.type, credit: Number(data.amount), voRefId: instance.id, isUo: true, visible: true }
             )
           }
             
@@ -913,12 +919,14 @@ module.exports = function (server) {
            ledger.push(createBankChargesLedger(data,instance.id));
           accountEntry(ledger, false, instanceId);
            if(data.forexAmount && data.forexCredit == true){
-               ledger.push({ accountName: data.vo_payment.forexAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.partyAccountId, refNo: data.vochNo, voType: data.type, credit: Number(data.forexAmount), voRefId: instance.id, isUo: false}
+               ledger.push({ accountName: data.vo_payment.forexAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.partyAccountId, refNo: data.vochNo, voType: data.type, credit: Number(data.forexAmount), voRefId: instance.id, isUo: false},
+               { accountName: data.vo_payment.partyAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.forexAccountId, refNo: data.vochNo, voType: data.type, debit: Number(data.amount), voRefId: instance.id, isUo: false}
             )
 
            }
              if(data.forexAmount && data.forexCredit == false){
-               ledger.push({ accountName: data.vo_payment.forexAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.partyAccountId, refNo: data.vochNo, voType: data.type, debit: Number(data.forexAmount), voRefId: instance.id, isUo: false }
+               ledger.push({ accountName: data.vo_payment.forexAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.partyAccountId, refNo: data.vochNo, voType: data.type, debit: Number(data.forexAmount), voRefId: instance.id, isUo: false },
+               { accountName:data.vo_payment.partyAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.forexAccountId, refNo: data.vochNo, voType: data.type, credit: Number(data.amount), voRefId: instance.id, isUo: false }
             )
           }
             
