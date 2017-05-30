@@ -2232,6 +2232,7 @@ module.exports = function (server) {
       var cursor = collection.aggregate(
         { $match: { compCode: compCode } },
         { $match: { type: invoiceType } },
+        { $sort : { date : -1 } },
         {
           $project:
           {
