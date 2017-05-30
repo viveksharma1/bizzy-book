@@ -1731,7 +1731,7 @@ module.exports = function (server) {
         var cursor = collection.aggregate([
           {
             $match: {
-              date: { $lt: fromDate },
+              date: { $lte: fromDate },
               accountName: accountName,
               compCode: { $in: compCode },
               visible: true,
@@ -1758,7 +1758,7 @@ module.exports = function (server) {
         var cursor = collection.aggregate([
           {
             $match: {
-              date: { $lt: fromDate },
+              date: { $lte: fromDate },
               accountName: accountName,
               compCode: { $in: compCode },
               isUo: false,
