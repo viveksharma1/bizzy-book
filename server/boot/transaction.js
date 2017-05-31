@@ -1546,6 +1546,7 @@ module.exports = function (server) {
               amount: "$customAmount",
               vochNo: "$vochNo",
               type: "$type",
+              custom:"$transactionData.invoiceType",
               balance: "$customBalance",
               invoiceType: "$transactionData.invoiceType",
               id: "$_id"
