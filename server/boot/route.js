@@ -8,6 +8,7 @@ module.exports = function (server) {
    router.route('/dateWiseAccountDetail').post(account.dateWiseAccountDetail);
    router.route('/isVoucherExist/:vochNo').get(account.isVoucherExist);
    router.route('/getBalanceSheet').post(account.getBalanceSheettest);
+    router.route('/closingBalance/:accountId').get(account.closingBalance);
    
  server.use(router);
 };

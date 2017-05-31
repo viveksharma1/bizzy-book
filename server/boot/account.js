@@ -28,6 +28,74 @@ var isExist = function (db, callback) {
       });
    }
 };
+
+// get closing balance of an account
+exports.closingBalance = function (req, res) {
+    var compCode = req.query.compCode 
+    var accountId = req.params.accountId
+    var role = req.query.role
+    console.log(" geting current balance of accountID ".green,accountId + " in company ".red,compCode)
+    voucherTransaction.getDataSource().connector.connect(function (err, db) {
+         getData(db,compCode,accountId,role,function (result) {
+             if(result.length > 0){
+                 getAccountType(db,accountId,function (instance) {
+                 console.log(" Balance ".yellow,result)
+                 console.log("account type".yellow,instance[0].balanceType)
+                  if (instance[0].balanceType == 'credit') {
+                        var balance = result[0].credit - result[0].debit
+                    }
+                    if (instance[0].balanceType == 'debit') {
+                      var balance = result[0].debit - result[0].credit
+                 }
+                 res.send({balance:balance})
+                 });
+             }else{
+                 console.log(" Balance ".yellow,0)
+                 res.send({status:"no data"})
+             }
+         });
+    });
+    var getAccountType = function(db,accountId,callback){
+        var collection = db.collection('account');
+        Account.find({where:{id:accountId}},  function(err, result) {
+                assert.equal(err, null);
+                callback(result);
+      });   
+    }
+    var getData = function (db,compCode,accountId,role, callback) {
+        var collection = db.collection('ledger');
+       if(req.query.role == 'O'){
+        var cursor = collection.aggregate(     
+            {$match: { compCode:compCode,accountName:accountId,isUo:false}},
+           {
+             $group:
+            {
+              _id: { accountName: "$accountName" },
+               credit: { $sum: "$credit" },
+               debit: { $sum: "$debit" }
+           }
+          },  function(err, result) {
+                assert.equal(err, null);
+                callback(result);
+      });
+    }
+    if(req.query.role == 'UO'){
+         var cursor = collection.aggregate(     
+         {$match: {compCode:compCode,accountName:accountId,visible:true}},
+         {
+           $group:
+            {
+              _id: { accountName: "$accountName" },
+               credit: { $sum: "$credit" },
+               debit: { $sum: "$debit" }
+           }
+         },  function(err, result) {
+                assert.equal(err, null);
+                callback(result);
+      });
+     }
+}
+}
 exports.dateWiseAccountDetail = function (req, res) {
     var compCode = req.body 
     var toDate = new Date(req.query.date);
