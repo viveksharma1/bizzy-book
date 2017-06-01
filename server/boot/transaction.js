@@ -716,7 +716,7 @@ module.exports = function (server) {
         }else{
         if (role == 'UO') {
           if (data[i].type == 'Purchase Invoice')
-            var query1 = { $set: { 'transactionData.adminBalance': Number(data[i].balance)} };
+            var query1 = { $set: { 'transactionData.adminBalance': Number(data[i].balance),'transactionData.adminBalanceInDollar':  Number(data[i].balanceInDollar)} };
           else if (data[i].type == 'EXPENSE')
             var query1 = { $set: { 'transactionData.adminBalance': Number(data[i].balance), 'transactionData.balance': Number(data[i].balance) } };
           else
@@ -724,8 +724,8 @@ module.exports = function (server) {
           var query2 = { $push: { 'paymentLog': { id: vochID, date: date, vochNo: vochNo, amount: data[i].amountPaid, isUo: true } } }
         }
         else {
-          var balanceInDollar = Number(data[i].balanceInDollar) - Number(data[i].amountPaidInDollar)
-          var query1 = { $set: { 'transactionData.balance': Number(data[i].balance) ,'transactionData.balanceInDollar': Number(balanceInDollar)} }
+          //var balanceInDollar = Number(data[i].balanceInDollar) - Number(data[i].amountPaidInDollar)
+          var query1 = { $set: { 'transactionData.balance': Number(data[i].balance) ,'transactionData.balanceInDollar':  Number(data[i].balanceInDollar)} }
           var query2 = { $push: { 'paymentLog': { id: vochID, date: date, vochNo: vochNo, amount: data[i].amountPaid,interest:data[i].interest, isUo: false } } }
 
         }
