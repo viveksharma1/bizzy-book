@@ -933,7 +933,7 @@ module.exports = function (server) {
             
 
         }
-         if(custom == "true"){
+         if(custom == true){
           updateTransactions(data.vo_payment.billDetail, data.date, data.vochNo, new mongodb.ObjectId(instance.id), data.role,true);
         }else{
          updateTransactions(data.vo_payment.billDetail, data.date, data.vochNo, new mongodb.ObjectId(instance.id), data.role);
