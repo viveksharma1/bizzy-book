@@ -847,7 +847,7 @@ module.exports = function (server) {
             
 
           }
-          if(custom == true){
+          if(custom == "true"){
           updateTransactions(data.vo_payment.billDetail, data.date, data.vochNo, new mongodb.ObjectId(id), data.role,true);
         }
         else{
@@ -861,8 +861,10 @@ module.exports = function (server) {
     });
   }
   function createPayment(data, res,custom, callback) {
-    voucherTransaction.create(data, function (err, instance) {
+    voucherTransaction.create(data,  function (err, instance) {
       if (instance) {
+       
+        console.log(custom)
         var vochID = instance.id
         var instanceId =  ObjectID(instance.id)
         //res.send(instance);
@@ -933,7 +935,7 @@ module.exports = function (server) {
             
 
         }
-         if(custom == true){
+         if(custom == "true"){
           updateTransactions(data.vo_payment.billDetail, data.date, data.vochNo, new mongodb.ObjectId(instance.id), data.role,true);
         }else{
          updateTransactions(data.vo_payment.billDetail, data.date, data.vochNo, new mongodb.ObjectId(instance.id), data.role);
