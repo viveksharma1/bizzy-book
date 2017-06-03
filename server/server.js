@@ -2,10 +2,8 @@ var loopback = require('loopback');
 var boot = require('loopback-boot');
 var es = require('event-stream');
 var app = module.exports = loopback();
-var bodyParser = require('body-parser');
- app.use(bodyParser.json({extended: true,limit: '50mb'}));
-app.use(bodyParser.urlencoded({extended: true,limit: '50mb'}));
-app.use(bodyParser.json());
+
+
 app.start = function()
 {
   // start the web server
