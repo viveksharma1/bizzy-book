@@ -3383,7 +3383,24 @@ function createBankChargesLedger(data, id) {
 
 
   });
-  
+   router.post('/uploadInventory', function (req, res) {
+      Inventory.create(req.body, function (err, result) {
+        if(result){
+           res.send("uploaded successfully")
+        }else{
+          res.send("some internal problem")
+        }
+        
+      });
+   })
+   router.post('/getSalesInvoiceNo', function (req, res) {
+      voucherTransaction.getDataSource().connector.connect(function (err, db) {
+         var collection = db.collection('voucherTransaction');
+       collection.count({type:"Sales Invoice"}, function (err, result) {
+
+           });
+     });
+   });
   server.use(router);
 };
 

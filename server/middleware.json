@@ -34,10 +34,14 @@
   "session": {},
   "auth": {},
   "parse": {
-    "body-parser#json": {},
+    "body-parser#json": {
+       "extended": true,
+      "limit":"200kb"
+    },
     "body-parser#urlencoded": {
       "params": {
-        "extended": true
+        "extended": true,
+        "limit":"200kb"
       }
     }
   },

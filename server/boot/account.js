@@ -34,6 +34,7 @@ exports.closingBalance = function (req, res) {
     var compCode = req.query.compCode 
     var accountId = req.params.accountId
     var role = req.query.role
+    
     console.log(" geting current balance of accountID ".green,accountId + " in company ".red,compCode)
     voucherTransaction.getDataSource().connector.connect(function (err, db) {
          getData(db,compCode,accountId,role,function (result) {
@@ -64,6 +65,8 @@ exports.closingBalance = function (req, res) {
     }
     var getData = function (db,compCode,accountId,role, callback) {
         var collection = db.collection('ledger');
+         var collection1 = db.collection('ledger');
+     
        if(req.query.role == 'O'){
         var cursor = collection.aggregate(     
             {$match: { compCode:compCode,accountName:accountId,isUo:false}},
@@ -370,3 +373,19 @@ exports.getBalanceSheet = function (req, res) {
            });
       }
 };
+exports.data1 = function (req, res) {
+voucherTransaction.getDataSource().connector.connect(function (err, db) {
+    var collection = db.collection('inventory');
+   collection.find().forEach(function(data) {
+    collection.update({
+        "_id": data._id
+       
+    }, {
+        "$set": {
+            "BALANCE": Number(data.BALANCE)
+        }
+    },{multi:true})
+   
+});
+});
+}
