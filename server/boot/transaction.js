@@ -2170,6 +2170,13 @@ module.exports = function (server) {
   router.get('/getInvoiceData/:compCode', function (req, res) {
     var compCode = req.params.compCode;
     var role = req.query.role;
+    var type
+    if(role == "O"){
+        type = "Sales Invoice"
+    }
+    if(role == "UO"){
+        type = "General Invoice"
+    }
     voucherTransaction.getDataSource().connector.connect(function (err, db) {
       getData(db, role, function (result) {
         if (result) {
@@ -2183,7 +2190,7 @@ module.exports = function (server) {
 
       var cursor = collection.aggregate(
         { $match: { compCode: compCode } },
-        { $match: { $or: [{ type: "General Invoice" }, { type: "Sales Invoice" }] } },
+        { $match: { type } },
         {
           $project:
           {
@@ -3394,10 +3401,11 @@ function createBankChargesLedger(data, id) {
       });
    })
    router.post('/getSalesInvoiceNo', function (req, res) {
+     console.log("dfdfds")
       voucherTransaction.getDataSource().connector.connect(function (err, db) {
          var collection = db.collection('voucherTransaction');
        collection.count({type:"Sales Invoice"}, function (err, result) {
-
+             res.send(result)
            });
      });
    });
