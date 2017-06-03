@@ -3400,12 +3400,13 @@ function createBankChargesLedger(data, id) {
         
       });
    })
-   router.post('/getSalesInvoiceNo', function (req, res) {
-     var compCode = req.query.compcode
-     console.log("dfdfds")
+   router.get('/getSalesInvoiceNo', function (req, res) {
+     var compCode = req.query.compCode
+     console.log(compCode)
       voucherTransaction.getDataSource().connector.connect(function (err, db) {
          var collection = db.collection('voucherTransaction');
        collection.count({type:"Sales Invoice",compCode:compCode}, function (err, result) {
+         console.log(result)
              res.send({count:result})
            });
      });
