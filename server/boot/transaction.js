@@ -2190,7 +2190,7 @@ module.exports = function (server) {
 
       var cursor = collection.aggregate(
         { $match: { compCode: compCode } },
-        { $match: { type } },
+        { $match: { type:type } },
         {
           $project:
           {

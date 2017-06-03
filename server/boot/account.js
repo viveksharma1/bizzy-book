@@ -65,7 +65,7 @@ exports.closingBalance = function (req, res) {
     }
     var getData = function (db,compCode,accountId,role, callback) {
         var collection = db.collection('ledger');
-         var collection1 = db.collection('ledger');
+        // var collection1 = db.collection('ledger');
      
        if(req.query.role == 'O'){
         var cursor = collection.aggregate(     
