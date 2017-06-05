@@ -475,10 +475,14 @@ module.exports = function (server) {
     else if (role == 'O') {
       accountEntry(null, false, new mongodb.ObjectID(id));
     }
-    voucherTransaction.remove({ _id: new mongodb.ObjectID(id) }, function (err, instance) {
+    //voucherTransaction.remove({ _id: new mongodb.ObjectID(id) }, function (err, instance) {
+   voucherTransaction.getDataSource().connector.connect(function (err, db) {
+      var collection = db.collection('voucherTransaction');
+       collection.update({ _id: new mongodb.ObjectID(id) },{$set:{state:"DELETED"}}, function (err, instance) {
       if (err) console.log(err);
       else console.log(instance);
     });
+   });
   }
 
   function createBadlaVoucher(dataBadla, callback) {
