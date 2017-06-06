@@ -1177,6 +1177,119 @@ module.exports = function (server) {
 
     });
   }
+    "Save General Invoice"
+  router.post('/generalInvoiceVoucher', function (req, res) {
+    var data = req.body
+    var id = req.query.id;
+    if (id == 'null') {
+      validateAvailableQtyOnCreate(data, res, function () {
+        createGeneralInvoiceVoucher(data, res);
+      });
+    } else {
+      voucherTransaction.findOne({ "where": { type: data.type, id: id } }, function (err, instance, count) {
+        if (err) {
+          console.log(err)
+        }
+        else {
+          console.log(instance)
+          if (instance) {
+            //also check is there any receipt against this invoice then send err message invoice has some receipts.
+            if (instance.paymentLog && instance.paymentLog.length > 0) {
+              res.send({ err: "Receipt exists", status: 200 });
+              return;
+            } else {
+              validateAvailableQtyOnUpdate(data, id, res, function (result) {
+                updateGeneralInvoiceVoucher(data, id, result, res);
+              });
+              //updateVoucher(data, id);
+            }
+          }
+        }
+      });
+    }
+  });
+
+  "create voucher"
+  function createGeneralInvoiceVoucher(data, res) {
+    delete data.aggLineItems;
+    voucherTransaction.create(data, function (err, instance) {
+      if (err) {
+        console.log(err);
+      }
+      else {
+        console.log("voucher created")
+        console.log(instance)
+        if (data.role == 'UO') { //Sales Invoice can be created by Un Official
+          var invData = data.invoiceData.billData;
+          var vochNo = data.vochNo
+          var date = data.date
+          var id = instance.id
+          var accountData = data.invoiceData.accountlineItem;
+          var ledger = [];
+          if (accountData) {
+            for (var i = 0; i < accountData.length; i++) {
+              ledger.push({ accountName: accountData[i].accountId, date: data.date, particular: data.invoiceData.ledgerAccountId, refNo: data.vochNo, voType: data.type, credit: Number(accountData[i].amount), voRefId: instance.id, isUo: false,visible: true })
+            }
+          }
+          ledger.push({ accountName: data.invoiceData.ledgerAccountId, date: data.date, particular: data.invoiceData.customerAccountId, refNo: data.vochNo, voType: data.type, credit: Number(data.invoiceData.saleAmount), voRefId: instance.id, isUo: false, visible: true, compCode: data.compCode },
+            { accountName: data.invoiceData.customerAccountId, date: data.date, particular: data.invoiceData.ledgerAccountId, refNo: data.vochNo, voType: data.type, debit: Number(data.invoiceData.saleAmount), voRefId: instance.id, isUo: false, visible: true, compCode: data.compCode }
+
+          )
+          accountEntry(ledger, false, instance.id);
+          updateInventoryValueOnCreate(invData, id, date, vochNo);
+        }
+        console.log({ "message": "voucher Created", "id": instance.id });
+        res.send({ "message": "voucher Created", "id": instance.id });
+      }
+
+    });
+  }
+  "update voucherTransaction"
+  function updateGeneralInvoiceVoucher(data, id, dataOld, res) {
+    if (id) {
+      var query = { id: id }
+    }
+    else {
+      query = { vochNo: data.vochNo }
+    }
+    //update inventory and balance and pull transactionLog.....
+    reversingSalesTransactionLogOfCreate(ObjectID(id), dataOld, function () {
+      delete data.aggLineItems;
+      voucherTransaction.update(query, data, function (err, instance) {
+        if (err) {
+          console.log(err)
+        }
+        else {
+          console.log(instance);
+          if (data.role == 'UO') {
+            var invDataSales = data.invoiceData.billData;
+            var vochNo = data.vochNo
+            var date = data.date
+            var accountData = data.invoiceData.accountlineItem;
+            var accountData = data.invoiceData.accountlineItem;
+            var objectId = new mongodb.ObjectId(id)
+            var ledger = [];
+            if (accountData) {
+              for (var i = 0; i < accountData.length; i++) {
+                ledger.push({ accountName: accountData[i].accountId, date: data.date, particular: data.invoiceData.ledgerAccountId, refNo: data.vochNo, voType: data.type, debit: Number(accountData[i].amount), voRefId: objectId, isUo: false, visible: true, compCode: data.compCode })
+              }
+            }
+            ledger.push({ accountName: data.invoiceData.ledgerAccountId, date: data.date, particular: data.invoiceData.customerAccountId, refNo: data.vochNo, voType: data.type, credit: Number(data.invoiceData.saleAmount), voRefId: objectId, isUo: false, visible: true, compCode: data.compCode },
+              { accountName: data.invoiceData.customerAccountId, date: data.date, particular: data.invoiceData.ledgerAccountId, refNo: data.vochNo, voType: data.type, debit: Number(data.invoiceData.saleAmount), voRefId: objectId, isUo: false, visible: true, compCode: data.compCode }
+
+            )
+            console.log(ledger);
+            accountEntry(ledger, false, objectId);
+            updateInventoryValueOnCreate(invDataSales, ObjectID(id), date, vochNo);
+
+          }
+          console.log({ "message": "voucher Updated", "id": id });
+          res.send({ "message": "voucher Updated", "id": id });
+        }
+      });
+    });
+
+  }
   "save voucherTransaction"
   router.post('/salesInvoiceVoucher', function (req, res) {
     var data = req.body
@@ -3153,16 +3266,17 @@ function createBankChargesLedger(data, id) {
       });
     }
   });
-  router.get('/getVoucherTransactionCount/:type', function (req, res) {
-    var type = req.params.type
+  router.get('/getVoucherTransactionCount/:compCode', function (req, res) {
+    var type = req.query.type
+     var compCode = req.params.compCode
     voucherTransaction.getDataSource().connector.connect(function (err, db) {
-      getCount(db, type, function (result) {
+      getCount(db, type,compCode, function (result) {
         res.status(200).send({ count: result + 1 });
       });
     });
-    var getCount = function (db, type, callback) {
+    var getCount = function (db, type,compCode, callback) {
       var collection = db.collection('voucherTransaction');
-      var cursor = collection.count({ type: type }, function (err, result) {
+      var cursor = collection.count({ type: type,compCode:compCode}, function (err, result) {
         assert.equal(err, null);
         callback(result);
       });
