@@ -3109,7 +3109,8 @@ function createBankChargesLedger(data, id) {
             date: "$date",
             totalLineItemData: "$invoiceData.billData",
             totalAmount: "$amount",
-            accountData: "$invoiceData.accountlineItem"
+            accountData: "$invoiceData.accountlineItem",
+            id:"$_id"
           }
         }
         , function (err, result) {
