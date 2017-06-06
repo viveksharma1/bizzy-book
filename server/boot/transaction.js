@@ -3105,7 +3105,7 @@ function createBankChargesLedger(data, id) {
         { $match: { vochNo: invoiceNo } },
         {
           $project: {
-            customer: "$invoiceData.customerAccountId",
+            customer: "$invoiceData.consigneeAccountId",
             date: "$date",
             totalLineItemData: "$invoiceData.billData",
             totalAmount: "$amount",
