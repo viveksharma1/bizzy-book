@@ -1947,7 +1947,7 @@ module.exports = function (server) {
             }
              
           },
-          { $sort : { date : -1} },
+         
           {
             $group:
             {
@@ -1967,7 +1967,7 @@ module.exports = function (server) {
       var ledger;
       if (role == 'UO') {
         var collection = db.collection('ledger');
-        var cursor = collection.find({ "accountName": accountName, compCode: { $in: compCode }, date: { $gte: fromDate, $lt: toDate }, visible: true }).toArray(function (err, result) {
+        var cursor = collection.find({ "accountName": accountName, compCode: { $in: compCode }, date: { $gte: fromDate, $lt: toDate },  visible: true }).sort( { date: -1 } ).toArray(function (err, result) {
           assert.equal(err, null);
           console.log(result);
           callback(result);
