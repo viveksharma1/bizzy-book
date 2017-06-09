@@ -1143,7 +1143,20 @@ module.exports = function (server) {
           if (err) {
             console.log(err);
           } else {
-            var oldbillData = resultOld.invoiceData.billData;
+            if(data.role == "O"){
+                var oldbillData = resultOld.invoiceData.billData;
+            }
+            else{
+                var oldbillData = resultOld.invoiceData.billDataUo
+                if(oldbillData == undefined){
+                  oldbillData = []
+
+                }
+            }
+           if(oldbillData.length == 0){
+                if (callback) callback(oldbillData);
+            }else{
+           
             for (var m = 0; m < result.length; m++) {
               var match = utils.getItembyId2(oldbillData, result[m]._id);
               if (match) {
@@ -1171,6 +1184,7 @@ module.exports = function (server) {
             }
             //if (res.headersSent) return;
             if (callback) callback(oldbillData);
+            }
           }
         });
       });
@@ -1348,18 +1362,39 @@ module.exports = function (server) {
           var id = instance.id
           var accountData = data.invoiceData.accountlineItem;
           var ledger = [];
-          if (accountData) {
+          if (accountData.length>0) {
             for (var i = 0; i < accountData.length; i++) {
-              ledger.push({ accountName: accountData[i].accountId, date: data.date, particular: data.invoiceData.ledgerAccountId, refNo: data.vochNo, voType: data.type, credit: Number(accountData[i].amount), voRefId: instance.id, isUo: false })
+              ledger.push({ accountName: accountData[i].account.id, date: data.date, particular: data.invoiceData.ledgerAccountId, refNo: data.vochNo, voType: data.type, debit: Number(accountData[i].amount), voRefId: instance.id, isUo: false,compCode:data.compCode })
             }
           }
-          ledger.push({ accountName: data.invoiceData.ledgerAccountId, date: data.date, particular: data.invoiceData.customerAccountId, refNo: data.vochNo, voType: data.type, credit: Number(data.invoiceData.saleAmount), voRefId: instance.id, isUo: false, visible: false, compCode: data.compCode },
-            { accountName: data.invoiceData.customerAccountId, date: data.date, particular: data.invoiceData.ledgerAccountId, refNo: data.vochNo, voType: data.type, debit: Number(data.invoiceData.saleAmount), voRefId: instance.id, isUo: false, visible: false, compCode: data.compCode }
+          ledger.push({ accountName: data.invoiceData.ledgerAccountId, date: data.date, particular: data.invoiceData.consigneeAccountId, refNo: data.vochNo, voType: data.type, credit: Number(data.invoiceData.saleAmount), voRefId: instance.id, isUo: false, visible: false, compCode: data.compCode },
+            { accountName: data.invoiceData.consigneeAccountId, date: data.date, particular: data.invoiceData.ledgerAccountId, refNo: data.vochNo, voType: data.type, debit: Number(data.invoiceData.saleAmount), voRefId: instance.id, isUo: false, visible: false, compCode: data.compCode }
 
           )
           accountEntry(ledger, false, instance.id);
           updateInventoryValueOnCreate(invData, id, date, vochNo);
         }
+        //uo
+
+         if (data.role == 'UO') { //Sales Invoice can be created by Un Official
+          var invData = data.invoiceData.billDataUo;
+          var vochNo = data.vochNo
+          var date = data.date
+          var id = instance.id
+          var accountData = data.invoiceData.accountlineItem;
+          var ledger = [];
+          if (accountData.length>0) {
+            for (var i = 0; i < accountData.length; i++) {
+              ledger.push({ accountName: accountData[i].account.id, date: data.date, particular: data.invoiceData.ledgerAccountId, refNo: data.vochNo, voType: data.type, debit: Number(accountData[i].amount), voRefId: instance.id, isUo: false,visible: true })
+            }
+          }
+          ledger.push({ accountName: data.invoiceData.ledgerAccountId, date: data.date, particular: data.invoiceData.consigneeAccountId, refNo: data.vochNo, voType: data.type, credit: Number(data.invoiceData.saleAmount), voRefId: instance.id, isUo: false, visible: true, compCode: data.compCode },
+            { accountName: data.invoiceData.consigneeAccountId, date: data.date, particular: data.invoiceData.ledgerAccountId, refNo: data.vochNo, voType: data.type, debit: Number(data.invoiceData.saleAmount), voRefId: instance.id, isUo: false, visible: true, compCode: data.compCode }
+
+          )
+           accountEntry(ledger, true, instance.id);
+          updateInventoryValueOnCreate(invData, id, date, vochNo);
+         }
         //unused in sales invoice voucher.
         // if (data.role == 'UO') {
         //   var accountData = data.invoiceData.accountlineItem;
@@ -1405,16 +1440,16 @@ module.exports = function (server) {
             var vochNo = data.vochNo
             var date = data.date
             var accountData = data.invoiceData.accountlineItem;
-            var accountData = data.invoiceData.accountlineItem;
+          //  var accountData = data.invoiceData.accountlineItem;
             var objectId = new mongodb.ObjectId(id)
             var ledger = [];
-            if (accountData) {
+            if (accountData.length>0) {
               for (var i = 0; i < accountData.length; i++) {
-                ledger.push({ accountName: accountData[i].accountId, date: data.date, particular: data.invoiceData.ledgerAccountId, refNo: data.vochNo, voType: data.type, debit: Number(accountData[i].amount), voRefId: objectId, isUo: false, visible: false, compCode: data.compCode })
+                ledger.push({ accountName: accountData[i].account.id, date: data.date, particular: data.invoiceData.ledgerAccountId, refNo: data.vochNo, voType: data.type, debit: Number(accountData[i].amount), voRefId: objectId, isUo: false, visible: false, compCode: data.compCode })
               }
             }
-            ledger.push({ accountName: data.invoiceData.ledgerAccountId, date: data.date, particular: data.invoiceData.customerAccountId, refNo: data.vochNo, voType: data.type, credit: Number(data.invoiceData.saleAmount), voRefId: objectId, isUo: false, visible: false, compCode: data.compCode },
-              { accountName: data.invoiceData.customerAccountId, date: data.date, particular: data.invoiceData.ledgerAccountId, refNo: data.vochNo, voType: data.type, debit: Number(data.invoiceData.saleAmount), voRefId: objectId, isUo: false, visible: false, compCode: data.compCode }
+            ledger.push({ accountName: data.invoiceData.ledgerAccountId, date: data.date, particular: data.invoiceData.consigneeAccountId, refNo: data.vochNo, voType: data.type, credit: Number(data.invoiceData.saleAmount), voRefId: objectId, isUo: false, visible: false, compCode: data.compCode },
+              { accountName: data.invoiceData.consigneeAccountId, date: data.date, particular: data.invoiceData.ledgerAccountId, refNo: data.vochNo, voType: data.type, debit: Number(data.invoiceData.saleAmount), voRefId: objectId, isUo: false, visible: false, compCode: data.compCode }
 
             )
             console.log(ledger);
@@ -1422,6 +1457,26 @@ module.exports = function (server) {
             updateInventoryValueOnCreate(invDataSales, ObjectID(id), date, vochNo);
 
           }
+             if (data.role == 'UO') { //Sales Invoice can be created by Un Official
+          var invDataSales = data.invoiceData.billDataUo;
+           var vochNo = data.vochNo
+            var date = data.date
+            var accountData = data.invoiceData.accountlineItem;
+           // var accountData = data.invoiceData.accountlineItem;
+            var objectId = new mongodb.ObjectId(id)
+            var ledger = [];
+          if (accountData.length>0) {
+            for (var i = 0; i < accountData.length; i++) {
+              ledger.push({ accountName: accountData[i].account.id, date: data.date, particular: data.invoiceData.ledgerAccountId, refNo: data.vochNo, voType: data.type, credit: Number(accountData[i].amount), voRefId: objectId, isUo: true,visible: true ,compCode: data.compCode})
+            }
+          }
+          ledger.push({ accountName: data.invoiceData.ledgerAccountId, date: data.date, particular: data.invoiceData.consigneeAccountId, refNo: data.vochNo, voType: data.type, credit: Number(data.invoiceData.saleAmount), voRefId: objectId, isUo: true, visible: true, compCode: data.compCode },
+            { accountName: data.invoiceData.consigneeAccountId, date: data.date, particular: data.invoiceData.ledgerAccountId, refNo: data.vochNo, voType: data.type, debit: Number(data.invoiceData.saleAmount), voRefId: objectId, isUo: true, visible: true, compCode: data.compCode }
+
+          )
+           accountEntry(ledger, true, id);
+            updateInventoryValueOnCreate(invDataSales, ObjectID(id), date, vochNo);
+             }
           // if (data.role == 'UO') {
           //   var invDataSales = data.invoiceData.billData;
           //   var vochNo = data.vochNo
@@ -1443,6 +1498,7 @@ module.exports = function (server) {
           // }
           console.log({ "message": "voucher Updated", "id": id });
           //if (res.headersSent) return;
+
           res.send({ "message": "voucher Updated", "id": id });
         }
       });
@@ -1452,6 +1508,9 @@ module.exports = function (server) {
 
   "update inventory balance"
   function reversingSalesTransactionLogOfCreate(vochID, dataOld, callback) {
+    if(dataOld.length == 0){
+      if (callback) callback();
+    }else{
     console.log(vochID);
     Inventory.getDataSource().connector.connect(function (err, db) {
       var collection = db.collection('inventory');
@@ -1471,6 +1530,7 @@ module.exports = function (server) {
       }
       if (callback) callback();
     });
+    }
   }
   "update inventory balance"
   function updateInventoryValueOnCreate(data, id, date, vochNo) {
@@ -1478,7 +1538,7 @@ module.exports = function (server) {
       var collection = db.collection('inventory');
       for (var i = 0; i < data.length; i++) {
         var query = { $push: { 'salesTransaction': { id: id, date: date, vochNo: vochNo, saleQty: data[i].itemQty } } }
-        var query1 = { $inc: { BALANCE: -Number(data[i].itemQty) } };
+        var query1 = { $inc: {BALANCE: -Number(data[i].itemQty) } };
         collection.update({ _id: new mongodb.ObjectId(data[i].id) }, query1, function (err, instance) {
           if (instance) {
             console.log(instance.result);
@@ -2307,7 +2367,8 @@ module.exports = function (server) {
 
       var cursor = collection.aggregate(
         { $match: { compCode: compCode } },
-        { $match: { type:type } },
+       
+        { $match: { type:"Sales Invoice" } },
         {
           $project:
           {
@@ -3530,6 +3591,63 @@ function createBankChargesLedger(data, id) {
            });
      });
    });
+ router.get('/getInventory', function (req, res) {
+   var compCode = req.query.compCode
+   var visible = req.query.visible
+  console.log(compCode)
+  console.log(visible)
+    Inventory.getDataSource().connector.connect(function (err, db) {
+        var collection = db.collection('inventory');
+         collection.find({visible:visible,compCode:compCode, BALANCE: { $gt: 25 } }).toArray(function (err, result) {
+           console.log(result)
+             res.send(result)
+          });
+          
+    });
+    
+ });
+  " inventory filter"
+   router.post('/inventoryFilter', function (req, res) {
+      var data = req.body
+      var queryData = {}
+      var qry = [
+           {WIDTH:{$in:data[0].WIDTH}},
+           {COILSHEETNO:{$in:data[1].COILSHEETNO}},
+           {INCOMINGDATE:{$in:data[2].INCOMINGDATE}},
+           {LotWeight:{$in:data[3].LotWeight}},
+           {LOCATION:{$in:data[4].LOCATION}},
+           {GRADE:{$in:data[5].GRADE}},
+           {FINISH:{$in:data[6].FINISH}},
+           {THICKNESS:{$in:data[7].THICKNESS}},
+           {NETWEIGHT:{$in:data[8].NETWEIGHT}},
+           {GROSSWT:{$in:data[9].GROSSWT}},
+           {LENGTH:{$in:data[10].LENGTH}},
+           {SUBCATEGORY:{$in:data[11].SUBCATEGORY}},
+  ]
+        function checkProperties(data) {
+         for (var i = 0; i< data.length;i++) {
+           for (var key in data[i]) {
+             if (data[i][key].length >0){
+               queryData[key] = qry[i][key]   
+             } 
+           }     
+        }
+    return queryData;
+  }
+    var queryData = checkProperties(data)
+    console.log("Please wait searching invebtory".green + " with query " , queryData)
+    Inventory.getDataSource().connector.connect(function (err, db) {
+        var collection = db.collection('inventory');
+         collection.find(queryData).toArray(function (err, result) {
+             res.send(result)
+          });
+    });
+ });
+
+
+
+
+
   server.use(router);
 };
 

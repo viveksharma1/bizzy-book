@@ -16,6 +16,9 @@
     "supliersName": {
       "type": "string"
     },
+     "BALANCE": {
+      "type": "string"
+    },
     "currentStatus": {
       "type": "string"
     }
