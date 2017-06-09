@@ -1975,7 +1975,7 @@ module.exports = function (server) {
       }
       if (role == 'O') {
         var collection = db.collection('ledger');
-        var cursor = collection.find({ "accountName": accountName, compCode: { $in: compCode }, date: { $gte: fromDate, $lt: toDate }, isUo: false }).toArray(function (err, result) {
+        var cursor = collection.find({ "accountName": accountName, compCode: { $in: compCode }, date: { $gte: fromDate, $lt: toDate }, isUo: false }).sort( { date: -1 } ).toArray(function (err, result) {
           assert.equal(err, null);
           console.log(result);
           callback(result);
