@@ -2,7 +2,7 @@
   "name": "inventory",
   "base": "PersistedModel",
   "strict": false,
-  "idInjection": true,
+  "idInjection": false,
   "options": {
     "validateUpsert": true
   },
@@ -17,7 +17,7 @@
       "type": "string"
     },
      "BALANCE": {
-      "type": "string"
+      "type": "number"
     },
     "currentStatus": {
       "type": "string"

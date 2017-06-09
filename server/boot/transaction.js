@@ -2369,6 +2369,7 @@ module.exports = function (server) {
         { $match: { compCode: compCode } },
        
         { $match: { type:"Sales Invoice" } },
+         { $match: { type:type } },
         {
           $project:
           {
@@ -3604,7 +3605,7 @@ function createBankChargesLedger(data, id) {
     Inventory.getDataSource().connector.connect(function (err, db) {
         var collection = db.collection('inventory');
          Inventory.find(
-       {where:{visible:visible,compCode:compCode}},function (err, result) {
+      {where: {visible:visible,compCode:compCode,BALANCE:{gt:0}}},function (err, result) {
            console.log(result)
              res.send(result)
           });
