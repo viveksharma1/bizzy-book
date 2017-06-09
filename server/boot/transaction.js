@@ -3594,11 +3594,17 @@ function createBankChargesLedger(data, id) {
  router.get('/getInventory', function (req, res) {
    var compCode = req.query.compCode
    var visible = req.query.visible
+   if(visible == 'true'){
+     visible = true
+   }else{
+     visible = false
+   }
   console.log(compCode)
   console.log(visible)
     Inventory.getDataSource().connector.connect(function (err, db) {
         var collection = db.collection('inventory');
-         collection.find({visible:visible,compCode:compCode, BALANCE: { $gt: 25 } }).toArray(function (err, result) {
+         collection.aggregate(
+        { $match: {visible:visible,compCode:compCode, BALANCE: { $gt: 0 } } },function (err, result) {
            console.log(result)
              res.send(result)
           });
