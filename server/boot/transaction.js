@@ -3603,8 +3603,8 @@ function createBankChargesLedger(data, id) {
   console.log(visible)
     Inventory.getDataSource().connector.connect(function (err, db) {
         var collection = db.collection('inventory');
-         collection.aggregate(
-        { $match: {visible:visible,compCode:compCode, BALANCE: { $gt: 0 } } },function (err, result) {
+         Inventory.find(
+       {where:{visible:visible,compCode:compCode}},function (err, result) {
            console.log(result)
              res.send(result)
           });
