@@ -2357,7 +2357,7 @@ module.exports = function (server) {
         }
       });
     }
-     if(role == "UO"){
+     if(role == "O"){
          getDataO(db, role, function (result) {
         if (result) {
           res.status(200).send(result);
