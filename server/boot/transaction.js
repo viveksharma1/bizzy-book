@@ -2371,8 +2371,8 @@ module.exports = function (server) {
       var cursor = collection.aggregate(
         { $match: { compCode: compCode } },
       
-        { $match: { type:"Sales Invoice" } },
-         { $match: { type:"General Invoice"} },
+       
+         { $match: { type:{$in:["General Invoice","Sales Invoice" ]}} },
            { $match: { isUO:true } },
         {
           $project:
