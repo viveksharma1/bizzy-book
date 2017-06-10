@@ -2364,7 +2364,7 @@ module.exports = function (server) {
         }
       });
      }
-    });
+    
  var getDataUo= function (db, role, callback) {
       var collection = db.collection('voucherTransaction');
 
@@ -2421,7 +2421,7 @@ module.exports = function (server) {
           callback(result);
         });
     }
-
+});
   });
 
   "get transaction data"
