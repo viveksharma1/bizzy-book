@@ -2370,10 +2370,10 @@ module.exports = function (server) {
 
       var cursor = collection.aggregate(
         { $match: { compCode: compCode } },
-       { $match: { isUO:true } },
+      
         { $match: { type:"Sales Invoice" } },
          { $match: { type:"General Invoice"} },
-          
+           { $match: { isUO:true } },
         {
           $project:
           {
