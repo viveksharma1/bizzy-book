@@ -375,14 +375,15 @@ exports.getBalanceSheet = function (req, res) {
 };
 exports.data1 = function (req, res) {
 voucherTransaction.getDataSource().connector.connect(function (err, db) {
-    var collection = db.collection('inventory');
-   collection.find().forEach(function(data) {
+    var collection = db.collection('voucherTransaction');
+   collection.find({type:"Sales Invoice"}).forEach(function(data) {
     collection.update({
         "_id": data._id
        
     }, {
         "$set": {
-            "BALANCE": Number(data.BALANCE)
+            "amountUo": Number(data.amount),
+            "amountO": Number(data.amount)
         }
     },{multi:true})
    

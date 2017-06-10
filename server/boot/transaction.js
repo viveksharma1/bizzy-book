@@ -1395,22 +1395,7 @@ module.exports = function (server) {
            accountEntry(ledger, true, instance.id);
           updateInventoryValueOnCreate(invData, id, date, vochNo);
          }
-        //unused in sales invoice voucher.
-        // if (data.role == 'UO') {
-        //   var accountData = data.invoiceData.accountlineItem;
-        //   var ledger = [];
-        //   if (accountData) {
-        //     for (var i = 0; i < accountData.length; i++) {
-        //       ledger.push({ accountName: accountData[i].accountId, date: data.date, particular: data.invoiceData.ledgerAccountId, refNo: data.vochNo, voType: data.type, credit: Number(accountData[i].amount), voRefId: instance.id, isUo: true, visible: true, compCode: data.compCode })
-        //     }
-        //   }
-        //   ledger.push({ accountName: data.invoiceData.ledgerAccountId, date: data.date, particular: data.invoiceData.customerAccountId, refNo: data.vochNo, voType: data.type, credit: Number(data.invoiceData.saleAmount), voRefId: instance.id, isUo: true, visible: true, compCode: data.compCode },
-        //     { accountName: data.invoiceData.customerAccountId, date: data.date, particular: data.invoiceData.ledgerAccountId, refNo: data.vochNo, voType: data.type, debit: Number(data.invoiceData.saleAmount), voRefId: instance.id, isUo: true, visible: true, compCode: data.compCode }
-
-        //   )
-        //   accountEntry(ledger, true, instance.id);
-        //   updateInventoryValueOnCreate(invData, id, date, vochNo);
-        // }
+       
 
         console.log({ "message": "voucher Created", "id": instance.id });
         res.send({ "message": "voucher Created", "id": instance.id });
@@ -2381,7 +2366,7 @@ module.exports = function (server) {
             invoiceNo: "$vochNo",
             date: "$date",
             duedate: "$duedate",
-            amount: "$amount",
+            amount: "$amountUo",
             balance: "$balance",
             customer: "$customerId",
             customerId: "$customerId",
@@ -2408,7 +2393,7 @@ module.exports = function (server) {
             invoiceNo: "$vochNo",
             date: "$date",
             duedate: "$duedate",
-            amount: "$amount",
+            amount: "$amountO",
             balance: "$balance",
             customer: "$customerId",
             customerId: "$customerId",
@@ -2656,7 +2641,7 @@ module.exports = function (server) {
      var visible = true
      if(balanceVisible == 'true'){
       var isUo = false
-      if (data[0].credit) {
+      if (data[0].credit >=0) {
       credit = data[0].credit
       console.log("new balance is".yellow, credit)
       var cursor = collection.update({ accountName: data[0].accountName, compCode: data[0].compCode, voType: "Balance",visible:visible}, { $set: { credit: credit,isUo:isUo } }, function (err, result) {
@@ -2683,7 +2668,7 @@ module.exports = function (server) {
      }
      if(balanceVisible == 'false'){
        var isUo = true;
-       if (data[0].credit) {
+       if (data[0].credit>=0) {
       credit = data[0].credit
       console.log("new balance is".yellow, credit)
       var cursor = collection.update({ accountName: data[0].accountName, compCode: data[0].compCode, voType: "Balance",visible:visible }, { $set: { credit: credit ,isUo:isUo} }, function (err, result) {
@@ -2768,10 +2753,10 @@ module.exports = function (server) {
     }
     var currentDate = new Date("02/02/2016")
     for (var i = 0; i < data.length; i++) {
-      if (data[i].obType == 'credit' && data[i].openingBalance) {
+      if (data[i].obType == 'credit' && data[i].openingBalance >=0) {
         ledger.push({ accountName: accountId, date: currentDate, particular: accountId, refNo: '', voType: "Balance", credit: Number(data[i].openingBalance), voRefId: '', isUo: isUo, visible: visible, compCode: compCode })
       }
-      if (data[i].obType == 'debit' && data[i].openingBalance) {
+      if (data[i].obType == 'debit' && data[i].openingBalance>=0) {
         ledger.push({ accountName: accountId, date: currentDate, particular: accountId, refNo: '', voType: "Balance", debit: Number(data[i].openingBalance), voRefId: '', isUo: isUo, visible: visible, compCode: compCode })
       }
     }
