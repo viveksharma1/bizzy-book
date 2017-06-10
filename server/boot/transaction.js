@@ -2349,29 +2349,58 @@ module.exports = function (server) {
   router.get('/getInvoiceData/:compCode', function (req, res) {
     var compCode = req.params.compCode;
     var role = req.query.role;
-    var type
-    if(role == "O"){
-        type = "Sales Invoice"
-    }
-    if(role == "UO"){
-        type = "General Invoice"
-    }
     voucherTransaction.getDataSource().connector.connect(function (err, db) {
-      getData(db, role, function (result) {
+       if(role == "UO"){
+      getDataUo(db, role, function (result) {
         if (result) {
           res.status(200).send(result);
         }
       });
+    }
+     if(role == "UO"){
+         getDataO(db, role, function (result) {
+        if (result) {
+          res.status(200).send(result);
+        }
+      });
+     }
     });
-
-    var getData = function (db, role, callback) {
+ var getDataUo= function (db, role, callback) {
       var collection = db.collection('voucherTransaction');
 
       var cursor = collection.aggregate(
         { $match: { compCode: compCode } },
-       
+       { $match: { isUO:true } },
         { $match: { type:"Sales Invoice" } },
-         { $match: { type:type } },
+         { $match: { type:"General Invoice"} },
+          
+        {
+          $project:
+          {
+            type: "$type",
+            invoiceNo: "$vochNo",
+            date: "$date",
+            duedate: "$duedate",
+            amount: "$amount",
+            balance: "$balance",
+            customer: "$customerId",
+            customerId: "$customerId",
+            compCode: "$compCode",
+            id: "$_id"
+
+          }
+        }, function (err, result) {
+          assert.equal(err, null);
+          callback(result);
+        });
+    }
+
+    var getDataO = function (db, role, callback) {
+      var collection = db.collection('voucherTransaction');
+
+      var cursor = collection.aggregate(
+        { $match: { compCode: compCode } },
+        { $match: { type:"Sales Invoice" } },  
         {
           $project:
           {
