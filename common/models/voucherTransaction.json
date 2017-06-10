@@ -37,6 +37,9 @@
     "vochNo": {
       "type": "string"
     },
+    "isUO": {
+      "type": "boolean"
+    },
     "vo_payment": {
       "type": "object"
     },
