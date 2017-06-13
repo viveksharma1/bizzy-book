@@ -1353,6 +1353,7 @@ module.exports = function (server) {
         console.log(err);
       }
       else {
+        var roundOffId = "5937a9728f7bac6f9a4d6d96"
         console.log("voucher created")
         console.log(instance)
         if (data.role == 'O') { //Sales Invoice can be created by Official
@@ -1362,6 +1363,16 @@ module.exports = function (server) {
           var id = instance.id
           var accountData = data.invoiceData.accountlineItem;
           var ledger = [];
+          if(data.roundOff){
+            if(Math.abs(data.roundOff)>=0.5){
+              var roundoff = Math.abs(data.roundOff);
+               ledger.push({ accountName: roundOffId, date: data.date, particular: data.invoiceData.consigneeAccountId, refNo: data.vochNo, voType: data.type, credit: Number(roundoff), voRefId: instance.id, isUo: false, visible: false, compCode: data.compCode })
+            }else{
+              var roundoff = Math.abs(data.roundOff);
+                ledger.push({ accountName: roundOffId, date: data.date, particular: data.invoiceData.consigneeAccountId, refNo: data.vochNo, voType: data.type, debit: Number(roundoff), voRefId: instance.id, isUo: false, visible: false, compCode: data.compCode })
+            }
+
+          }
           if (accountData.length>0) {
             for (var i = 0; i < accountData.length; i++) {
               ledger.push({ accountName: accountData[i].account.id, date: data.date, particular: data.invoiceData.ledgerAccountId, refNo: data.vochNo, voType: data.type, debit: Number(accountData[i].amount), voRefId: instance.id, isUo: false,compCode:data.compCode })
@@ -1419,6 +1430,7 @@ module.exports = function (server) {
           console.log(err)
         }
         else {
+           var roundOffId = "5937a9728f7bac6f9a4d6d96"
           console.log(instance);
           if (data.role == 'O') {
             var invDataSales = data.invoiceData.billData;
@@ -1428,6 +1440,16 @@ module.exports = function (server) {
           //  var accountData = data.invoiceData.accountlineItem;
             var objectId = new mongodb.ObjectId(id)
             var ledger = [];
+            if(data.roundOff){
+            if(Math.abs(data.roundOff)>=0.5){
+              var roundoff = Math.abs(data.roundOff);
+               ledger.push({ accountName: roundOffId, date: data.date, particular: data.invoiceData.consigneeAccountId, refNo: data.vochNo, voType: data.type, credit: Number(roundoff), voRefId: objectId, isUo: false, visible: false, compCode: data.compCode })
+            }else{
+              var roundoff = Math.abs(data.roundOff);
+                ledger.push({ accountName: roundOffId, date: data.date, particular: data.invoiceData.consigneeAccountId, refNo: data.vochNo, voType: data.type, debit: Number(roundoff), voRefId: objectId, isUo: false, visible: false, compCode: data.compCode })
+            }
+
+          }
             if (accountData.length>0) {
               for (var i = 0; i < accountData.length; i++) {
                 ledger.push({ accountName: accountData[i].account.id, date: data.date, particular: data.invoiceData.ledgerAccountId, refNo: data.vochNo, voType: data.type, debit: Number(accountData[i].amount), voRefId: objectId, isUo: false, visible: false, compCode: data.compCode })
@@ -1952,7 +1974,7 @@ module.exports = function (server) {
       var ledger;
       if (role == 'UO') {
         var collection = db.collection('ledger');
-        var cursor = collection.find({ "accountName": accountName, compCode: { $in: compCode }, date: { $gte: fromDate, $lt: toDate },  visible: true }).sort( { date: -1 } ).toArray(function (err, result) {
+        var cursor = collection.find({ "accountName": accountName, compCode: { $in: compCode }, date: { $gte: fromDate, $lte: toDate },  visible: true }).sort( { date: -1 } ).toArray(function (err, result) {
           assert.equal(err, null);
           console.log(result);
           callback(result);
@@ -1960,7 +1982,7 @@ module.exports = function (server) {
       }
       if (role == 'O') {
         var collection = db.collection('ledger');
-        var cursor = collection.find({ "accountName": accountName, compCode: { $in: compCode }, date: { $gte: fromDate, $lt: toDate }, isUo: false }).sort( { date: -1 } ).toArray(function (err, result) {
+        var cursor = collection.find({ "accountName": accountName, compCode: { $in: compCode }, date: { $gte: fromDate, $lte: toDate }, isUo: false }).sort( { date: -1 } ).toArray(function (err, result) {
           assert.equal(err, null);
           console.log(result);
           callback(result);
@@ -2307,8 +2329,19 @@ module.exports = function (server) {
   function createLedgerJson(data, id) {
     console.log("ledger", data);
     var ledger = [];
+    var roundOffId = "58df8f7af5448d2e2c3c0fb6"
     if (data.role == 'O') {
       var accountData = data.accountlineItem;
+      if(data.roundOff){
+            if(Math.abs(data.roundOff)>=0.5){
+              var roundoff = Math.abs(data.roundOff);
+               ledger.push({ accountName: roundOffId, date: data.date, particular: data.supliersId, refNo: data.no, voType: "Purchase Invoice", debit: Number(roundoff), voRefId: id, isUo: false, visible: false, compCode: data.compCode })
+            }else{
+              var roundoff = Math.abs(data.roundOff);
+                ledger.push({ accountName: roundOffId, date: data.date, particular: data.supliersId, refNo: data.no, voType: "Purchase Invoice", credit: Number(roundoff), voRefId: id, isUo: false, visible: false, compCode: data.compCode })
+            }
+
+          }
       for (var i = 0; i < accountData.length; i++) {
         ledger.push({ accountName: accountData[i].accountId, date: data.date, particular: data.purchaseAccountId, refNo: data.no, voType: "Purchase Invoice", debit: Number(accountData[i].amount), voRefId: id, isUo: false, compCode: data.compCode })
       }
@@ -3280,9 +3313,12 @@ function createBankChargesLedger(data, id) {
   "get invoice for sales settelment"
   router.get('/getSalesInvoice', function (req, res) {
     var invoiceNo = req.query.invoiceNo;
+     var compCode = req.query.compCode
+     console.log(" geting invoice ".green + invoiceNo + " in company ".red + compCode)
     voucherTransaction.getDataSource().connector.connect(function (err, db) {
-      getInvoice(db, invoiceNo, function (result) {
+      getInvoice(db, invoiceNo,compCode, function (result) {
         if (result.length > 0) {
+          console.log(" Invoice id ".yellow + result[0]._id)
           res.status(200).send(result);
         }
         else {
@@ -3290,10 +3326,11 @@ function createBankChargesLedger(data, id) {
         }
       });
     });
-    var getInvoice = function (db, invoiceNo, callback) {
+    var getInvoice = function (db, invoiceNo,compCode, callback) {
       var collection = db.collection('voucherTransaction');
       var cursor = collection.aggregate(
         { $match: { vochNo: invoiceNo } },
+        { $match: { compCode: compCode } },
         {
           $project: {
             customer: "$invoiceData.consigneeAccountId",
