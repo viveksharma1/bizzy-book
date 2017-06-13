@@ -175,6 +175,8 @@ module.exports = function (server) {
             console.log(err)
           }
           else {
+            var activity = "Account" + " " + accountData.accountName +" "+ "Updated"
+            activityLog(accountData.username,activity,' ',accountData.compCode)
             console.log("account updated")
             res.status(200).send({ id: id });
           }
@@ -187,6 +189,8 @@ module.exports = function (server) {
           }
           else {
             console.log(instance)
+              var activity = "Account" + " " +  accountData.accountName + " " + "created"
+              activityLog(accountData.username,activity,' ',accountData.compCode)
             //res.send({"status":"Account created"})
             res.status(200).send({ id: instance.id });
           }
@@ -413,6 +417,8 @@ module.exports = function (server) {
           return;
         } else {
           updateReceipt(data, id, function () {
+             var activity = "Receipt Updated"
+            activityLog(data.username,activity,data.vochNo,data.compCode)
             //find out if any badla voucher exists for receipt then delete badla voucher and ledger
             //and create new badla and ledger if there is badla object in the request.
             removeBadlaVoucher(id, data.role, function () {
@@ -432,6 +438,8 @@ module.exports = function (server) {
     }
     else {
       createReceipt(data, function (dataInstance) {
+            var activity = "Receipt Created"
+            activityLog(data.username,activity,data.vochNo,data.compCode)
         if (dataBadla) {
           dataBadla.receiptId = dataInstance.id;
           createBadlaVoucher(dataBadla, function () {
@@ -765,11 +773,15 @@ module.exports = function (server) {
     if (id != 'null') {
       //var query = { id: id }
       updatePayment(req.body, id, res,custom);
+       var activity = "Payment Updated"
+      activityLog(data.username,activity,data.vochNo,data.compCode)
       //res.send({status:'200'});
     }
     else {
       createPayment(data, res,custom);
       //res.send({status:'200'});
+       var activity = "Payment Created"
+      activityLog(data.username,activity,data.vochNo,data.compCode)
     }
 
   });
@@ -1318,6 +1330,8 @@ module.exports = function (server) {
     if (id == 'null') {
       validateAvailableQtyOnCreate(data, res, function () {
         createSalesInvoiceVoucher(data, res);
+          var activity = "Sales Invoice Created"
+            activityLog(data.username,activity,data.vochNo,data.compCode)
       });
     } else {
       voucherTransaction.findOne({ "where": { type: data.type, id: id } }, function (err, instance, count) {
@@ -1336,6 +1350,8 @@ module.exports = function (server) {
             } else {
               validateAvailableQtyOnUpdate(data, id, res, function (result) {
                 updateSalesInvoiceVoucher(data, id, result, res);
+                 var activity = "Sales Invoice Updated"
+                    activityLog(data.username,activity,data.vochNo,data.compCode)
               });
               //updateVoucher(data, id);
             }
@@ -2024,6 +2040,8 @@ module.exports = function (server) {
         updateExpence(db, data, function (result) {
           if (result) {
             var isUo
+            var activity = "Expense Updated"
+             activityLog(data.username,activity,data.vochNo,data.compCode)
             console.log("Expense Updated")
             if (data.role == 'O') {
               isUo = false
@@ -2047,6 +2065,8 @@ module.exports = function (server) {
             if (data.role == 'UO') {
               isUo = true
             }
+            var activity = "Expense Created"
+             activityLog(data.username,activity,data.vochNo,data.compCode)
             console.log("Expense Created")
             var ledger = createLedgerJsonExpense(data.transactionData, result.ops[0]._id);
             accountEntry(ledger, isUo, new mongodb.ObjectId(result.ops[0]._id));
@@ -2156,6 +2176,8 @@ module.exports = function (server) {
         updateBill(db, data, function (result) {
           if (result) {
             console.log("Bill Updated", result)
+            var activity = "Purchase Invoice Updated"
+            activityLog(data.username,activity,data.vochNo,compCode);
             var lineItem;
             var visible;
             var isUo;
@@ -2202,6 +2224,8 @@ module.exports = function (server) {
         createBill(db, data, function (result) {
           if (result) {
             console.log("Bill Created", result)
+             var activity = "Purchase Invoice Created"
+            activityLog(data.username,activity,data.vochNo,compCode)
             var ledger = createLedgerJson(data.transactionData, result.ops[0]._id);
             accountEntry(ledger, false, new mongodb.ObjectId(result.ops[0]._id));
             var billId = result.ops[0]._id
@@ -3704,8 +3728,29 @@ function createBankChargesLedger(data, id) {
     });
  });
 
+// activity log
+function activityLog(username,activity,vochNo,compCode) {
+      var d = new Date()
+      var logData = {
+                      username: username,
+                      date: new Date(),
+                      hours:d.getHours() + ':' + d.getMinutes() ,
+                      activityType:activity,
+                      vochNo:vochNo,
+                      compCode:compCode
+                   }
 
-
+     voucherTransaction.getDataSource().connector.connect(function (err, db) {
+      var collection = db.collection('userActivity');
+       collection.insert(logData,function (err, result) {
+          if(err){
+            console.log(err)
+          }else{
+            console.log("Activity Recorded".green)
+          }
+      });
+  });
+};
 
 
   server.use(router);
