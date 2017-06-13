@@ -3437,10 +3437,10 @@ function createBankChargesLedger(data, id) {
       return ledger;
     }
      if(type == 'sales'){
-        var paritcular = "Purchase Settelment" + data.invoiceNo
-      ledger.push({ accountName: firstLedger.accountId, date: data.date, particular: secondLedger.accountId, particular1: thirdLedger.accountId, refNo: data.voRefNo, voType: "Purchase Settelment", debit: Number(firstLedger.amount), voRefId: id, isUo: true, visible: true, compCode: data.compCode })
-      ledger.push({ accountName: secondLedger.accountId, date: data.date, particular: firstLedger.accountId, refNo: data.voRefNo, voType: "Purchase Settelment", credit: Number(secondLedger.amount), voRefId: id, isUo: true, visible: true, compCode: data.compCode })
-      ledger.push({ accountName: thirdLedger.accountId, date: data.date, particular: firstLedger.accountId, refNo: data.voRefNo, voType: "Purchase Settelment", credit: Number(thirdLedger.amount), voRefId: id, isUo: true, visible: true, compCode: data.compCode })
+        var paritcular = "Sales Settelment" + data.invoiceNo
+      ledger.push({ accountName: firstLedger.accountId, date: data.date, particular: secondLedger.accountId, particular1: thirdLedger.accountId, refNo: data.voRefNo, voType: "Sales Settelment", debit: Number(firstLedger.amount), voRefId: id, isUo: true, visible: true, compCode: data.compCode })
+      ledger.push({ accountName: secondLedger.accountId, date: data.date, particular: firstLedger.accountId, refNo: data.voRefNo, voType: "Sales Settelment", credit: Number(secondLedger.amount), voRefId: id, isUo: true, visible: true, compCode: data.compCode })
+      ledger.push({ accountName: thirdLedger.accountId, date: data.date, particular: firstLedger.accountId, refNo: data.voRefNo, voType: "Sales Settelment", credit: Number(thirdLedger.amount), voRefId: id, isUo: true, visible: true, compCode: data.compCode })
       return ledger;
      }
     }
