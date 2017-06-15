@@ -690,7 +690,7 @@ module.exports = function (server) {
                   paymentLogAmt += Number(data[i].paymentLog[m].amount);
                 }
               }
-              var query1 = { $set: { balance: Number(data[i].balance) + paymentLogAmt } }
+              var query1 = { $set: { 'transactionData.balance': Number(data[i].balance) + paymentLogAmt } }
               var query2 = { $pull: { 'paymentLog': { id: vochID } } }
 
             }
@@ -1705,7 +1705,7 @@ module.exports = function (server) {
             $project: {
               date: "$date",
               duedate: "$transactionData.billDueDate",
-              amount: "$transactionData.balance",
+              amount: "$transactionData.amount",
               amountInDollar: "$transactionData.amountInDollar",
               balanceInDollar: "$transactionData.balanceInDollar", 
               vochNo: "$vochNo",
