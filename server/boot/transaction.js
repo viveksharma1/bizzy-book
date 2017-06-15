@@ -1985,7 +1985,7 @@ module.exports = function (server) {
         });
       }
     }
-
+      
     var getLedgerData = function (db, role, callback) {
       var ledger;
       if (role == 'UO') {
@@ -2007,6 +2007,7 @@ module.exports = function (server) {
     }
     Ledgers.getDataSource().connector.connect(function (err, db) {
       var collection = db.collection('ledger');
+     
       openingBalnce(db, role, compCode, function (data) {
         var ledgerOpeningBalnce = {};
         if (data.length > 0) {
@@ -2023,8 +2024,45 @@ module.exports = function (server) {
       });
     });
   });
+ router.post('/ledgerlastentry', function (req, res) {
+    var compCode = req.body
+    var accountName = req.query.accountName
+    var role = req.query.role
+    var l;
+   var getLastDate = function(db,callback){
+       //items.find.sort( [['_id', -1]] ) // get all items desc by created date.
+       var collection = db.collection('ledger');
+       if (role == 'UO') {
+        var cursor = collection.find({compCode: { $in: compCode },voType: { $nin: [ "Balance" ] },accountName:accountName,visible: true},{date:true}).sort( [['date', -1]]).limit(1).toArray(function (err, result) {
+          assert.equal(err, null);
+          console.log("last Date".red ,result);
+          callback(result);
+        });
+      }
+      
+       if (role == 'O') {
+        var cursor = collection.find({compCode: { $in: compCode }, voType: { $nin: [ "Balance" ] },"accountName":accountName,isUo: false},{date:true}).sort( [['date', -1]]).limit(1).toArray(function (err, result) {
+          assert.equal(err, null);
+          console.log("last Date".red ,result);
+          callback(result);
 
-
+        });
+    }
+  }
+   voucherTransaction.getDataSource().connector.connect(function (err, db) {
+      var collection = db.collection('ledger');
+       getLastDate(db, function (data) {
+          if(data.length>0){
+               var lastDate = data[0].date
+               console.log("lastDate".green ,lastDate)
+               res.send({lastDate:lastDate,days:lastDate.getDate()});
+          }else{
+              var d = new Date()
+             res.send({lastDate:new Date(),days:d.getDate()});
+          }
+      });
+   });
+ });
   "create Expense and save Expense"
   router.post('/saveExpensetest/:expenseId/:uoVisible', function (req, res) {
     var data = req.body;
@@ -3660,10 +3698,11 @@ function createBankChargesLedger(data, id) {
    })
    router.get('/getSalesInvoiceNo', function (req, res) {
      var compCode = req.query.compCode
+     var type = req.query.type
      console.log(compCode)
       voucherTransaction.getDataSource().connector.connect(function (err, db) {
          var collection = db.collection('voucherTransaction');
-       collection.count({type:"Sales Invoice",compCode:compCode}, function (err, result) {
+       collection.count({type:type,compCode:compCode}, function (err, result) {
          console.log(result)
              res.send({count:result})
            });
@@ -3786,7 +3825,7 @@ router.get('/getreport', function (req, res) {
      }
 
       ,function (err, result) {
-           console.log(result)
+           //console.log(result)
              res.send(result)
           });
           
@@ -3803,6 +3842,25 @@ router.get('/getreport', function (req, res) {
          {
             _id: { accountName: "$date" },
               total: { $sum: "$transactionData.amount" },
+         }
+     }
+
+      ,function (err, result) {
+          // console.log(result)
+             res.send(result)
+          });
+          
+    });
+    
+ });
+ router.get('/getreport4', function (req, res) {
+    Inventory.getDataSource().connector.connect(function (err, db) {
+        var collection = db.collection('voucherTransaction');
+         collection.aggregate( 
+       {$group:
+         {
+            _id: { accountName: "$type" },
+              total: { $sum: 1 }
          }
      }
 
