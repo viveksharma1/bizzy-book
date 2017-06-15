@@ -1705,13 +1705,13 @@ module.exports = function (server) {
             $project: {
               date: "$date",
               duedate: "$transactionData.billDueDate",
-              amount: "$amount",
+              amount: "$transactionData.balance",
               amountInDollar: "$transactionData.amountInDollar",
               balanceInDollar: "$transactionData.balanceInDollar", 
               vochNo: "$vochNo",
               type: "$type",
               balance: "$transactionData.balance",
-               exchangeRate:"$transactionData.ExchangeRate",
+              exchangeRate:"$transactionData.ExchangeRate",
               invoiceType: "$transactionData.invoiceType",
               id: "$_id"
             }
