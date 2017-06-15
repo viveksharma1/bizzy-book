@@ -3462,7 +3462,7 @@ function createBankChargesLedger(data, id) {
     }
      if(type == 'sales'){
         var paritcular = "Sales Settelment" + data.invoiceNo
-      ledger.push({ accountName: firstLedger.accountId, date: data.date, particular: secondLedger.accountId, particular1: thirdLedger.accountId, refNo: data.voRefNo, voType: "Sales Settelment", debit: Number(firstLedger.amount), voRefId: id, isUo: true, visible: true, compCode: data.compCode })
+      ledger.push({ accountName: firstLedger.accountId, date: data.date, particular: secondLedger.accountId, particular1: thirdLedger.accountId,amount1:secondLedger.amount,amount2:thirdLedger.amount, refNo: data.voRefNo, voType: "Sales Settelment", debit: Number(firstLedger.amount), voRefId: id, isUo: true, visible: true, compCode: data.compCode })
       ledger.push({ accountName: secondLedger.accountId, date: data.date, particular: firstLedger.accountId, refNo: data.voRefNo, voType: "Sales Settelment", credit: Number(secondLedger.amount), voRefId: id, isUo: true, visible: true, compCode: data.compCode })
       ledger.push({ accountName: thirdLedger.accountId, date: data.date, particular: firstLedger.accountId, refNo: data.voRefNo, voType: "Sales Settelment", credit: Number(thirdLedger.amount), voRefId: id, isUo: true, visible: true, compCode: data.compCode })
       return ledger;
@@ -3752,7 +3752,47 @@ function activityLog(username,activity,vochNo,compCode) {
   });
 };
 
+router.get('/getreport', function (req, res) {
+    Inventory.getDataSource().connector.connect(function (err, db) {
+        var collection = db.collection('voucherTransaction');
+         collection.aggregate( 
+           {
+       $group:
+         {
+            _id: { accountName: "$type" },
+              total: { $sum: "$amount" },
+         }
+     }
 
+      ,function (err, result) {
+           console.log(result)
+             res.send(result)
+          });
+          
+    });
+    
+ });
+ router.get('/getreport2', function (req, res) {
+    Inventory.getDataSource().connector.connect(function (err, db) {
+        var collection = db.collection('voucherTransaction');
+         collection.aggregate( 
+           
+      { $match: {type:"Sales Invoice"} },
+       {$group:
+         {
+            _id: { accountName: "$date" },
+              total: { $sum: "$amount" },
+         }
+     }
+
+      ,function (err, result) {
+           console.log(result)
+             res.send(result)
+          });
+          
+    });
+    
+ });
   server.use(router);
 };
 
