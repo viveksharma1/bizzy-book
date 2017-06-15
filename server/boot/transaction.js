@@ -1539,12 +1539,12 @@ module.exports = function (server) {
       var collection = db.collection('inventory');
       for (var i = 0; i < dataOld.length; i++) {
         var query = { $pull: { 'salesTransaction': { id: vochID } } }
-        var query1 = { $inc: { BALANCE: Number(dataOld[i].itemQty) } };
-        collection.update({ _id: new mongodb.ObjectId(dataOld[i].id) }, query1, function (err, instance) {
-          if (instance) {
-            console.log(instance.result);
-          }
-        });
+      //  var query1 = { $inc: { BALANCE: Number(dataOld[i].itemQty) } };
+        // collection.update({ _id: new mongodb.ObjectId(dataOld[i].id) }, query1, function (err, instance) {
+        //   if (instance) {
+        //     console.log(instance.result);
+        //   }
+        // });
         collection.update({ _id: new mongodb.ObjectId(dataOld[i].id) }, query, function (err, instance) {
           if (instance) {
             console.log(instance.result);
@@ -3782,6 +3782,27 @@ router.get('/getreport', function (req, res) {
          {
             _id: { accountName: "$date" },
               total: { $sum: "$amount" },
+         }
+     }
+
+      ,function (err, result) {
+           console.log(result)
+             res.send(result)
+          });
+          
+    });
+    
+ });
+ router.get('/getreport3', function (req, res) {
+    Inventory.getDataSource().connector.connect(function (err, db) {
+        var collection = db.collection('voucherTransaction');
+         collection.aggregate( 
+           
+      { $match: {type:"Purchase Invoice"} },
+       {$group:
+         {
+            _id: { accountName: "$date" },
+              total: { $sum: "$transactionData.amount" },
          }
      }
 
