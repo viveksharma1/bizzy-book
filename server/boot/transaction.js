@@ -1985,7 +1985,7 @@ module.exports = function (server) {
         });
       }
     }
-      
+      fromDate.setDate(fromDate.getDate()-1);
     var getLedgerData = function (db, role, callback) {
       var ledger;
       if (role == 'UO') {
@@ -3872,6 +3872,59 @@ router.get('/getreport', function (req, res) {
     });
     
  });
+
+
+"voucher count"
+  router.get('/voucherTransactions/count', function (req, res) {
+    var type = req.query.type
+    var compCode = req.query.compCode
+    var isUo = JSON.parse(req.query.isUo1)
+    voucherTransaction.getDataSource().connector.connect(function (err, db) {
+        var collection = db.collection('voucherTransaction');
+          collection.count({isUo:isUo,type:type,compCode:compCode},function (err, result) {
+           console.log({count:result})
+             res.send({count:result})
+       });      
+    });  
+ });
+   "get voucherTransaction"
+  router.post('/voucherTransactions/', function (req, res) {
+    var type = req.body
+    var compCode = req.query.compCode
+    var role = req.query.role
+    if(role == "O"){
+    voucherTransaction.getDataSource().connector.connect(function (err, db) {
+        var collection = db.collection('voucherTransaction');
+          collection.find({"type":{$nin:type},isUo:false,compCode:compCode}).toArray(function (err, result) {
+            console.log("voucher",result)
+            if(result.length>0){
+             console.log(result)
+             res.send(result)
+            }
+       });      
+    });  
+  }
+   if(role == "UO"){
+    voucherTransaction.getDataSource().connector.connect(function (err, db) {
+        var collection = db.collection('voucherTransaction');
+          collection.find({"type":{$nin:type},visible:true,compCode:compCode}).toArray(function (err, result) {
+            console.log("voucher",result)
+            if(result.length>0){
+             console.log(result)
+             res.send(result)
+            }
+       });      
+    });  
+  }
+ });
+
+
+
+
+
+
+
+
   server.use(router);
 };
 

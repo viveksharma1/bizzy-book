@@ -20,7 +20,7 @@
       "type": "number"
     },
     "isUo": {
-      "type": "number"
+      "type": "boolean"
     },
     "compCode": {
       "type": "string"
