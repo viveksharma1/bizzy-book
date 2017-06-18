@@ -6,6 +6,14 @@ var server = require('../../server/server')
 var voucherTransaction = server.models.voucherTransaction;
 var Account = server.models.account;
 
+ var es = require('event-stream');
+ var router = server.loopback.Router();
+  var userActivity = server.models.userActivity;
+  userActivity.createChangeStream(function(err, changes)
+   {
+    changes.pipe(es.stringify()).pipe(process.stdout);
+  });
+
 exports.isVoucherExist = function(req, res){
   var vochNo = req.params.vochNo  
   voucherTransaction.getDataSource().connector.connect(function (err, db) {

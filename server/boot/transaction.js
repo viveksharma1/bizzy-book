@@ -11,6 +11,7 @@ module.exports = function (server) {
   var Ledgers = server.models.ledger;
   var groupMaster = server.models.groupMaster;
   var user = server.models.User;
+  var userActivity = server.models.userActivity;
   var MongoClient = require('mongodb').MongoClient;
   var assert = require('assert');
   var mmongoose = require('mongoose');
@@ -1540,11 +1541,11 @@ module.exports = function (server) {
       for (var i = 0; i < dataOld.length; i++) {
         var query = { $pull: { 'salesTransaction': { id: vochID } } }
        var query1 = { $inc: { BALANCE: Number(dataOld[i].itemQty) } };
-        collection.update({ _id: new mongodb.ObjectId(dataOld[i].id) }, query1, function (err, instance) {
-          if (instance) {
-            console.log(instance.result);
-          }
-        });
+        // collection.update({ _id: new mongodb.ObjectId(dataOld[i].id) }, query1, function (err, instance) {
+        //   if (instance) {
+        //     console.log(instance.result);
+        //   }
+        // });
         collection.update({ _id: new mongodb.ObjectId(dataOld[i].id) }, query, function (err, instance) {
           if (instance) {
             console.log(instance.result);
@@ -3781,7 +3782,7 @@ function activityLog(username,activity,vochNo,compCode) {
 
      voucherTransaction.getDataSource().connector.connect(function (err, db) {
       var collection = db.collection('userActivity');
-       collection.insert(logData,function (err, result) {
+       userActivity.create(logData,function (err, result) {
           if(err){
             console.log(err)
           }else{
