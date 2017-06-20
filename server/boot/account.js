@@ -176,6 +176,23 @@ var getLedger = function (db, callback) {
       }
 };
 exports.getBalanceSheettest = function (req, res) {
+     voucherTransaction.getDataSource().connector.connect(function (err, db) {
+         var collection = db.collection('account');
+        var cursor = collection.aggregate(  
+        {$match: {ancestor:{$in:ancestors}}},   
+         {
+           $group:
+            {
+              _id: {accountName: "$Under",id:"$_id",balanceType:"$balanceType",ancestor:"$ancestor"}
+           }
+         },  function(err, result) {
+                assert.equal(err, null);
+                callback(result);
+      });
+    });
+ }
+        
+exports.getBalanceSheettest = function (req, res) {
     var compCode = req.body 
     voucherTransaction.getDataSource().connector.connect(function (err, db) {
          getAccountaggregate(db,function (result) {
@@ -188,27 +205,29 @@ exports.getBalanceSheettest = function (req, res) {
                          var reportdata = []
                          for(var i=0;i<accountData.length;i++){
                              for(var j=0;j<ledgerdata.length;j++){
-                                 if((accountData[i]._id.id).toHexString() == ledgerdata[j]._id.accountName) {
-                                     var under = accountData[i]._id.accountName
-                                     console.log(under)
+                                 if((accountData[i].id == ledgerdata[j]._id.accountName)) {
+                                     var under = accountData[i].accountName
+                                    //console.log(under)
                                      var output = {};
-                                     output["account"]= under;
-                                     if(accountData[i]._id.balanceType == 'credit'){
+                                    // output["account"]= under;
+                                     if(accountData[i].balanceType == 'credit'){
                                          output["amount"]= ledgerdata[j].credit - ledgerdata[j].debit;
-                                     }if(accountData[i]._id.balanceType == 'debit'){
+                                     }if(accountData[i].balanceType == 'debit'){
                                          output["amount"]= ledgerdata[j].debit - ledgerdata[j].credit ;
                                      }
                                     
-                                      if(accountData[i]._id.ancestor[0] == "PRIMARY"){
-                                      var index = accountData[i]._id.ancestor.indexOf("PRIMARY");
-                                      if (index > -1) {
-                                            accountData[i]._id.ancestor.splice(index, 1);
-                                      }
-                                      }
-                                      output["ancestor"]= accountData[i]._id.ancestor;
-                                      output["balanceType"]= accountData[i]._id.balanceType;
+                                      if(accountData[i].ancestor == "PRIMARY"){
+                                    // //   var index = accountData[i].ancestor.indexOf("PRIMARY");
+                                    //  // if (index > -1) {
+                                          accountData.splice(i, 1);
+                                    //  // }
+                                     }
+                                      output["ancestor"]= accountData[i].ancestor;
+                                      output["balanceType"]= accountData[i].balanceType;
+                                      output["id"]= accountData[i].id;
+                                       output["arrayIndex"]= accountData[i].arrayIndex;
                                       reportdata.push(output);
-                                      //console.log(reportdata)
+                                      console.log(reportdata)
                                  }
                              }
                          }
@@ -232,14 +251,25 @@ exports.getBalanceSheettest = function (req, res) {
                     ]
        var collection = db.collection('account');
         var cursor = collection.aggregate(  
-        {$match: {ancestor:{$in:ancestors}}},   
-         {
-           $group:
-            {
-              _id: {accountName: "$Under",id:"$_id",balanceType:"$balanceType",ancestor:"$ancestor"}
-           }
-         },  function(err, result) {
+        {$match: {ancestor:{$in:ancestors}}},  
+         { $unwind: { path:"$ancestor",includeArrayIndex: "arrayIndex"}
+        //  {  
+        //    $group:
+        //     {
+        //       _id: {accountName: "$Under",id:"$_id",balanceType:"$balanceType",ancestor:"$ancestor" , arrayIndex :"$arrayIndex"},
+              
+        //    }
+         },
+         {$project:{
+             accountName:"$Under",
+             id:"$_id",
+             balanceType:"$balanceType",
+             arrayIndex:"$arrayIndex",
+             ancestor:"$ancestor"
+
+         }},  function(err, result) {
                 assert.equal(err, null);
+                console.log(result)
                 callback(result);
       });
      }

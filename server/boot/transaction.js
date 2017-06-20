@@ -3879,7 +3879,7 @@ router.get('/getreport', function (req, res) {
   router.get('/voucherTransactions/count', function (req, res) {
     var type = req.query.type
     var compCode = req.query.compCode
-    var isUo = JSON.parse(req.query.isUo1)
+    var isUo = JSON.parse(req.query.isUo)
     voucherTransaction.getDataSource().connector.connect(function (err, db) {
         var collection = db.collection('voucherTransaction');
           collection.count({isUo:isUo,type:type,compCode:compCode},function (err, result) {
