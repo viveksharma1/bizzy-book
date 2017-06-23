@@ -1414,6 +1414,7 @@ module.exports = function (server) {
           var accountData = data.invoiceData.accountlineItem;
           var ledger = [];
           if(data.roundOff){
+            console.log("roundOff".magenta , data.roundOff)
             if(data.roundOff<0){
               var roundoff = Math.abs(data.roundOff);
                ledger.push({ accountName: roundOffId, date: data.date, particular: data.invoiceData.consigneeAccountId, refNo: data.vochNo, voType: data.type, debit: Number(roundoff), voRefId: instance.id, isUo: false, visible: false, compCode: data.compCode })
@@ -1491,7 +1492,7 @@ module.exports = function (server) {
             var objectId = new mongodb.ObjectId(id)
             var ledger = [];
             if(data.roundOff){
-            if(Math.abs(data.roundOff)>=0.5){
+            if(data.roundOff<0){
               var roundoff = Math.abs(data.roundOff);
                ledger.push({ accountName: roundOffId, date: data.date, particular: data.invoiceData.consigneeAccountId, refNo: data.vochNo, voType: data.type, debit: Number(roundoff), voRefId: objectId, isUo: false, visible: false, compCode: data.compCode })
             }else{
