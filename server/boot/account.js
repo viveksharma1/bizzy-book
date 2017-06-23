@@ -197,6 +197,16 @@ exports.getBalanceSheettest = function (req, res) {
     voucherTransaction.getDataSource().connector.connect(function (err, db) {
          getAccountaggregate(db,function (result) {
              if(result){
+                  getGroup(db,function (data1) {
+                      var groupData = data1
+                      for(var i=0;i<groupData.length;i++){
+                          for(var j=0;j<result.length;j++){
+                              if(groupData[i].name  == result[j].accountName){
+                                  result[j].trackid = groupData[i].id
+                              }
+                          }
+
+                      }
                  console.log(result)
                  var accountData = result;
                  getLedgerForReport(db, compCode,function (result) {
@@ -226,14 +236,16 @@ exports.getBalanceSheettest = function (req, res) {
                                       output["balanceType"]= accountData[i].balanceType;
                                       output["id"]= accountData[i].id;
                                        output["arrayIndex"]= accountData[i].arrayIndex;
+                                       output["trackid"]= accountData[i].trackid;
                                       reportdata.push(output);
-                                      console.log(reportdata)
+                                      //console.log(reportdata)
                                  }
                              }
                          }
                          res.send(reportdata)
 
                      }
+             });
              });
              }
          });
@@ -252,24 +264,41 @@ exports.getBalanceSheettest = function (req, res) {
        var collection = db.collection('account');
         var cursor = collection.aggregate(  
         {$match: {ancestor:{$in:ancestors}}},  
-         { $unwind: { path:"$ancestor",includeArrayIndex: "arrayIndex"}
+        //  { $unwind: { path:"$ancestor",includeArrayIndex: "arrayIndex"}
         //  {  
         //    $group:
         //     {
         //       _id: {accountName: "$Under",id:"$_id",balanceType:"$balanceType",ancestor:"$ancestor" , arrayIndex :"$arrayIndex"},
               
         //    }
-         },
+        //  },
          {$project:{
              accountName:"$Under",
              id:"$_id",
              balanceType:"$balanceType",
              arrayIndex:"$arrayIndex",
-             ancestor:"$ancestor"
+             ancestor:"$ancestor",         
+
 
          }},  function(err, result) {
                 assert.equal(err, null);
                 console.log(result)
+                callback(result);
+      });
+     }
+
+     var getGroup = function (db, callback) {
+       var collection = db.collection('groupMaster');
+       var cursor = collection.aggregate( 
+           {$project:{
+             name:"$name",
+             id:"$_id",   
+             ancestor:"$ancestor" 
+
+         }},
+          function(err, result) {
+                assert.equal(err, null);
+                console.log("group",result)
                 callback(result);
       });
      }
