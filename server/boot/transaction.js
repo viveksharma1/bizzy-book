@@ -1416,16 +1416,16 @@ module.exports = function (server) {
           if(data.roundOff){
             if(Math.abs(data.roundOff)>=0.5){
               var roundoff = Math.abs(data.roundOff);
-               ledger.push({ accountName: roundOffId, date: data.date, particular: data.invoiceData.consigneeAccountId, refNo: data.vochNo, voType: data.type, credit: Number(roundoff), voRefId: instance.id, isUo: false, visible: false, compCode: data.compCode })
+               ledger.push({ accountName: roundOffId, date: data.date, particular: data.invoiceData.consigneeAccountId, refNo: data.vochNo, voType: data.type, debit: Number(roundoff), voRefId: instance.id, isUo: false, visible: false, compCode: data.compCode })
             }else{
               var roundoff = Math.abs(data.roundOff);
-                ledger.push({ accountName: roundOffId, date: data.date, particular: data.invoiceData.consigneeAccountId, refNo: data.vochNo, voType: data.type, debit: Number(roundoff), voRefId: instance.id, isUo: false, visible: false, compCode: data.compCode })
+                ledger.push({ accountName: roundOffId, date: data.date, particular: data.invoiceData.consigneeAccountId, refNo: data.vochNo, voType: data.type, credit: Number(roundoff), voRefId: instance.id, isUo: false, visible: false, compCode: data.compCode })
             }
 
           }
           if (accountData.length>0) {
             for (var i = 0; i < accountData.length; i++) {
-              ledger.push({ accountName: accountData[i].account.id, date: data.date, particular: data.invoiceData.ledgerAccountId, refNo: data.vochNo, voType: data.type, debit: Number(accountData[i].amount), voRefId: instance.id, isUo: false,compCode:data.compCode })
+              ledger.push({ accountName: accountData[i].account.id, date: data.date, particular: data.invoiceData.ledgerAccountId, refNo: data.vochNo, voType: data.type, credit: Number(accountData[i].amount), voRefId: instance.id, isUo: false,compCode:data.compCode })
             }
           }
           ledger.push({ accountName: data.invoiceData.ledgerAccountId, date: data.date, particular: data.invoiceData.consigneeAccountId, refNo: data.vochNo, voType: data.type, credit: Number(data.salesledgerAmount), voRefId: instance.id, isUo: false, visible: false, compCode: data.compCode },
@@ -1446,7 +1446,7 @@ module.exports = function (server) {
           var ledger = [];
           if (accountData.length>0) {
             for (var i = 0; i < accountData.length; i++) {
-              ledger.push({ accountName: accountData[i].account.id, date: data.date, particular: data.invoiceData.ledgerAccountId, refNo: data.vochNo, voType: data.type, debit: Number(accountData[i].amount), voRefId: instance.id, isUo: true,visible: true })
+              ledger.push({ accountName: accountData[i].account.id, date: data.date, particular: data.invoiceData.ledgerAccountId, refNo: data.vochNo, voType: data.type, credit: Number(accountData[i].amount), voRefId: instance.id, isUo: true,visible: true })
             }
           }
           ledger.push({ accountName: data.invoiceData.ledgerAccountId, date: data.date, particular: data.invoiceData.consigneeAccountId, refNo: data.vochNo, voType: data.type, credit: Number(data.salesledgerAmount), voRefId: instance.id, isUo: true, visible: true, compCode: data.compCode },
@@ -1493,16 +1493,16 @@ module.exports = function (server) {
             if(data.roundOff){
             if(Math.abs(data.roundOff)>=0.5){
               var roundoff = Math.abs(data.roundOff);
-               ledger.push({ accountName: roundOffId, date: data.date, particular: data.invoiceData.consigneeAccountId, refNo: data.vochNo, voType: data.type, credit: Number(roundoff), voRefId: objectId, isUo: false, visible: false, compCode: data.compCode })
+               ledger.push({ accountName: roundOffId, date: data.date, particular: data.invoiceData.consigneeAccountId, refNo: data.vochNo, voType: data.type, debit: Number(roundoff), voRefId: objectId, isUo: false, visible: false, compCode: data.compCode })
             }else{
               var roundoff = Math.abs(data.roundOff);
-                ledger.push({ accountName: roundOffId, date: data.date, particular: data.invoiceData.consigneeAccountId, refNo: data.vochNo, voType: data.type, debit: Number(roundoff), voRefId: objectId, isUo: false, visible: false, compCode: data.compCode })
+                ledger.push({ accountName: roundOffId, date: data.date, particular: data.invoiceData.consigneeAccountId, refNo: data.vochNo, voType: data.type, credit: Number(roundoff), voRefId: objectId, isUo: false, visible: false, compCode: data.compCode })
             }
 
           }
             if (accountData.length>0) {
               for (var i = 0; i < accountData.length; i++) {
-                ledger.push({ accountName: accountData[i].account.id, date: data.date, particular: data.invoiceData.ledgerAccountId, refNo: data.vochNo, voType: data.type, debit: Number(accountData[i].amount), voRefId: objectId, isUo: false, visible: false, compCode: data.compCode })
+                ledger.push({ accountName: accountData[i].account.id, date: data.date, particular: data.invoiceData.ledgerAccountId, refNo: data.vochNo, voType: data.type, credit: Number(accountData[i].amount), voRefId: objectId, isUo: false, visible: false, compCode: data.compCode })
               }
             }
             ledger.push({ accountName: data.invoiceData.ledgerAccountId, date: data.date, particular: data.invoiceData.consigneeAccountId, refNo: data.vochNo, voType: data.type, credit: Number(data.salesledgerAmount), voRefId: objectId, isUo: false, visible: false, compCode: data.compCode },
@@ -2536,10 +2536,10 @@ module.exports = function (server) {
       if(data.roundOff){
             if(Math.abs(data.roundOff)>=0.5){
               var roundoff = Math.abs(data.roundOff);
-               ledger.push({ accountName: roundOffId, date: data.date, particular: data.supliersId, refNo: data.no, voType: "Purchase Invoice", debit: Number(roundoff), voRefId: id, isUo: false, visible: false, compCode: data.compCode })
+               ledger.push({ accountName: roundOffId, date: data.date, particular: data.supliersId, refNo: data.no, voType: "Purchase Invoice", credit: Number(roundoff), voRefId: id, isUo: false, visible: false, compCode: data.compCode })
             }else{
               var roundoff = Math.abs(data.roundOff);
-                ledger.push({ accountName: roundOffId, date: data.date, particular: data.supliersId, refNo: data.no, voType: "Purchase Invoice", credit: Number(roundoff), voRefId: id, isUo: false, visible: false, compCode: data.compCode })
+                ledger.push({ accountName: roundOffId, date: data.date, particular: data.supliersId, refNo: data.no, voType: "Purchase Invoice", debit: Number(roundoff), voRefId: id, isUo: false, visible: false, compCode: data.compCode })
             }
 
           }
