@@ -1184,9 +1184,10 @@ module.exports = function (server) {
     Inventory.getDataSource().connector.connect(function (err, db) {
       var collection = db.collection('inventory');
       collection.find({ "_id": { "$in": obj_ids } }).toArray(function (err, result) {
-        console.log(result);
+        console.log("inv Data".green,result);
         voucherTransaction.findOne({ "where": { "_id": ObjectID(id) } }, { invoiceData: 1 }, function (err, resultOld) {
           if (err) {
+
             console.log(err);
           } else {
             if(data.role == "O"){
@@ -1222,7 +1223,7 @@ module.exports = function (server) {
                   if (match.BALANCE < aggLineItems[i].sum) {
                     //return err and break for loop
                     res.send({ err: "low balance", status: 200 });
-                    break;
+                    return;
                   }
                 }
               }
