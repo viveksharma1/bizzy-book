@@ -18,7 +18,8 @@ module.exports = function (server) {
   var colors = require('colors');
   var test = require('./voucherDelete');
   var utils = require('./utils');
-
+  var interestPayble = "59523facfcb0e939d4165108"
+  var interestReceivable ="59522f85267e787c4836bf03"
   "rest Api Starts here"
   router.post('/updateAccount', function (req, res) {
     var id = req.body.id;
@@ -401,10 +402,12 @@ module.exports = function (server) {
     var data = req.body;
     console.log(data);
     var dataBadla;
+    var badla;
     //var isBadla=false;
     if (data.vo_badla) {
       //badla payment
       dataBadla = data.vo_badla;
+      
       delete data.vo_badla;
     }
     //if ( Array.isArray(req.body) && req.body.length>1 ) {
@@ -420,7 +423,7 @@ module.exports = function (server) {
           res.send({ err: "Badla exists", status: 200 });
           return;
         } else {
-          updateReceipt(data, id, function () {
+          updateReceipt(data, id,dataBadla, function () {
              var activity = "Receipt Updated"
             activityLog(data.username,activity,data.vochNo,data.compCode)
             //find out if any badla voucher exists for receipt then delete badla voucher and ledger
@@ -441,7 +444,7 @@ module.exports = function (server) {
 
     }
     else {
-      createReceipt(data, function (dataInstance) {
+      createReceipt(data, dataBadla,function (dataInstance) {
             var activity = "Receipt Created"
             activityLog(data.username,activity,data.vochNo,data.compCode)
         if (dataBadla) {
@@ -525,7 +528,7 @@ module.exports = function (server) {
     });
   }
 
-  function updateReceipt(data, id, callback) {
+  function updateReceipt(data, id,dataBadla, callback) {
     console.log(id);
     voucherTransaction.update({ _id: new mongodb.ObjectId(id) }, data, function (err, instance) {
       if (err)
@@ -539,19 +542,23 @@ module.exports = function (server) {
               if (bill.interest) {
                 if (bill.interest > 0) {
                   ledger.push(
-                    { accountName: data.vo_payment.partyAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.bankAccountId, refNo: data.vochNo, voType: "Interest Receivable", credit: Math.abs(Number(bill.interest)), voRefId: id, isUo: true, visible: data.visible },
-                    { accountName: data.vo_payment.bankAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.partyAccountId, refNo: data.vochNo, voType: "Interest Receivable", debit: Math.abs(Number(bill.interest)), voRefId: id, isUo: true, visible: data.visible });
+                    { accountName: data.vo_payment.partyAccountId, compCode: data.compCode, date: data.date, particular: interestReceivable, refNo: data.vochNo, voType: "Interest", credit: Math.abs(Number(bill.interest)), voRefId: id, isUo: true, visible: data.visible },
+                    { accountName: interestReceivable, compCode: data.compCode, date: data.date, particular: data.vo_payment.partyAccountId, refNo: data.vochNo, voType: "Interest", debit: Math.abs(Number(bill.interest)), voRefId: id, isUo: true, visible: data.visible });
                 } else if (bill.interest < 0) {
                   ledger.push(
-                    { accountName: data.vo_payment.partyAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.bankAccountId, refNo: data.vochNo, voType: "Interest Payable", credit: Math.abs(Number(bill.interest)), voRefId: id, isUo: true, visible: data.visible },
-                    { accountName: data.vo_payment.bankAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.partyAccountId, refNo: data.vochNo, voType: "Interest Payable", debit: Math.abs(Number(bill.interest)), voRefId: id, isUo: true, visible: data.visible });
+                    { accountName: data.vo_payment.partyAccountId, compCode: data.compCode, date: data.date, particular: interestPayble, refNo: data.vochNo, voType: "Interest", credit: Math.abs(Number(bill.interest)), voRefId: id, isUo: true, visible: data.visible },
+                    { accountName: interestPayble, compCode: data.compCode, date: data.date, particular: data.vo_payment.partyAccountId, refNo: data.vochNo, voType: "Interest", debit: Math.abs(Number(bill.interest)), voRefId: id, isUo: true, visible: data.visible });
                 }
               }
 
             }
+             if(dataBadla){
+                ledger.push({ accountName: data.vo_payment.partyAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.bankAccountId, refNo: data.vochNo, voType: data.type, credit: Number(data.amount), voRefId: instance.id, isUo: true, visible: data.visible });
+        }else{
             ledger.push({ accountName: data.vo_payment.partyAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.bankAccountId, refNo: data.vochNo, voType: data.type, credit: Number(data.amount), voRefId: id, isUo: true, visible: data.visible },
               { accountName: data.vo_payment.bankAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.partyAccountId, refNo: data.vochNo, voType: data.type, debit: Number(data.amount), voRefId: id, isUo: true, visible: data.visible }
             )
+        }
             console.log(ledger);
             accountEntry(ledger, true, new mongodb.ObjectId(id));
           }
@@ -561,12 +568,12 @@ module.exports = function (server) {
               if (bill.interest) {
                 if (bill.interest > 0) {
                   ledger.push(
-                    { accountName: data.vo_payment.partyAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.bankAccountId, refNo: data.vochNo, voType: "Interest Receivable", credit: Math.abs(Number(bill.interest)), voRefId: instance.id, isUo: false, visible: data.visible },
-                    { accountName: data.vo_payment.bankAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.partyAccountId, refNo: data.vochNo, voType: "Interest Receivable", debit: Math.abs(Number(bill.interest)), voRefId: instance.id, isUo: false, visible: data.visible });
+                    { accountName: data.vo_payment.partyAccountId, compCode: data.compCode, date: data.date, particular: interestReceivable, refNo: data.vochNo, voType: "Interest", credit: Math.abs(Number(bill.interest)), voRefId: instance.id, isUo: false, visible: data.visible },
+                    { accountName: interestReceivable, compCode: data.compCode, date: data.date, particular: data.vo_payment.partyAccountId, refNo: data.vochNo, voType: "Interest", debit: Math.abs(Number(bill.interest)), voRefId: instance.id, isUo: false, visible: data.visible });
                 } else if (bill.interest < 0) {
                   ledger.push(
-                    { accountName: data.vo_payment.partyAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.bankAccountId, refNo: data.vochNo, voType: "Interest Payable", credit: Math.abs(Number(bill.interest)), voRefId: instance.id, isUo: false, visible: data.visible },
-                    { accountName: data.vo_payment.bankAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.partyAccountId, refNo: data.vochNo, voType: "Interest Payable", debit: Math.abs(Number(bill.interest)), voRefId: instance.id, isUo: false, visible: data.visible });
+                    { accountName: data.vo_payment.partyAccountId, compCode: data.compCode, date: data.date, particular: interestPayble, refNo: data.vochNo, voType: "Interest", credit: Math.abs(Number(bill.interest)), voRefId: instance.id, isUo: false, visible: data.visible },
+                    { accountName: interestPayble, compCode: data.compCode, date: data.date, particular: data.vo_payment.partyAccountId, refNo: data.vochNo, voType: "Interest", debit: Math.abs(Number(bill.interest)), voRefId: instance.id, isUo: false, visible: data.visible });
                 }
               }
             }
@@ -583,7 +590,7 @@ module.exports = function (server) {
     });
   }
 
-  function createReceipt(data, dataBadla,callback) {
+  function createReceipt(data,dataBadla,callback) {
     voucherTransaction.create(data, function (err, instance) {
       if (err) {
         console.log(err);
@@ -596,12 +603,12 @@ module.exports = function (server) {
           if (bill.interest) {
             if (bill.interest > 0) {
               ledger.push(
-                { accountName: data.vo_payment.partyAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.bankAccountId, refNo: data.vochNo, voType: "Interest Receivable", credit: Math.abs(Number(bill.interest)), voRefId: instance.id, isUo: true, visible: data.visible },
-                { accountName: data.vo_payment.bankAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.partyAccountId, refNo: data.vochNo, voType: "Interest Receivable", debit: Math.abs(Number(bill.interest)), voRefId: instance.id, isUo: true, visible: data.visible });
+                { accountName: data.vo_payment.partyAccountId, compCode: data.compCode, date: data.date, particular: interestReceivable, refNo: data.vochNo, voType: "Interest ", credit: Math.abs(Number(bill.interest)), voRefId: instance.id, isUo: true, visible: data.visible },
+                { accountName: interestReceivable, compCode: data.compCode, date: data.date, particular: data.vo_payment.partyAccountId, refNo: data.vochNo, voType: "Interest", debit: Math.abs(Number(bill.interest)), voRefId: instance.id, isUo: true, visible: data.visible });
             } else if (bill.interest < 0) {
               ledger.push(
-                { accountName: data.vo_payment.partyAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.bankAccountId, refNo: data.vochNo, voType: "Interest Payable", credit: Math.abs(Number(bill.interest)), voRefId: instance.id, isUo: true, visible: data.visible },
-                { accountName: data.vo_payment.bankAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.partyAccountId, refNo: data.vochNo, voType: "Interest Payable", debit: Math.abs(Number(bill.interest)), voRefId: instance.id, isUo: true, visible: data.visible });
+                { accountName: data.vo_payment.partyAccountId, compCode: data.compCode, date: data.date, particular: interestPayble, refNo: data.vochNo, voType: "Interest", credit: Math.abs(Number(bill.interest)), voRefId: instance.id, isUo: true, visible: data.visible },
+                { accountName: interestPayble, compCode: data.compCode, date: data.date, particular: data.vo_payment.partyAccountId, refNo: data.vochNo, voType: "Interest", debit: Math.abs(Number(bill.interest)), voRefId: instance.id, isUo: true, visible: data.visible });
             }
           }
         }
@@ -622,12 +629,12 @@ module.exports = function (server) {
 
             if (bill.interest > 0) {
               ledger.push(
-                { accountName: data.vo_payment.partyAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.bankAccountId, refNo: data.vochNo, voType: "Interest Receivable", credit: Math.abs(Number(bill.interest)), voRefId: instance.id, isUo: false, visible: data.visible },
-                { accountName: data.vo_payment.bankAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.partyAccountId, refNo: data.vochNo, voType: "Interest Receivable", debit: Math.abs(Number(bill.interest)), voRefId: instance.id, isUo: false, visible: data.visible });
+                { accountName: data.vo_payment.partyAccountId, compCode: data.compCode, date: data.date, particular: interestReceivable, refNo: data.vochNo, voType: "Interest", credit: Math.abs(Number(bill.interest)), voRefId: instance.id, isUo: false, visible: data.visible },
+                { accountName: interestReceivable, compCode: data.compCode, date: data.date, particular: data.vo_payment.partyAccountId, refNo: data.vochNo, voType: "Interest", debit: Math.abs(Number(bill.interest)), voRefId: instance.id, isUo: false, visible: data.visible });
             } else if (bill.interest < 0) {
               ledger.push(
-                { accountName: data.vo_payment.partyAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.bankAccountId, refNo: data.vochNo, voType: "Interest Payable", credit: Math.abs(Number(bill.interest)), voRefId: instance.id, isUo: false, visible: data.visible },
-                { accountName: data.vo_payment.bankAccountId, compCode: data.compCode, date: data.date, particular: data.vo_payment.partyAccountId, refNo: data.vochNo, voType: "Interest Payable", debit: Math.abs(Number(bill.interest)), voRefId: instance.id, isUo: false, visible: data.visible });
+                { accountName: data.vo_payment.partyAccountId, compCode: data.compCode, date: data.date, particular: interestPayble, refNo: data.vochNo, voType: "Interest", credit: Math.abs(Number(bill.interest)), voRefId: instance.id, isUo: false, visible: data.visible },
+                { accountName: interestPayble, compCode: data.compCode, date: data.date, particular: data.vo_payment.partyAccountId, refNo: data.vochNo, voType: "Interest", debit: Math.abs(Number(bill.interest)), voRefId: instance.id, isUo: false, visible: data.visible });
             }
           }
         }
@@ -1223,7 +1230,7 @@ module.exports = function (server) {
                   if (match.BALANCE < aggLineItems[i].sum) {
                     //return err and break for loop
                     res.send({ err: "low balance", status: 200 });
-                    return;
+                    break;
                   }
                 }
               }
