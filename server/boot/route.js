@@ -9,6 +9,8 @@ module.exports = function (server) {
    router.route('/isVoucherExist/:vochNo').get(account.isVoucherExist);
    router.route('/getBalanceSheet').post(account.getBalanceSheettest);
     router.route('/closingBalance/:accountId').get(account.closingBalance);
+     router.route('/getGroupData').get(account.getGrpupData);
+       router.route('/getGrpupDataForBalanceSheet').get(account.getGrpupDataForBalanceSheet);
    
  server.use(router);
 };

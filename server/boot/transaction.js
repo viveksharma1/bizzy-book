@@ -396,6 +396,50 @@ module.exports = function (server) {
     if (callback) callback();
   }
 
+  " create Interest Voucher Json "
+ function createInterestVoucherJson(data,id,interestData,vochType) {
+   voucherTransaction.remove({voucherId: id, type: "Interest" }, function (err, instance) {
+    if (err) console.log(err);
+    else{
+       var json = [];
+      for (var i = 0; i <interestData.length; i++) {
+        if(interestData[i].interest != 0){
+           var jsonData = {
+                compCode: data.compCode,
+                type: "Interest",
+                refVochType:vochType,
+                role: data.role,
+                date: data.date,
+                duedate: new Date(interestData[i].duedate),
+                customerId:data.vo_payment.partyAccountId,
+                amount: Math.abs(interestData[i].interest),
+                balance:Math.abs(interestData[i].interest),
+                vochNo: " Interest " + data.vochNo,
+                refNo:data.vochNo,
+                voucherId:id,
+                state: "PAID",
+                username: data.username,
+                visible: data.visible,
+                isUo: data.isUo
+      }
+         json.push(jsonData);
+         console.log("interest voucher json created".magenta,jsonData)
+   }
+}         
+          if(json.length>0){ 
+          voucherTransaction.create(json, function (err, instance) {
+            if(err){
+              console.log(err)
+            }else{
+              console.log("interest voucher created sucesfully".magenta,json.length)
+            }
+          });
+      }   
+   }
+  
+});
+     
+};
   "Receipt"
   router.post('/receipt', function (req, res) {
     var id = req.query.id
@@ -426,6 +470,8 @@ module.exports = function (server) {
           updateReceipt(data, id,dataBadla, function () {
              var activity = "Receipt Updated"
             activityLog(data.username,activity,data.vochNo,data.compCode)
+             createInterestVoucherJson(data,id,data.vo_payment.billDetail,"Receipt");
+
             //find out if any badla voucher exists for receipt then delete badla voucher and ledger
             //and create new badla and ledger if there is badla object in the request.
             removeBadlaVoucher(id, data.role, function () {
@@ -447,6 +493,7 @@ module.exports = function (server) {
       createReceipt(data, dataBadla,function (dataInstance) {
             var activity = "Receipt Created"
             activityLog(data.username,activity,data.vochNo,data.compCode)
+            createInterestVoucherJson(data, dataInstance.id.toHexString(),data.vo_payment.billDetail,"Receipt");
         if (dataBadla) {
           dataBadla.receiptId = dataInstance.id;
           createBadlaVoucher(dataBadla, function () {
@@ -749,7 +796,13 @@ module.exports = function (server) {
           else
             var query1 = { $set: { balance: Number(data[i].balance) } }
           var query2 = { $push: { 'paymentLog': { id: vochID, date: date, vochNo: vochNo, amount: data[i].amountPaid,interest:data[i].interest ,isUo: true } } }
+
+          if(data[i].type == "Interest"){
+            var query1 = { $set: { balance: Number(data[i].balance),state:"PAID" } }
+          var query2 = { $push: { 'paymentLog': { id: vochID, date: date, vochNo: vochNo, amount: data[i].amountPaid ,isUo: true } } }
         }
+        }
+        
         else {
           //var balanceInDollar = Number(data[i].balanceInDollar) - Number(data[i].amountPaidInDollar)
           var query1 = { $set: { 'transactionData.balance': Number(data[i].balance) ,'transactionData.balanceInDollar':  Number(data[i].balanceInDollar)} }
@@ -1603,7 +1656,7 @@ module.exports = function (server) {
     Inventory.getDataSource().connector.connect(function (err, db) {
       var collection = db.collection('inventory');
       for (var i = 0; i < data.length; i++) {
-        var query = { $push: { 'salesTransaction': { id: id, date: date, vochNo: vochNo, saleQty: data[i].itemQty } } }
+        var query = { $push: { 'salesTransaction': { id: id, date: date, vochNo: vochNo, saleQty: data[i].itemQty,itemRate:data[i].itemRate } } }
         var query1 = { $inc: {BALANCE: -Number(data[i].itemQty) } };
         collection.update({ _id: new mongodb.ObjectId(data[i].id) }, query1, function (err, instance) {
           if (instance) {
@@ -1647,7 +1700,7 @@ module.exports = function (server) {
             });
         } else {
           var invBalance = data[i].itemQty;
-          var query = { $push: { 'salesTransaction': { id: id, date: date, vochNo: vochNo, saleQty: data[i].itemQty, isUo: true } } }
+          var query = { $push: { 'salesTransaction': { id: id, date: date, vochNo: vochNo, saleQty: data[i].itemQty,itemRate:data[i].itemRate,isUo: true } } }
           var query1 = { $set: { "BALANCE": invBalance } }
           collection.update({ _id: new mongodb.ObjectId(data[i].id) }, query1, function (err, instance) {
             if (instance) {
@@ -1820,7 +1873,7 @@ module.exports = function (server) {
           { $match: { customerId: customerId } },
           { $match: { balance: { $gt: 0 } } },
            { $match: { compCode: compCode} },
-          { $match: { type: { $in: ["General Invoice", "Badla Voucher"] } } },
+          { $match: { type: { $in: ["General Invoice", "Badla Voucher","Interest"] } } },
           {
             $project: {
               date: "$date",
@@ -1849,7 +1902,7 @@ module.exports = function (server) {
           { $match: { customerId: customerId } },
           { $match: { balance: { $gt: 0 } } },
            { $match: { compCode: compCode} },
-          { $match: { type: { $in: ["Sales Invoice"] } } },
+          { $match: { type: { $in: ["Sales Invoice","Interest"] } } },
           {
             $project: {
               date: "$date",
@@ -4148,16 +4201,20 @@ router.get('/getreport', function (req, res) {
    "get voucherTransaction"
   router.post('/voucherTransactions/', function (req, res) {
     var type = req.body
+    var fromDate = new Date(req.query.fromDate)
+    var lastDate = new Date(req.query.lastDate)
     var compCode = req.query.compCode
     var role = req.query.role
     if(role == "O"){
     voucherTransaction.getDataSource().connector.connect(function (err, db) {
         var collection = db.collection('voucherTransaction');
-          collection.find({"type":{$nin:type},isUo:false,compCode:compCode}).sort( [['_id', -1]]).toArray(function (err, result) {
+          collection.find({"type":{$nin:type},isUo:false,compCode:compCode,date: { $gte: fromDate , $lte: lastDate } }).sort( [['_id', -1]]).toArray(function (err, result) {
             console.log("voucher",result)
             if(result.length>0){
              console.log(result)
              res.send(result)
+            }else{
+              res.send(result)
             }
        });      
     });  
@@ -4165,12 +4222,55 @@ router.get('/getreport', function (req, res) {
    if(role == "UO"){
     voucherTransaction.getDataSource().connector.connect(function (err, db) {
         var collection = db.collection('voucherTransaction');
-          collection.find({"type":{$nin:type},visible:true,compCode:compCode}).sort( [['_id', -1]]).toArray(function (err, result) {
+          collection.find({"type":{$nin:type},visible:true,compCode:compCode,date: { $gte: fromDate , $lte: lastDate }}).sort( [['_id', -1]]).toArray(function (err, result) {
             console.log("voucher",result)
             if(result.length>0){
              console.log(result)
              res.send(result)
+            }else{
+              res.send(result)
             }
+
+       });      
+    });  
+  }
+ });
+
+
+   "get voucher by type"
+   router.get('/voucherTransactionsByType/', function (req, res) {
+    var type = req.query.type
+    console.log(type)
+    var fromDate = new Date(req.query.fromDate)
+    var lastDate = new Date(req.query.lastDate)
+    var compCode = req.query.compCode
+    var role = req.query.role
+    if(role == "O"){
+    voucherTransaction.getDataSource().connector.connect(function (err, db) {
+        var collection = db.collection('voucherTransaction');
+          collection.find({type:type,isUo:false,compCode:compCode,date: { $gte: fromDate , $lte: lastDate } }).sort( [['_id', -1]]).toArray(function (err, result) {
+            console.log("voucher",result)
+            if(result.length>0){
+             console.log(result)
+             res.send(result)
+            }else{
+              res.send(result)
+            }
+       });      
+    });  
+  }
+   if(role == "UO"){
+    voucherTransaction.getDataSource().connector.connect(function (err, db) {
+        var collection = db.collection('voucherTransaction');
+          collection.find({"type":type,visible:true,compCode:compCode,date: { $gte: fromDate , $lte: lastDate }}).sort( [['_id', -1]]).toArray(function (err, result) {
+            console.log("voucher",result)
+            if(result.length>0){
+             console.log(result)
+             res.send(result)
+            }else{
+              res.send(result)
+            }
+
        });      
     });  
   }
@@ -4247,7 +4347,20 @@ router.get('/getreport', function (req, res) {
 
 
   "get all account"
- router.get('/getAllAccount', function (req, res) {
+ router.get('/getAllType', function (req, res) {
+   var isUo = req.query.isU
+     voucherTransaction.getDataSource().connector.connect(function (err, db) {
+        var collection = db.collection('voucherTransaction');
+           collection.distinct("type"
+            ,function (err, instance) {
+             if (instance) {
+               res.send(instance);
+          };
+       });
+     });
+  });
+
+router.get('/getAllAccount', function (req, res) {
      voucherTransaction.getDataSource().connector.connect(function (err, db) {
         var collection = db.collection('account');
            collection.find({isActive: true}).toArray(function (err, instance) {
@@ -4257,8 +4370,6 @@ router.get('/getreport', function (req, res) {
        });
      });
   });
-
-
   server.use(router);
 };
 

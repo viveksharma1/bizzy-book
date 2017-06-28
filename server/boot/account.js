@@ -457,3 +457,166 @@ voucherTransaction.getDataSource().connector.connect(function (err, db) {
 });
 });
 }
+
+
+exports.getGrpupData = function (req, res) {
+    var under = req.query.under
+     var getLedgerData = function (db, callback) {
+         var collection = db.collection('ledger');
+         collection.aggregate(
+                 // {$match: {compCode:compCode},isUo:false},    
+                 {       
+                    $group:
+                   {
+                     _id: { accountName: "$accountName" },
+                      credit: { $sum: "$credit" },
+                      debit: { $sum: "$debit" }
+                   }
+                },function(err, result) {
+                    assert.equal(err, null);
+                    callback(result);
+           });
+       }
+       var getGroup = function (db,under, callback) {
+         var collection = db.collection('account');
+         collection.find({ancestor:under}).toArray(function(err, result) {
+                assert.equal(err, null);
+                callback(result);
+        });
+      }
+      function getAggregateLineItems(data) {
+        return Enumerable.From(data).GroupBy("$.under", null, function (key, g) {
+            return {
+                id: key,
+                amount: g.Sum("$.amount| 0")
+            }
+        })
+       .ToArray();
+    }
+   voucherTransaction.getDataSource().connector.connect(function (err, db) {
+         getGroup(db,under,function (result) {
+             if(result){
+                 var groupData = result;
+                 var data = []
+                 getLedgerData(db,function (result) {
+                     if(result){
+                     var ledgerData = result
+                        for(var i= 0;i<groupData.length;i++){
+                            for(var j= 0;j<ledgerData.length;j++){
+                                if(groupData[i]._id == ledgerData[j]._id.accountName){
+                                    if(groupData[i].balanceType == 'credit'){
+                                        var amount = ledgerData[j].credit - ledgerData[j].debit
+                                    }
+                                    if(groupData[i].balanceType == 'debit'){
+                                        var amount = ledgerData[j].debit - ledgerData[j].credit
+                                    }
+                                      data.push({under:groupData[i].Under,amount:amount});
+                                }
+
+
+                            }
+
+                        }
+                            //var data1 = getAggregateLineItems(data)
+                            res.send(data);
+                     
+                     }
+
+                   
+                 });
+             }
+
+       });
+
+      
+   });
+}
+
+
+
+
+exports.getGrpupDataForBalanceSheet = function (req, res) {
+    var  ancestors = [ "BRANCH / DIVISIONS",
+                        "CAPITAL ACCOUNT",
+                        "CURRENT ASSETS",
+                        "CURRENT LIABILITIES",
+                        "FIXED ASSETS",
+                        "INVESTMENTS",
+                        "LOANS (LIABILITY)",
+                        "MISC. EXPENSES (ASSET)",
+                        "SUSPENSE A/C",
+                    ]
+     var getLedgerData = function (db, callback) {
+         var collection = db.collection('ledger');
+         collection.aggregate(
+                 // {$match: {compCode:compCode},isUo:false},    
+                 {       
+                    $group:
+                   {
+                     _id: { accountName: "$accountName" },
+                      credit: { $sum: "$credit" },
+                      debit: { $sum: "$debit" }
+                   }
+                },function(err, result) {
+                    assert.equal(err, null);
+                    callback(result);
+           });
+       }
+       var getGroup = function (db,ancestors, callback) {
+         var collection = db.collection('account');
+         var cursor = collection.aggregate(  
+           {$match: {ancestor:{$in:ancestors}}}, 
+           { $unwind: { path:"$ancestor",includeArrayIndex: "arrayIndex"}}, 
+           {$project:{
+             under:"$Under",
+             id:"$_id",
+             balanceType:"$balanceType",
+             arrayIndex:"$arrayIndex",
+             ancestor:"$ancestor",        
+           }
+        }, 
+          function(err, result) {
+               assert.equal(err, null);
+               callback(result);
+      });
+}
+     
+   voucherTransaction.getDataSource().connector.connect(function (err, db) {
+         getGroup(db,ancestors,function (result) {
+             if(result){
+                 console.log(result)
+                 var groupData = result;
+                 var data = []
+                 getLedgerData(db,function (result) {
+                     if(result){
+                     var ledgerData = result
+                        for(var i= 0;i<groupData.length;i++){
+                            for(var j= 0;j<ledgerData.length;j++){
+                                if(groupData[i].id == ledgerData[j]._id.accountName){
+                                    if(groupData[i].balanceType == 'credit'){
+                                        var amount = ledgerData[j].credit - ledgerData[j].debit
+                                    }
+                                    if(groupData[i].balanceType == 'debit'){
+                                        var amount = ledgerData[j].debit - ledgerData[j].credit
+                                    }
+                                      data.push({under:groupData[i].ancestor,amount:amount});
+                                }
+
+
+                            }
+
+                        }
+                            //var data1 = getAggregateLineItems(data)
+                            res.send(data);
+                     
+                     }
+
+                   
+                 });
+             }
+
+       });
+
+      
+   });
+}
