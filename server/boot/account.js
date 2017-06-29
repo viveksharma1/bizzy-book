@@ -226,16 +226,15 @@ exports.getBalanceSheettest = function (req, res) {
                                          output["amount"]= ledgerdata[j].debit - ledgerdata[j].credit ;
                                      }
                                     
-                                      if(accountData[i].ancestor == "PRIMARY"){
-                                    // //   var index = accountData[i].ancestor.indexOf("PRIMARY");
-                                    //  // if (index > -1) {
-                                          accountData.splice(i, 1);
-                                    //  // }
+                                   
+                                        var index = accountData[i].ancestor.indexOf("PRIMARY");
+                                          if (index > -1) {
+                                          accountData[i].ancestor.splice(index, 1);
                                      }
+                                     
                                       output["ancestor"]= accountData[i].ancestor;
                                       output["balanceType"]= accountData[i].balanceType;
                                       output["id"]= accountData[i].id;
-                                       output["arrayIndex"]= accountData[i].arrayIndex;
                                        output["trackid"]= accountData[i].trackid;
                                       reportdata.push(output);
                                       //console.log(reportdata)
@@ -264,19 +263,19 @@ exports.getBalanceSheettest = function (req, res) {
        var collection = db.collection('account');
         var cursor = collection.aggregate(  
         {$match: {ancestor:{$in:ancestors}}},  
-        //  { $unwind: { path:"$ancestor",includeArrayIndex: "arrayIndex"}
-        //  {  
+        //   { $unwind: { path:"$ancestor",includeArrayIndex: "arrayIndex"}},
+        //   {  
         //    $group:
         //     {
         //       _id: {accountName: "$Under",id:"$_id",balanceType:"$balanceType",ancestor:"$ancestor" , arrayIndex :"$arrayIndex"},
               
         //    }
-        //  },
+        //   },
          {$project:{
              accountName:"$Under",
              id:"$_id",
              balanceType:"$balanceType",
-             arrayIndex:"$arrayIndex",
+            
              ancestor:"$ancestor",         
 
 
@@ -536,16 +535,7 @@ exports.getGrpupData = function (req, res) {
 
 
 exports.getGrpupDataForBalanceSheet = function (req, res) {
-    var  ancestors = [ "BRANCH / DIVISIONS",
-                        "CAPITAL ACCOUNT",
-                        "CURRENT ASSETS",
-                        "CURRENT LIABILITIES",
-                        "FIXED ASSETS",
-                        "INVESTMENTS",
-                        "LOANS (LIABILITY)",
-                        "MISC. EXPENSES (ASSET)",
-                        "SUSPENSE A/C",
-                    ]
+    var  type = req.query.type
      var getLedgerData = function (db, callback) {
          var collection = db.collection('ledger');
          collection.aggregate(
@@ -565,13 +555,11 @@ exports.getGrpupDataForBalanceSheet = function (req, res) {
        var getGroup = function (db,ancestors, callback) {
          var collection = db.collection('account');
          var cursor = collection.aggregate(  
-           {$match: {ancestor:{$in:ancestors}}}, 
-           { $unwind: { path:"$ancestor",includeArrayIndex: "arrayIndex"}}, 
+           {$match: {type:type}}, 
            {$project:{
              under:"$Under",
              id:"$_id",
              balanceType:"$balanceType",
-             arrayIndex:"$arrayIndex",
              ancestor:"$ancestor",        
            }
         }, 
@@ -582,7 +570,7 @@ exports.getGrpupDataForBalanceSheet = function (req, res) {
 }
      
    voucherTransaction.getDataSource().connector.connect(function (err, db) {
-         getGroup(db,ancestors,function (result) {
+         getGroup(db,type,function (result) {
              if(result){
                  console.log(result)
                  var groupData = result;
@@ -599,7 +587,7 @@ exports.getGrpupDataForBalanceSheet = function (req, res) {
                                     if(groupData[i].balanceType == 'debit'){
                                         var amount = ledgerData[j].debit - ledgerData[j].credit
                                     }
-                                      data.push({under:groupData[i].ancestor,amount:amount});
+                                      data.push({under:groupData[i].under,amount:amount});
                                 }
 
 

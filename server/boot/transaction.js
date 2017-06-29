@@ -2296,7 +2296,7 @@ module.exports = function (server) {
       }
       else {
         createExpence(db, data, function (result) {
-          console.log(result.ops[0]._id);
+          console.log(result.id);
           if (result) {
             if (data.role == 'O') {
               isUo = false
@@ -2307,9 +2307,9 @@ module.exports = function (server) {
             var activity = "Expense Created"
              activityLog(data.username,activity,data.vochNo,data.compCode)
             console.log("Expense Created")
-            var ledger = createLedgerJsonExpense(data.transactionData, result.ops[0]._id);
-            accountEntry(ledger, isUo, new mongodb.ObjectId(result.ops[0]._id));
-            res.status(200).send(result.ops[0]._id);
+            var ledger = createLedgerJsonExpense(data.transactionData, result.id);
+            accountEntry(ledger, isUo, new mongodb.ObjectId(result.id));
+            res.status(200).send(result.id);
           }
         });
       }
@@ -2317,14 +2317,14 @@ module.exports = function (server) {
     });
     var updateExpence = function (db, expenseData, callback) {
       var collection = db.collection('voucherTransaction');
-      var cursor = collection.update(query, expenseData, function (err, result) {
+     voucherTransaction.update(query, expenseData, function (err, result) {
         assert.equal(err, null);
         callback(result);
       });
     }
     var createExpence = function (db, expenseData, callback) {
       var collection = db.collection('voucherTransaction');
-      var cursor = collection.insert(expenseData, function (err, result) {
+      voucherTransaction.create(expenseData, function (err, result) {
         assert.equal(err, null);
         callback(result);
       });
@@ -2465,9 +2465,9 @@ module.exports = function (server) {
             console.log("Bill Created", result)
              var activity = "Purchase Invoice Created"
             activityLog(data.username,activity,data.vochNo,compCode)
-            var ledger = createLedgerJson(data.transactionData, result.ops[0]._id);
-            accountEntry(ledger, false, new mongodb.ObjectId(result.ops[0]._id));
-            var billId = result.ops[0]._id
+            var ledger = createLedgerJson(data.transactionData, result.id);
+            accountEntry(ledger, false, new mongodb.ObjectId(result.id));
+            var billId = result.id
             var lineItem;
             if (data.role == 'O') {
                visible = true;
@@ -2482,11 +2482,11 @@ module.exports = function (server) {
               console.log("checking inventory ...")
               if (result > 0) {
                 console.log(result);
-                var inventoryData = createInventoryData(lineItem, visible, data.no, billId.toHexString(), result, compCode);
+                var inventoryData = createInventoryData(lineItem, visible, data.no, billId, result, compCode);
                 console.log("inventory data", inventoryData)
               }
               else {
-                var inventoryData = createInventoryData(lineItem, visible, data.no, billId.toHexString(), 0, compCode);
+                var inventoryData = createInventoryData(lineItem, visible, data.no, billId, 0, compCode);
               }
 
               createInventory(db, inventoryData, function (result) {
@@ -2529,7 +2529,7 @@ module.exports = function (server) {
         if (instance) {
           var tdata = generateTransaction(billData, instance, billData.role)
         }
-        var cursor = collection.update(query, tdata, function (err, result) {
+        voucherTransaction.update(query, tdata, function (err, result) {
           assert.equal(err, null);
           callback(result);
         });
@@ -2538,7 +2538,7 @@ module.exports = function (server) {
     "create bill"
     var createBill = function (db, billData, callback) {
       var collection = db.collection('voucherTransaction');
-      var cursor = collection.insert(billData, function (err, result) {
+      voucherTransaction.create(billData, function (err, result) {
         assert.equal(err, null);
         callback(result);
       });
