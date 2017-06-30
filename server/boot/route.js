@@ -11,6 +11,8 @@ module.exports = function (server) {
     router.route('/closingBalance/:accountId').get(account.closingBalance);
      router.route('/getGroupData').get(account.getGrpupData);
        router.route('/getGrpupDataForBalanceSheet').get(account.getGrpupDataForBalanceSheet);
+       router.route('/getSalesRegister').get(account.getSalesRegister);
+         router.route('/getMonthWiseSales').get(account.getMonthWiseSales);
    
  server.use(router);
 };

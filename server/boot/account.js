@@ -555,11 +555,12 @@ exports.getGrpupDataForBalanceSheet = function (req, res) {
        var getGroup = function (db,ancestors, callback) {
          var collection = db.collection('account');
          var cursor = collection.aggregate(  
-           {$match: {type:type}}, 
+           {$match: {ancestor:type}}, 
            {$project:{
              under:"$Under",
              id:"$_id",
              balanceType:"$balanceType",
+             accountName:"$accountName",
              ancestor:"$ancestor",        
            }
         }, 
@@ -578,6 +579,8 @@ exports.getGrpupDataForBalanceSheet = function (req, res) {
                  getLedgerData(db,function (result) {
                      if(result){
                      var ledgerData = result
+                     var accData = []
+                     var sum = []
                         for(var i= 0;i<groupData.length;i++){
                             for(var j= 0;j<ledgerData.length;j++){
                                 if(groupData[i].id == ledgerData[j]._id.accountName){
@@ -586,15 +589,25 @@ exports.getGrpupDataForBalanceSheet = function (req, res) {
                                     }
                                     if(groupData[i].balanceType == 'debit'){
                                         var amount = ledgerData[j].debit - ledgerData[j].credit
-                                    }
-                                      data.push({under:groupData[i].under,amount:amount});
+                                    } 
+                                       var obj = {under:groupData[i].accountName,amount:amount}
+                                       accData.push(obj)
+
+                                       data.push({under:groupData[i].under,amount:amount});
+                                       if(groupData[i].Under != groupData[i].accountName){
+                                        data.push({under:groupData[i].accountName,amount:amount});
+                                       }
+                                        
+                                      
                                 }
 
-
+                                   
                             }
+                            accData = []
 
                         }
                             //var data1 = getAggregateLineItems(data)
+                            console.log("data",data)
                             res.send(data);
                      
                      }
@@ -606,5 +619,106 @@ exports.getGrpupDataForBalanceSheet = function (req, res) {
        });
 
       
+   });
+}
+
+
+
+exports.getSalesRegister = function (req, res) {
+    var compCode = req.query.compCode
+     var getSalesAccount = function (db, callback) {
+       var collection = db.collection('account');
+            collection.aggregate(
+                   {$match: {ancestor:"SALES ACCOUNTS"}},    
+                        
+                   { $project:
+                   {
+                      accountName:"$accountName",
+                      id:  "$_id", 
+                      balanceType:"$balanceType"
+                   }
+                },function(err, result) {
+                    assert.equal(err, null);
+                    callback(result);
+           });
+       }
+       var getLedger = function (db,compCode, callback) {
+         var collection = db.collection('ledger');
+         collection.aggregate(
+                   {$match: {compCode:compCode}},
+                 {       
+                     $group:
+                   {
+                     _id: { accountName: "$accountName" },
+                      credit: { $sum: "$credit" },
+                      debit: { $sum: "$debit" }
+                   }
+                },function(err, result) {
+                    assert.equal(err, null);
+                    callback(result);
+           });
+      }
+     
+   voucherTransaction.getDataSource().connector.connect(function (err, db) {
+         getSalesAccount(db,function (result) {
+             if(result){
+                 console.log(result)
+                 var accountData = result;
+                 var data = []
+                 getLedger(db,compCode,function (result) {
+                     if(result){
+                          console.log(result)
+                       var ledgerData = result
+                        for(var i= 0;i<accountData.length;i++){
+                            for(var j= 0;j<ledgerData.length;j++){
+                                if(accountData[i].id == ledgerData[j]._id.accountName){
+                                      ledgerData[j].accountName = accountData[i].accountName
+                                      data.push(ledgerData[j]);
+                                }
+                            }
+                        }
+                         res.send(data);
+                     
+                     }else{
+                          res.send("no Data");
+                     }    
+                 });
+             }
+       });    
+   });
+}
+
+
+"get month wise sales ledger"
+
+exports.getMonthWiseSales = function (req, res) {
+    var compCode = req.query.compCode
+    
+     var accountName = req.query.accountName
+     var getLedger = function (db,accountName,callback) {
+       var collection = db.collection('ledger');
+            collection.aggregate(
+                  {$match: {accountName:accountName,compCode:compCode}},    
+                  { $group:
+                    {
+                      _id: { date: "$date",accountName:"$accountName"},
+                        credit: { $sum: "$credit" },
+                        debit: { $sum: "$debit" }       
+                    }
+                  }
+                ,function(err, result) {
+                    assert.equal(err, null); 
+                    callback(result);
+           });
+       }
+      
+     
+   voucherTransaction.getDataSource().connector.connect(function (err, db) {
+         getLedger(db,accountName,function (result) {
+             if(result){ 
+               console.log("month wise sales data".bgMagenta,result)        
+               res.send(result);     
+             }
+       });    
    });
 }
