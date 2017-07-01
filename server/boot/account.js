@@ -175,7 +175,7 @@ var getLedger = function (db, callback) {
            });
       }
 };
-exports.getBalanceSheettest = function (req, res) {
+exports.getBalanceSheettest1 = function (req, res) {
      voucherTransaction.getDataSource().connector.connect(function (err, db) {
          var collection = db.collection('account');
         var cursor = collection.aggregate(  
@@ -193,7 +193,7 @@ exports.getBalanceSheettest = function (req, res) {
  }
         
 exports.getBalanceSheettest = function (req, res) {
-    var compCode = req.body 
+    var compCode = req.query.compCode 
     voucherTransaction.getDataSource().connector.connect(function (err, db) {
          getAccountaggregate(db,function (result) {
              if(result){
@@ -236,6 +236,7 @@ exports.getBalanceSheettest = function (req, res) {
                                       output["balanceType"]= accountData[i].balanceType;
                                       output["id"]= accountData[i].id;
                                        output["trackid"]= accountData[i].trackid;
+                                       output["nodes"]= []
                                       reportdata.push(output);
                                       //console.log(reportdata)
                                  }
@@ -304,7 +305,7 @@ exports.getBalanceSheettest = function (req, res) {
      var getLedgerForReport = function (db,compCode, callback) {
        var collection = db.collection('ledger');
        var cursor = collection.aggregate( 
-         {$match: {compCode:{$in:compCode},isUo:false}},    
+         {$match: {compCode:compCode,isUo:false}},    
          {       
            $group:
             {
@@ -536,10 +537,11 @@ exports.getGrpupData = function (req, res) {
 
 exports.getGrpupDataForBalanceSheet = function (req, res) {
     var  type = req.query.type
+    var  compCode = req.query.compCode
      var getLedgerData = function (db, callback) {
          var collection = db.collection('ledger');
          collection.aggregate(
-                 // {$match: {compCode:compCode},isUo:false},    
+                 {$match: {compCode:compCode}},    
                  {       
                     $group:
                    {
@@ -555,10 +557,11 @@ exports.getGrpupDataForBalanceSheet = function (req, res) {
        var getGroup = function (db,ancestors, callback) {
          var collection = db.collection('account');
          var cursor = collection.aggregate(  
-           {$match: {ancestor:type}}, 
+           {$match:  {$or: [{type:type},{Under:type}]}}, 
            {$project:{
              under:"$Under",
              id:"$_id",
+             type:"$type",
              balanceType:"$balanceType",
              accountName:"$accountName",
              ancestor:"$ancestor",        
@@ -567,13 +570,20 @@ exports.getGrpupDataForBalanceSheet = function (req, res) {
           function(err, result) {
                assert.equal(err, null);
                callback(result);
+               console.log("data".green ,result )
+      });
+}
+var getAllAccount = function (db, callback) {
+         var collection = db.collection('account');
+         var cursor = collection.find({Under:type}).toArray(function(err, result) {
+               assert.equal(err, null);
+               callback(result);
       });
 }
      
    voucherTransaction.getDataSource().connector.connect(function (err, db) {
          getGroup(db,type,function (result) {
              if(result){
-                 console.log(result)
                  var groupData = result;
                  var data = []
                  getLedgerData(db,function (result) {
@@ -581,46 +591,64 @@ exports.getGrpupDataForBalanceSheet = function (req, res) {
                      var ledgerData = result
                      var accData = []
                      var sum = []
+
+                       getAllAccount(db,function (result) {
+                          function data1(under){
+                              var arr = []
+                               for(var i= 0;i<result.length;i++){
+                                    for(var j= 0;j<ledgerData.length;j++){
+                                         if(result[i].Under == under){
+                                            if(result[i]._id == ledgerData[j]._id.accountName){
+                                               if(result[i].balanceType == 'credit'){
+                                                var amount = Math.abs(ledgerData[j].credit - ledgerData[j].debit)
+                                                }
+                                             if(result[i].balanceType == 'debit'){
+                                              var amount = Math.abs(ledgerData[j].debit - ledgerData[j].credit)
+                                             } 
+                           arr.push({under:result[i].accountName,amount:amount,nodes:[]})
+                           
+                       }   
+                  }   
+            }                       
+     }
+     return arr;
+ }
+                        var accData = []
+                        var amount = 0
+                         var amount1 = 0
                         for(var i= 0;i<groupData.length;i++){
                             for(var j= 0;j<ledgerData.length;j++){
                                 if(groupData[i].id == ledgerData[j]._id.accountName){
                                     if(groupData[i].balanceType == 'credit'){
-                                        var amount = ledgerData[j].credit - ledgerData[j].debit
+                                        amount1 = amount1 + Math.abs(ledgerData[j].credit - ledgerData[j].debit)
+                                        amount  = Math.abs(ledgerData[j].credit - ledgerData[j].debit)
                                     }
                                     if(groupData[i].balanceType == 'debit'){
-                                        var amount = ledgerData[j].debit - ledgerData[j].credit
+                                        amount1 = amount1 + Math.abs(ledgerData[j].debit - ledgerData[j].credit)
+                                        amount  = Math.abs(ledgerData[j].debit - ledgerData[j].credit)
                                     } 
-                                       var obj = {under:groupData[i].accountName,amount:amount}
-                                       accData.push(obj)
-
-                                       data.push({under:groupData[i].under,amount:amount});
-                                       if(groupData[i].Under != groupData[i].accountName){
-                                        data.push({under:groupData[i].accountName,amount:amount});
-                                       }
                                         
-                                      
-                                }
-
-                                   
+                                        if(groupData[i].under != type) {
+                                          var accData =  data1(type);
+                                          if(accData.length>0){
+                                          accData.push({under:groupData[i].under,amount:amount1});   
+                                        }
+                                      } else{
+                                              accData.push({under:groupData[i].accountName,amount:amount});
+                                              amount1 = 0      
+                                        }
+                                  }        
                             }
-                            accData = []
-
-                        }
-                            //var data1 = getAggregateLineItems(data)
-                            console.log("data",data)
-                            res.send(data);
-                     
-                     }
-
-                   
-                 });
+                           
+                        }    
+                            res.send({data:accData}); 
+                    });
+                  }          
+               });
              }
-
-       });
-
-      
-   });
-}
+         });   
+      });
+   }
 
 
 
