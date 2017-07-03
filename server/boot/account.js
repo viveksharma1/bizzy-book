@@ -5,10 +5,9 @@ var mongodb = require('mongodb');
 var server = require('../../server/server')
 var voucherTransaction = server.models.voucherTransaction;
 var Account = server.models.account;
-
- var es = require('event-stream');
- var router = server.loopback.Router();
-  var userActivity = server.models.userActivity;
+var es = require('event-stream');
+var router = server.loopback.Router();
+var userActivity = server.models.userActivity;
   userActivity.createChangeStream(function(err, changes)
    {
     changes.pipe(es.stringify()).pipe(process.stdout);
@@ -41,8 +40,7 @@ var isExist = function (db, callback) {
 exports.closingBalance = function (req, res) {
     var compCode = req.query.compCode 
     var accountId = req.params.accountId
-    var role = req.query.role
-    
+    var role = req.query.role 
     console.log(" geting current balance of accountID ".green,accountId + " in company ".red,compCode)
     voucherTransaction.getDataSource().connector.connect(function (err, db) {
          getData(db,compCode,accountId,role,function (result) {
@@ -73,10 +71,8 @@ exports.closingBalance = function (req, res) {
     }
     var getData = function (db,compCode,accountId,role, callback) {
         var collection = db.collection('ledger');
-        // var collection1 = db.collection('ledger');
-     
-       if(req.query.role == 'O'){
-        var cursor = collection.aggregate(     
+        if(req.query.role == 'O'){
+         var cursor = collection.aggregate(     
             {$match: { compCode:compCode,accountName:accountId,isUo:false}},
            {
              $group:
@@ -103,17 +99,17 @@ exports.closingBalance = function (req, res) {
          },  function(err, result) {
                 assert.equal(err, null);
                 callback(result);
-      });
-     }
+        });
+      }
+   }
 }
-}
+// date Wise Account Detail
 exports.dateWiseAccountDetail = function (req, res) {
     var compCode = req.body 
     var toDate = new Date(req.query.date);
     var role = req.query.role
     voucherTransaction.getDataSource().connector.connect(function (err, db) {
          getLedger(db,function (result) {
-
              if(result){
                  var ledgerData = result
                  getAccount(db ,function (result) {
@@ -163,10 +159,9 @@ var getLedger = function (db, callback) {
          },  function(err, result) {
                 assert.equal(err, null);
                 callback(result);
-      });
+        });
      }
  }
-    
        var getAccount = function (db,callback) {
            var collection = db.collection('account');
            var cursor = collection.find({isActive:true}).toArray(function(err, result) {
@@ -175,40 +170,13 @@ var getLedger = function (db, callback) {
            });
       }
 };
-exports.getBalanceSheettest1 = function (req, res) {
-     voucherTransaction.getDataSource().connector.connect(function (err, db) {
-         var collection = db.collection('account');
-        var cursor = collection.aggregate(  
-        {$match: {ancestor:{$in:ancestors}}},   
-         {
-           $group:
-            {
-              _id: {accountName: "$Under",id:"$_id",balanceType:"$balanceType",ancestor:"$ancestor"}
-           }
-         },  function(err, result) {
-                assert.equal(err, null);
-                callback(result);
-      });
-    });
- }
-        
+       
 exports.getBalanceSheettest = function (req, res) {
     var compCode = req.query.compCode 
     var ancestor = req.body
     voucherTransaction.getDataSource().connector.connect(function (err, db) {
          getAccountaggregate(db, ancestor,function (result) {
              if(result){
-                  getGroup(db,function (data1) {
-                      var groupData = data1
-                      for(var i=0;i<groupData.length;i++){
-                          for(var j=0;j<result.length;j++){
-                              if(groupData[i].name  == result[j].accountName){
-                                  result[j].trackid = groupData[i].id
-                              }
-                          }
-
-                      }
-                 console.log(result)
                  var accountData = result;
                  getLedgerForReport(db, compCode,function (result) {
                      if(result){
@@ -217,81 +185,45 @@ exports.getBalanceSheettest = function (req, res) {
                          for(var i=0;i<accountData.length;i++){
                              for(var j=0;j<ledgerdata.length;j++){
                                  if((accountData[i].id == ledgerdata[j]._id.accountName)) {
-                                     var under = accountData[i].accountName
-                                    //console.log(under)
                                      var output = {};
-                                    // output["account"]= under;
                                      if(accountData[i].balanceType == 'credit'){
                                          output["amount"]= Math.abs(ledgerdata[j].credit - ledgerdata[j].debit);
-                                     }if(accountData[i].balanceType == 'debit'){
+                                     }
+                                     if(accountData[i].balanceType == 'debit'){
                                          output["amount"]= Math.abs(ledgerdata[j].debit - ledgerdata[j].credit) ;
                                      }
-                                    
-                                   
                                         var index = accountData[i].ancestor.indexOf("PRIMARY");
                                           if (index > -1) {
                                           accountData[i].ancestor.splice(index, 1);
-                                     }
-                                     
-                                      output["ancestor"]= accountData[i].ancestor;
-                                      output["balanceType"]= accountData[i].balanceType;
-                                      output["id"]= accountData[i].id;
-                                       output["trackid"]= accountData[i].trackid;
+                                         }
+                                       output["ancestor"]= accountData[i].ancestor;
+                                       output["balanceType"]= accountData[i].balanceType;
+                                       output["id"]= accountData[i].id;
                                        output["nodes"]= []
-                                      reportdata.push(output);
-                                      //console.log(reportdata)
+                                       reportdata.push(output);    
                                  }
                              }
                          }
-                         res.send(reportdata)
-
+                          res.send(reportdata)
+                     }else{
+                          res.send("no data")
                      }
-             });
-             });
+                 });
              }
          });
     });
-     var getAccountaggregate = function (db,ancestors, callback) {
-         
+     var getAccountaggregate = function (db,ancestors, callback) { 
        var collection = db.collection('account');
         var cursor = collection.aggregate(  
-        {$match: {ancestor:{$in:ancestors}}},  
+         {$match: {ancestor:{$in:ancestors}}},  
          {$match: {isActive:true}}, 
-        //   { $unwind: { path:"$ancestor",includeArrayIndex: "arrayIndex"}},
-        //   {  
-        //    $group:
-        //     {
-        //       _id: {accountName: "$Under",id:"$_id",balanceType:"$balanceType",ancestor:"$ancestor" , arrayIndex :"$arrayIndex"},
-              
-        //    }
-        //   },
          {$project:{
              accountName:"$Under",
              id:"$_id",
              balanceType:"$balanceType",
-            
-             ancestor:"$ancestor",         
-
-
+             ancestor:"$ancestor", 
          }},  function(err, result) {
                 assert.equal(err, null);
-                console.log(result)
-                callback(result);
-      });
-     }
-
-     var getGroup = function (db, callback) {
-       var collection = db.collection('groupMaster');
-       var cursor = collection.aggregate( 
-           {$project:{
-             name:"$name",
-             id:"$_id",   
-             ancestor:"$ancestor" 
-
-         }},
-          function(err, result) {
-                assert.equal(err, null);
-                console.log("group",result)
                 callback(result);
       });
      }
@@ -313,221 +245,29 @@ exports.getBalanceSheettest = function (req, res) {
      }
 }
 
-exports.getBalanceSheet = function (req, res) {
-    var toDate = new Date(req.query.date);
-    var role = req.query.role
-     var  ancestors = [ "BRANCH / DIVISIONS",
-                        "CAPITAL ACCOUNT",
-                        "CURRENT ASSETS",
-                        "CURRENT LIABILITIES",
-                        "FIXED ASSETS",
-                        "INVESTMENTS",
-                        "LOANS (LIABILITY)",
-                        "MISC. EXPENSES (ASSET)",
-                        "SUSPENSE A/C",
-                    ]
-    voucherTransaction.getDataSource().connector.connect(function (err, db) {
-        getAccountForReport(db,function (result) {
-            var accountId = [];
-             if(result){
-                 for(var i =0;i<result.length;i++){
-                      var resultData = result[i].id.toHexString();
-                      accountId.push(resultData); 
-                 }
-                 console.log(accountId)
-                 getLedgerForReport(db,accountId, function (result) {
-                       if(result){
-                           var ledger_data = result ;
-                            getAccount(db,ancestors, function (result) {
-                                if(result){
-                                    var reportdata = []
-                                   console.log(result.length)
-                                    for(var i=0;i<result.length;i++){
-                                        for(var k=0;k<ledger_data.length;k++){
-                                         for(var j=0;j<result[i].ancestor.length;j++){
-                                             var data = result[i].ancestor[j]
-                                             if((result[i]._id).toHexString() == ledger_data[k]._id.accountName) {
-                                                 console.log(result[i]._id).toHexString()
-                                                  console.log(data)
-                                                  console.log(result[i].credit)
-                                             }
-                                            // reportdata.push({result[j].ancestor:result[i].credit})
-                                         }
-                                        }
 
-                                    }
-
-                                }
-                               
-                               res.send(result); 
-                            });
-                       }
-                 });                     
-             }
-        
-        });
-    });
-
-  var getAccountForReport = function (db, callback) {
-       var collection = db.collection('account');
-      var  ancestor = [ "BRANCH / DIVISIONS",
-                        "CAPITAL ACCOUNT",
-                        "CURRENT ASSETS",
-                        "CURRENT LIABILITIES",
-                        "FIXED ASSETS",
-                        "INVESTMENTS",
-                        "LOANS (LIABILITY)",
-                        "MISC. EXPENSES (ASSET)",
-                        "SUSPENSE A/C",
-                    ]
-      
-       var cursor = collection.aggregate(     
-       {$match: {ancestor:{$in:ancestors}}},
-       {$project:{id:"$_id"}},
-          function(err, result) {
-                assert.equal(err, null);
-                callback(result);
-      });
-
-      
- }
- var getLedgerForReport1 = function (db, accountId,callback) {
-     console.log(accountId)
-       var collection = db.collection('ledger');
-       //if(req.query.role == 'O'){
-       var cursor = collection.aggregate(     
-         {$match: {compCode:{$in:["COM2016123456781","COM2016123456780"]},isUo:false,accountName:{$in:accountId}}},
-         {
-           $group:
-            {
-              _id: { accountName: "$accountName" },
-               credit: { $sum: "$credit" },
-               debit: { $sum: "$debit" }
-           }
-         },  function(err, result) {
-                assert.equal(err, null);
-                callback(result);
-      });
-  //  }
-    //  if(req.query.role == 'UO'){
-    //      var cursor = collection.aggregate(     
-    //      {$match: { date: { $lte: toDate},compCode:{$in:compCode},visible:true}},
-    //      {
-    //        $group:
-    //         {
-    //           _id: { accountName: "$accountName" },
-    //            credit: { $sum: "$credit" },
-    //            debit: { $sum: "$debit" }
-    //        }
-    //      },  function(err, result) {
-    //             assert.equal(err, null);
-    //             callback(result);
-    //   });
-    //  }
- }
-  var getAccount = function (db,ancestor,callback) {
-           var collection = db.collection('account');
-           collection.find({ancestor:{$in:ancestor}}).toArray(function(err, result) {
-                assert.equal(err, null);
-                callback(result);
-           });
-      }
-};
-exports.data1 = function (req, res) {
-voucherTransaction.getDataSource().connector.connect(function (err, db) {
-    var collection = db.collection('voucherTransaction');
-   collection.find({type:"Sales Invoice"}).forEach(function(data) {
-    collection.update({
-        "_id": data._id
+// exports.data1 = function (req, res) {
+// voucherTransaction.getDataSource().connector.connect(function (err, db) {
+//     var collection = db.collection('voucherTransaction');
+//    collection.find({type:"Sales Invoice"}).forEach(function(data) {
+//     collection.update({
+//         "_id": data._id
        
-    }, {
-        "$set": {
-            "amountUo": Number(data.amount),
-            "amountO": Number(data.amount)
-        }
-    },{multi:true})
+//     }, {
+//         "$set": {
+//             "amountUo": Number(data.amount),
+//             "amountO": Number(data.amount)
+//         }
+//     },{multi:true})
    
-});
-});
-}
-
-
-exports.getGrpupData = function (req, res) {
-    var under = req.query.under
-     var getLedgerData = function (db, callback) {
-         var collection = db.collection('ledger');
-         collection.aggregate(
-                 // {$match: {compCode:compCode},isUo:false},    
-                 {       
-                    $group:
-                   {
-                     _id: { accountName: "$accountName" },
-                      credit: { $sum: "$credit" },
-                      debit: { $sum: "$debit" }
-                   }
-                },function(err, result) {
-                    assert.equal(err, null);
-                    callback(result);
-           });
-       }
-       var getGroup = function (db,under, callback) {
-         var collection = db.collection('account');
-         collection.find({ancestor:under}).toArray(function(err, result) {
-                assert.equal(err, null);
-                callback(result);
-        });
-      }
-      function getAggregateLineItems(data) {
-        return Enumerable.From(data).GroupBy("$.under", null, function (key, g) {
-            return {
-                id: key,
-                amount: g.Sum("$.amount| 0")
-            }
-        })
-       .ToArray();
-    }
-   voucherTransaction.getDataSource().connector.connect(function (err, db) {
-         getGroup(db,under,function (result) {
-             if(result){
-                 var groupData = result;
-                 var data = []
-                 getLedgerData(db,function (result) {
-                     if(result){
-                     var ledgerData = result
-                        for(var i= 0;i<groupData.length;i++){
-                            for(var j= 0;j<ledgerData.length;j++){
-                                if(groupData[i]._id == ledgerData[j]._id.accountName){
-                                    if(groupData[i].balanceType == 'credit'){
-                                        var amount = ledgerData[j].credit - ledgerData[j].debit
-                                    }
-                                    if(groupData[i].balanceType == 'debit'){
-                                        var amount = ledgerData[j].debit - ledgerData[j].credit
-                                    }
-                                      data.push({under:groupData[i].Under,amount:amount});
-                                }
-
-
-                            }
-
-                        }
-                            //var data1 = getAggregateLineItems(data)
-                            res.send(data);
-                     
-                     }
-
-                   
-                 });
-             }
-
-       });
-
-      
-   });
-}
+// });
+// });
+// }
 
 
 
 
+"getGrpupDataForBalanceSheet"
 exports.getGrpupDataForBalanceSheet = function (req, res) {
     var  type = req.query.type
     var  compCode = req.query.compCode
@@ -551,7 +291,7 @@ exports.getGrpupDataForBalanceSheet = function (req, res) {
          var collection = db.collection('account');
          var cursor = collection.aggregate(  
            {$match:  {ancestor:type}}, 
-            {$match:  {isActive:true}}, 
+           {$match:  {isActive:true}}, 
            {$project:{
              under:"$Under",
              id:"$_id",
@@ -564,99 +304,37 @@ exports.getGrpupDataForBalanceSheet = function (req, res) {
           function(err, result) {
                assert.equal(err, null);
                callback(result);
-               console.log("data".green ,result )
-      });
+    });
 }
-var getAllAccount = function (db, callback) {
-         var collection = db.collection('account');
-         var cursor = collection.find({Under:type,isActive:true}).toArray(function(err, result) {
-               assert.equal(err, null);
-               callback(result);
-      });
-}
-     
    voucherTransaction.getDataSource().connector.connect(function (err, db) {
          getGroup(db,type,function (result) {
              if(result){
                  var groupData = result;
-                 var data = []
                  getLedgerData(db,function (result) {
                      if(result){
                      var ledgerData = result
                      var accData = []
-                     var sum = []
-
-                       getAllAccount(db,function (result) {
-                          function data1(under){
-                              var arr = []
-                               for(var i= 0;i<result.length;i++){
-                                    for(var j= 0;j<ledgerData.length;j++){
-                                         if(result[i].Under == under){
-                                            if(result[i]._id == ledgerData[j]._id.accountName){
-                                               if(result[i].balanceType == 'credit'){
-                                                var amount = Math.abs(ledgerData[j].credit - ledgerData[j].debit)
-                                                }
-                                             if(result[i].balanceType == 'debit'){
-                                              var amount = Math.abs(ledgerData[j].debit - ledgerData[j].credit)
-                                             } 
-                           arr.push({under:result[i].accountName,amount:amount,nodes:[]})
-                           
-                       }   
-                  }   
-            }                       
-     }
-     return arr;
- }
-                        var accData = []
-                        var amount = 0
-                         var amount1 = 0
-                          
                         for(var i= 0;i<groupData.length;i++){
                             var index = groupData[i].ancestor.indexOf(type) + 1
                             for(var j= 0;j<ledgerData.length;j++){
                                 if(groupData[i].id == ledgerData[j]._id.accountName){
                                     if(groupData[i].balanceType == 'credit'){
-                                      //  amount1 = amount1 + Math.abs(ledgerData[j].credit - ledgerData[j].debit)
                                         amount  = Math.abs(ledgerData[j].credit - ledgerData[j].debit)
                                     }
                                     if(groupData[i].balanceType == 'debit'){
-                                       // amount1 = amount1 + Math.abs(ledgerData[j].debit - ledgerData[j].credit)
                                         amount  = Math.abs(ledgerData[j].debit - ledgerData[j].credit)
                                     } 
-                                    //  if(groupData[i].under != type) {
-                                    //     var index = groupData[i].ancestor.indexOf(groupData[i].type);
-                                               
-                                    //              if(groupData[i].ancestor[index] != type) {
-                                    //                  if(index>1){
-                                    //                      accData.push({under:groupData[i].ancestor[index-1],amount:amount}); 
-                                    //                  }else{
-                                    //                   accData.push({under:groupData[i].ancestor[index],amount:amount}); 
-                                    //                  }
-                                    //                   //accData.push({under:groupData[i].ancestor[index-1],amount:amount});     
-                                    //              }else{
-                                    //                    accData.push({under:groupData[i].under,amount:amount});   
-                                    //              }
-                                           
-                                    //  }  
-                                          if((groupData[i].ancestor.length-groupData[i].ancestor.indexOf(type))  == 1){
-                                              
-                                          }else{
-                                               accData.push({under:groupData[i].ancestor[index],amount:amount});
-                                          }
-                                         
-                                          
-
-                                        if(groupData[i].under == type) {
-                                             accData.push({under:groupData[i].accountName,amount:amount,accountId:groupData[i].id});
-                                            
-                                         } 
-                                  }        
-                            }
-                            
-                           
+                                     if((groupData[i].ancestor.length-groupData[i].ancestor.indexOf(type))  == 1){   
+                                     }else{
+                                            accData.push({under:groupData[i].ancestor[index],amount:amount});
+                                    }
+                                    if(groupData[i].under == type) {
+                                      accData.push({under:groupData[i].accountName,amount:amount,accountId:groupData[i].id});        
+                                    } 
+                                }        
+                            }  
                         }    
-                            res.send({data:accData}); 
-                    });
+                        res.send({data:accData});    
                   }          
                });
              }
