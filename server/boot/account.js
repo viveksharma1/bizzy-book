@@ -194,8 +194,9 @@ exports.getBalanceSheettest1 = function (req, res) {
         
 exports.getBalanceSheettest = function (req, res) {
     var compCode = req.query.compCode 
+    var ancestor = req.body
     voucherTransaction.getDataSource().connector.connect(function (err, db) {
-         getAccountaggregate(db,function (result) {
+         getAccountaggregate(db, ancestor,function (result) {
              if(result){
                   getGroup(db,function (data1) {
                       var groupData = data1
@@ -221,9 +222,9 @@ exports.getBalanceSheettest = function (req, res) {
                                      var output = {};
                                     // output["account"]= under;
                                      if(accountData[i].balanceType == 'credit'){
-                                         output["amount"]= ledgerdata[j].credit - ledgerdata[j].debit;
+                                         output["amount"]= Math.abs(ledgerdata[j].credit - ledgerdata[j].debit);
                                      }if(accountData[i].balanceType == 'debit'){
-                                         output["amount"]= ledgerdata[j].debit - ledgerdata[j].credit ;
+                                         output["amount"]= Math.abs(ledgerdata[j].debit - ledgerdata[j].credit) ;
                                      }
                                     
                                    
@@ -250,20 +251,12 @@ exports.getBalanceSheettest = function (req, res) {
              }
          });
     });
-     var getAccountaggregate = function (db, callback) {
-          var  ancestors = [ "BRANCH / DIVISIONS",
-                        "CAPITAL ACCOUNT",
-                        "CURRENT ASSETS",
-                        "CURRENT LIABILITIES",
-                        "FIXED ASSETS",
-                        "INVESTMENTS",
-                        "LOANS (LIABILITY)",
-                        "MISC. EXPENSES (ASSET)",
-                        "SUSPENSE A/C",
-                    ]
+     var getAccountaggregate = function (db,ancestors, callback) {
+         
        var collection = db.collection('account');
         var cursor = collection.aggregate(  
         {$match: {ancestor:{$in:ancestors}}},  
+         {$match: {isActive:true}}, 
         //   { $unwind: { path:"$ancestor",includeArrayIndex: "arrayIndex"}},
         //   {  
         //    $group:
@@ -305,7 +298,7 @@ exports.getBalanceSheettest = function (req, res) {
      var getLedgerForReport = function (db,compCode, callback) {
        var collection = db.collection('ledger');
        var cursor = collection.aggregate( 
-         {$match: {compCode:compCode,isUo:false}},    
+         {$match: {compCode:compCode}},    
          {       
            $group:
             {
@@ -398,7 +391,7 @@ exports.getBalanceSheet = function (req, res) {
 
       
  }
- var getLedgerForReport = function (db, accountId,callback) {
+ var getLedgerForReport1 = function (db, accountId,callback) {
      console.log(accountId)
        var collection = db.collection('ledger');
        //if(req.query.role == 'O'){
@@ -557,7 +550,8 @@ exports.getGrpupDataForBalanceSheet = function (req, res) {
        var getGroup = function (db,ancestors, callback) {
          var collection = db.collection('account');
          var cursor = collection.aggregate(  
-           {$match:  {$or: [{type:type},{Under:type}]}}, 
+           {$match:  {ancestor:type}}, 
+            {$match:  {isActive:true}}, 
            {$project:{
              under:"$Under",
              id:"$_id",
@@ -575,7 +569,7 @@ exports.getGrpupDataForBalanceSheet = function (req, res) {
 }
 var getAllAccount = function (db, callback) {
          var collection = db.collection('account');
-         var cursor = collection.find({Under:type}).toArray(function(err, result) {
+         var cursor = collection.find({Under:type,isActive:true}).toArray(function(err, result) {
                assert.equal(err, null);
                callback(result);
       });
@@ -616,29 +610,49 @@ var getAllAccount = function (db, callback) {
                         var accData = []
                         var amount = 0
                          var amount1 = 0
+                          
                         for(var i= 0;i<groupData.length;i++){
+                            var index = groupData[i].ancestor.indexOf(type) + 1
                             for(var j= 0;j<ledgerData.length;j++){
                                 if(groupData[i].id == ledgerData[j]._id.accountName){
                                     if(groupData[i].balanceType == 'credit'){
-                                        amount1 = amount1 + Math.abs(ledgerData[j].credit - ledgerData[j].debit)
+                                      //  amount1 = amount1 + Math.abs(ledgerData[j].credit - ledgerData[j].debit)
                                         amount  = Math.abs(ledgerData[j].credit - ledgerData[j].debit)
                                     }
                                     if(groupData[i].balanceType == 'debit'){
-                                        amount1 = amount1 + Math.abs(ledgerData[j].debit - ledgerData[j].credit)
+                                       // amount1 = amount1 + Math.abs(ledgerData[j].debit - ledgerData[j].credit)
                                         amount  = Math.abs(ledgerData[j].debit - ledgerData[j].credit)
                                     } 
-                                        
-                                        if(groupData[i].under != type) {
-                                          var accData =  data1(type);
-                                          if(accData.length>0){
-                                          accData.push({under:groupData[i].under,amount:amount1});   
-                                        }
-                                      } else{
-                                              accData.push({under:groupData[i].accountName,amount:amount});
-                                              amount1 = 0      
-                                        }
+                                    //  if(groupData[i].under != type) {
+                                    //     var index = groupData[i].ancestor.indexOf(groupData[i].type);
+                                               
+                                    //              if(groupData[i].ancestor[index] != type) {
+                                    //                  if(index>1){
+                                    //                      accData.push({under:groupData[i].ancestor[index-1],amount:amount}); 
+                                    //                  }else{
+                                    //                   accData.push({under:groupData[i].ancestor[index],amount:amount}); 
+                                    //                  }
+                                    //                   //accData.push({under:groupData[i].ancestor[index-1],amount:amount});     
+                                    //              }else{
+                                    //                    accData.push({under:groupData[i].under,amount:amount});   
+                                    //              }
+                                           
+                                    //  }  
+                                          if((groupData[i].ancestor.length-groupData[i].ancestor.indexOf(type))  == 1){
+                                              
+                                          }else{
+                                               accData.push({under:groupData[i].ancestor[index],amount:amount});
+                                          }
+                                         
+                                          
+
+                                        if(groupData[i].under == type) {
+                                             accData.push({under:groupData[i].accountName,amount:amount,accountId:groupData[i].id});
+                                            
+                                         } 
                                   }        
                             }
+                            
                            
                         }    
                             res.send({data:accData}); 
@@ -654,10 +668,11 @@ var getAllAccount = function (db, callback) {
 
 exports.getSalesRegister = function (req, res) {
     var compCode = req.query.compCode
-     var getSalesAccount = function (db, callback) {
+    var type = req.query.type
+     var getSalesAccount = function (db,type, callback) {
        var collection = db.collection('account');
             collection.aggregate(
-                   {$match: {ancestor:"SALES ACCOUNTS"}},    
+                   {$match: {ancestor:type,isActive:true}},    
                         
                    { $project:
                    {
@@ -688,7 +703,7 @@ exports.getSalesRegister = function (req, res) {
       }
      
    voucherTransaction.getDataSource().connector.connect(function (err, db) {
-         getSalesAccount(db,function (result) {
+         getSalesAccount(db,type,function (result) {
              if(result){
                  console.log(result)
                  var accountData = result;
