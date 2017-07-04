@@ -292,6 +292,16 @@ module.exports = function (server) {
 
     });
   });
+   "get sundry debitor account"
+  router.get('/getCustomer/:compCode', function (req, res) {
+    var compCode = req.params.compCode
+    Accounts.find({ where: {isActive: true ,ancestor:"SUNDRY DEBTORS"}} , function (err, instance) {
+      if (instance) {
+        res.send(instance);
+      };
+
+    });
+  });
   "get purchase Account "
   router.get('/getpurchaseAccount/:compCode', function (req, res) {
     var compCode = req.params.compCode
@@ -794,7 +804,7 @@ module.exports = function (server) {
           else if (data[i].type == 'EXPENSE')
             var query1 = { $set: { 'transactionData.adminBalance': Number(data[i].balance), 'transactionData.balance': Number(data[i].balance) } };
           else
-            var query1 = { $set: { balance: Number(data[i].balance) } }
+            var query1 = { $set: { balance: Number(data[i].balance) ,state:"PAID"} }
           var query2 = { $push: { 'paymentLog': { id: vochID, date: date, vochNo: vochNo, amount: data[i].amountPaid,interest:data[i].interest ,isUo: true } } }
 
           if(data[i].type == "Interest"){
@@ -805,7 +815,7 @@ module.exports = function (server) {
         
         else {
           //var balanceInDollar = Number(data[i].balanceInDollar) - Number(data[i].amountPaidInDollar)
-          var query1 = { $set: { 'transactionData.balance': Number(data[i].balance) ,'transactionData.balanceInDollar':  Number(data[i].balanceInDollar)} }
+          var query1 = { $set: { 'transactionData.balance': Number(data[i].balance) ,state:"PAID",'transactionData.balanceInDollar':  Number(data[i].balanceInDollar)} }
           var query2 = { $push: { 'paymentLog': { id: vochID, date: date, vochNo: vochNo, amount: data[i].amountPaid,interest:data[i].interest, isUo: false } } }
 
         }
@@ -2630,6 +2640,170 @@ module.exports = function (server) {
   router.get('/getInvoiceData/:compCode', function (req, res) {
     var compCode = req.params.compCode;
     var role = req.query.role;
+    var dueDate = new Date(req.query.dueDate)
+    voucherTransaction.getDataSource().connector.connect(function (err, db) {
+       if(role == "UO"){
+      getDataUo(db, role,dueDate, function (result) {
+        if (result) {
+          res.status(200).send(result);
+        }
+      });
+    }
+     if(role == "O"){
+         getDataO(db, role,dueDate, function (result) {
+        if (result) {
+          res.status(200).send(result);
+        }
+      });
+     }
+    });
+ var getDataUo= function (db, role,dueDate, callback) {
+      var collection = db.collection('voucherTransaction');
+
+      var cursor = collection.aggregate(
+        { $match: { compCode: compCode } },
+      
+       
+         { $match: { type:{$in:["General Invoice","Sales Invoice" ]}} },
+           { $match: { isUO:true } },
+             { $match: { duedate:{$gt:dueDate}}},
+        {
+          $project:
+          {
+            type: "$type",
+            invoiceNo: "$vochNo",
+            date: "$date",
+            duedate: "$duedate",
+            amount: "$amountUo",
+            balance: "$balance",
+            customer: "$customerId",
+            customerId: "$customerId",
+            compCode: "$compCode",
+            id: "$_id"
+
+          }
+        }, function (err, result) {
+          assert.equal(err, null);
+          callback(result);
+        });
+    }
+
+    var getDataO = function (db, role,dueDate, callback) {
+      var collection = db.collection('voucherTransaction');
+
+      var cursor = collection.aggregate(
+        { $match: { compCode: compCode } },
+        { $match: { type:"Sales Invoice" } }, 
+          { $match: { duedate:{$gt:dueDate}}}, 
+        {
+          $project:
+          {
+            type: "$type",
+            invoiceNo: "$vochNo",
+            date: "$date",
+            duedate: "$duedate",
+            amount: "$amountO",
+            balance: "$balance",
+            customer: "$customerId",
+            customerId: "$customerId",
+            compCode: "$compCode",
+            id: "$_id"
+
+          }
+        }, function (err, result) {
+          assert.equal(err, null);
+          callback(result);
+        });
+    }
+});
+
+
+"get overdue sales invoice"
+
+ router.get('/getInvoiceDataOverDue/:compCode', function (req, res) {
+    var compCode = req.params.compCode;
+    var role = req.query.role;
+    var dueDate = new Date(req.query.dueDate);
+    console.log(dueDate)
+    voucherTransaction.getDataSource().connector.connect(function (err, db) {
+       if(role == "UO"){
+      getDataUo(db, role,dueDate, function (result) {
+        if (result) {
+          res.status(200).send(result);
+        }
+      });
+    }
+     if(role == "O"){
+         getDataO(db, role, dueDate,function (result) {
+        if (result) {
+          res.status(200).send(result);
+        }
+      });
+     }
+    });
+ var getDataUo= function (db, role,dueDate, callback) {
+      var collection = db.collection('voucherTransaction');
+      var cursor = collection.aggregate(
+        { $match: { compCode: compCode } },
+         { $match: { type:{$in:["General Invoice","Sales Invoice" ]}} },
+           { $match: { isUO:true } },
+           { $match: { duedate:{$lt:dueDate}}},
+        {
+          $project:
+          {
+            type: "$type",
+            invoiceNo: "$vochNo",
+            date: "$date",
+            duedate: "$duedate",
+            amount: "$amountUo",
+            balance: "$balance",
+            customer: "$customerId",
+            customerId: "$customerId",
+            compCode: "$compCode",
+            id: "$_id"
+
+          }
+        }, function (err, result) {
+          assert.equal(err, null);
+          callback(result);
+        });
+    }
+
+    var getDataO = function (db, role,dueDate, callback) {
+      var collection = db.collection('voucherTransaction');
+
+      var cursor = collection.aggregate(
+        { $match: { compCode: compCode } },
+        { $match: { type:"Sales Invoice" } },
+         { $match: { duedate:{$lt:dueDate}}},  
+        {
+          $project:
+          {
+            type: "$type",
+            invoiceNo: "$vochNo",
+            date: "$date",
+            duedate: "$duedate",
+            amount: "$amountO",
+            balance: "$balance",
+            customer: "$customerId",
+            customerId: "$customerId",
+            compCode: "$compCode",
+            id: "$_id"
+
+          }
+        }, function (err, result) {
+          assert.equal(err, null);
+          callback(result);
+        });
+    }
+});
+  
+
+  "get paid invoice"
+
+  router.get('/getPaidInvoice/:compCode', function (req, res) {
+    var compCode = req.params.compCode;
+    var role = req.query.role;
     voucherTransaction.getDataSource().connector.connect(function (err, db) {
        if(role == "UO"){
       getDataUo(db, role, function (result) {
@@ -2639,7 +2813,7 @@ module.exports = function (server) {
       });
     }
      if(role == "O"){
-         getDataO(db, role, function (result) {
+         getDataO(db, role,function (result) {
         if (result) {
           res.status(200).send(result);
         }
@@ -2648,13 +2822,11 @@ module.exports = function (server) {
     });
  var getDataUo= function (db, role, callback) {
       var collection = db.collection('voucherTransaction');
-
       var cursor = collection.aggregate(
         { $match: { compCode: compCode } },
-      
-       
          { $match: { type:{$in:["General Invoice","Sales Invoice" ]}} },
-           { $match: { isUO:true } },
+           { $match: { isUO:true ,state:"PAID"} },
+           
         {
           $project:
           {
@@ -2681,7 +2853,8 @@ module.exports = function (server) {
 
       var cursor = collection.aggregate(
         { $match: { compCode: compCode } },
-        { $match: { type:"Sales Invoice" } },  
+        { $match: { type:"Sales Invoice" } },
+          { $match: {state:"PAID"} },
         {
           $project:
           {
@@ -2703,8 +2876,6 @@ module.exports = function (server) {
         });
     }
 });
-
-
   "get transaction data"
   router.get('/getTransactionData/:compCode', function (req, res) {
     var compCode = req.params.compCode;
@@ -3238,7 +3409,7 @@ function createBankChargesLedger(data, id) {
           payments[i].id = mmongoose.Types.ObjectId();
           //console.log(payments[i]);
           console.log("creating payment with vouchNo: " + cVouchNo);
-          createPayment(payments[i], null, function () {
+          createPayment(payments[i], null,null, function () {
             processPayments(i + 1);
           });
 

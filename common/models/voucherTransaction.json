@@ -37,6 +37,9 @@
     "vochNo": {
       "type": "string"
     },
+     "duedate": {
+      "type": "date"
+    },
     "isUO": {
       "type": "boolean"
     },

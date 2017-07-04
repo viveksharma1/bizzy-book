@@ -2,6 +2,7 @@
 var MongoClient = require('mongodb').MongoClient;
 var assert = require('assert');
 var mongodb = require('mongodb');
+var isodate = require("isodate");
 var server = require('../../server/server')
 var voucherTransaction = server.models.voucherTransaction;
 var Account = server.models.account;
@@ -246,23 +247,23 @@ exports.getBalanceSheettest = function (req, res) {
 }
 
 
-// exports.data1 = function (req, res) {
-// voucherTransaction.getDataSource().connector.connect(function (err, db) {
-//     var collection = db.collection('voucherTransaction');
-//    collection.find({type:"Sales Invoice"}).forEach(function(data) {
-//     collection.update({
-//         "_id": data._id
+exports.data1 = function (req, res) {
+voucherTransaction.getDataSource().connector.connect(function (err, db) {
+    var collection = db.collection('voucherTransaction');
+   collection.find({type:"Sales Invoice"}).forEach(function(data) {
+    collection.update({
+        "_id": data._id
        
-//     }, {
-//         "$set": {
-//             "amountUo": Number(data.amount),
-//             "amountO": Number(data.amount)
-//         }
-//     },{multi:true})
+    }, {
+        "$set": {
+            "duedate": isodate(data.duedate)
+            
+        }
+    },{multi:true})
    
-// });
-// });
-// }
+});
+});
+}
 
 
 
