@@ -246,22 +246,185 @@ exports.getBalanceSheettest = function (req, res) {
      }
 }
 
-
+var data = [
+	{
+		"code": "01",
+		"state": "Jammu & Kashmir",
+	},
+	{
+		"code": "02",
+		"state": "Himachal Pradesh",
+	},
+	{
+		"code": "03",
+		"state": "Punjab",
+	},
+	{
+		"code": "04",
+		"state": "Chandigarh",
+	},
+	{
+		"code": "05",
+		"state": "Uttranchal",
+	},
+	{
+		"code": "06",
+		"state": "Haryana",
+	},
+	{
+		"code": "07",
+		"state": "Delhi",
+	},
+	{
+		"code": "08",
+		"state": "Rajasthan",
+		
+	},
+	{
+		"code": "09",
+		"state": "Uttar Pradesh",
+	
+	},
+	{
+		"code": "10",
+		"state": "Bihar",
+		
+	},
+	{
+		"code": "11",
+		"state": "Sikkim",
+		
+	},
+	{
+		"code": "12",
+		"state": "Arunachal Pradesh",
+	
+	},
+	{
+		"code": "13",
+		"state": "Nagaland",
+		
+	},
+	{
+		"code": "14",
+		"state": "Manipur",
+		
+	},
+	{
+		"code": "15",
+		"state": "Mizoram",
+		
+	},
+	{
+		"code": "16",
+		"state": "Tripura",
+		
+	},
+	{
+		"code": "17",
+		"state": "Meghalaya",
+	
+	},
+	{
+		"code": "18",
+		"state": "Assam",
+		
+	},
+	{
+		"code": "19",
+		"state": "West Bengal",
+		
+	},
+	{
+		"code": "20",
+		"state": "Jharkhand",
+		
+	},
+	{
+		"code": "21",
+		"state": "Orissa",
+	
+	},
+	{
+		"code": "22",
+		"state": "Chhattisgarh",
+	
+	},
+	{
+		"code": "23",
+		"state": "Madhya Pradesh",
+	
+	},
+	{
+		"code": "24",
+		"state": "Gujarat",
+	
+	},
+	{
+		"code": "25",
+		"state": "Daman & Diu",
+	
+	},
+	{
+		"code": "26",
+		"state": "Dadra & Nagar Haveli",
+		
+	},
+	{
+		"code": "27",
+		"state": "Maharashtra",
+		
+	},
+	{
+		"code": "28",
+		"state": "Andhra Pradesh",
+		
+	},
+	{
+		"code": "29",
+		"state": "Karnataka",
+		"": ""
+	},
+	{
+		"code": "30",
+		"state": "Goa",
+	
+	},
+	{
+		"code": "31",
+		"state": "Lakshdweep",
+	
+	},
+	{
+		"code": "32",
+		"state": "Kerala",
+	
+	},
+	{
+		"code": "33",
+		"state": "Tamil Nadu",
+	
+	},
+	{
+		"code": "34",
+		"state": "Pondicherry",
+	
+	},
+	{
+		"code": "35",
+		"state": "Andaman & Nicobar Islands",
+		
+	}
+	
+]
 exports.data1 = function (req, res) {
 voucherTransaction.getDataSource().connector.connect(function (err, db) {
-    var collection = db.collection('voucherTransaction');
-   collection.find({type:"Sales Invoice"}).forEach(function(data) {
-    collection.update({
-        "_id": data._id
-       
-    }, {
-        "$set": {
-            "duedate": isodate(data.duedate)
-            
-        }
-    },{multi:true})
-   
-});
+    var collection = db.collection('stateMaster');
+   collection.insert(data,  function(err, result) {
+                assert.equal(err, null);
+                consol.log("inserted")
+                callback(result);
+      });
 });
 }
 
