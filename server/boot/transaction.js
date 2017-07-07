@@ -243,7 +243,7 @@ module.exports = function (server) {
                 console.log(err)
               }
               else {
-                res.send({ "status": "group created" })
+                res.send({status: "group created" })
               }
             });
           });
@@ -747,10 +747,10 @@ module.exports = function (server) {
                 }
 
               }
-              var query1 = { $set: { 'transactionData.adminBalance': Number(data[i].transactionData.balance) + paymentLogAmt } }
+              var query1 = { $set: { 'transactionData.adminBalance': Number(data[i].transactionData.balance) + paymentLogAmt ,'state':"OPEN" } }
               var query2 = { $pull: { 'paymentLog': { id: vochID } } }
             } else if (role == 'UO' && data[i].type == 'EXPENSE') {
-              var query1 = { $set: { 'transactionData.adminBalance': Number(data[i].transactionData.balance) + paymentLogAmt, 'transactionData.balance': Number(data[i].transactionData.balance) + paymentLogAmt } }
+              var query1 = { $set: { 'transactionData.adminBalance': Number(data[i].transactionData.balance) + paymentLogAmt, 'transactionData.balance': Number(data[i].transactionData.balance) + paymentLogAmt ,'state':"OPEN" } }
               var query2 = { $pull: { 'paymentLog': { id: vochID } } }
             }
             else {
@@ -762,8 +762,14 @@ module.exports = function (server) {
                   paymentLogAmt += Number(data[i].paymentLog[m].amount);
                 }
               }
-              var query1 = { $set: { 'transactionData.balance': Number(data[i].balance) + paymentLogAmt } }
-              var query2 = { $pull: { 'paymentLog': { id: vochID } } }
+              if (data[i].type == 'Sales Invoice' ||data[i].type == 'General Invoice' ) {
+                 var query1 = { $set: { 'balance': Number(data[i].balance) + Number(paymentLogAmt) ,'state':"OPEN" } }
+               
+                 var query2 = { $pull: { 'paymentLog': { id: vochID } } }
+              }else{
+                 var query1 = { $set: { 'transactionData.balance': Number(data[i].balance) + Number(paymentLogAmt),'state':"OPEN"  } }
+                 var query2 = { $pull: { 'paymentLog': { id: vochID } } }
+              }
 
             }
             //update balance..
@@ -814,11 +820,14 @@ module.exports = function (server) {
         }
         
         else {
-          //var balanceInDollar = Number(data[i].balanceInDollar) - Number(data[i].amountPaidInDollar)
-          var query1 = { $set: { 'transactionData.balance': Number(data[i].balance) ,state:"PAID",'transactionData.balanceInDollar':  Number(data[i].balanceInDollar)} }
-          var query2 = { $push: { 'paymentLog': { id: vochID, date: date, vochNo: vochNo, amount: data[i].amountPaid,interest:data[i].interest, isUo: false } } }
-
-        }
+           if (data[i].type == 'Sales Invoice' || data[i].type == "General Invoice"){
+                var query1 = { $set: { balance: Number(data[i].balance),state:"PAID" } }
+                var query2 = { $push: { 'paymentLog': { id: vochID, date: date, vochNo: vochNo, amount: data[i].amountPaid ,isUo: false } } }
+            }else{
+                var query1 = { $set: { 'transactionData.balance': Number(data[i].balance) ,state:"PAID",'transactionData.balanceInDollar':  Number(data[i].balanceInDollar)} }
+                var query2 = { $push: { 'paymentLog': { id: vochID, date: date, vochNo: vochNo, amount: data[i].amountPaid,interest:data[i].interest, isUo: false } } }
+            }
+          }
         }
        
         //_id: new mongodb.ObjectId(id)
@@ -1936,6 +1945,76 @@ module.exports = function (server) {
     }
   });
 
+  "Get outstanding voucher for recipt by invoice no and account Id "
+  router.get('/getVouchersforReceiptByNo', function (req, res) {
+    var customerId = req.query.customerId;
+    var usertype = req.query.role;
+    var compCode = req.query.compCode
+     var vochNo = req.query.vochNo
+    console.log(customerId);
+    if (usertype == 'UO') {
+      voucherTransaction.getDataSource().connector.connect(function (err, db) {
+        var collection = db.collection('voucherTransaction');
+        collection.aggregate(
+          { $match: { customerId: customerId } },
+          { $match: { balance: { $gt: 0 } } },
+           { $match: { compCode: compCode} },
+           { $match: { vochNo: vochNo} },
+          { $match: { type: { $in: ["General Invoice", "Badla Voucher","Interest"] } } },
+          {
+            $project: {
+              date: "$date",
+              duedate: "$duedate",
+              amount: "$amount",
+              vochNo: "$vochNo",
+              type: "$type",
+              balance: "$balance",
+              invoiceData: "$invoiceData",
+              vo_badla: "$vo_badla",
+              id: "$_id"
+            }
+          }
+          , function (err, instance) {
+            if (instance) {
+              res.send(instance)
+            }
+            else
+              console.log(err);
+          });
+      });
+    } else {
+      voucherTransaction.getDataSource().connector.connect(function (err, db) {
+        var collection = db.collection('voucherTransaction');
+        collection.aggregate(
+          { $match: { customerId: customerId } },
+          { $match: { balance: { $gt: 0 } } },
+           { $match: { compCode: compCode} },
+            { $match: { vochNo: vochNo} },
+          { $match: { type: { $in: ["Sales Invoice","Interest"] } } },
+          {
+            $project: {
+              date: "$date",
+              duedate: "$duedate",
+              amount: "$amount",
+              vochNo: "$vochNo",
+              type: "$type",
+              balance: "$balance",
+              invoiceData: "$invoiceData",
+              id: "$_id"
+            }
+          }
+          , function (err, instance) {
+            if (instance) {
+              res.send(instance)
+            }
+            else
+              console.log(err);
+          });
+      });
+    }
+  });
+
+
   "get key value pair of account"
   router.get('/getAccountNameById', function (req, res) {
     Accounts.getDataSource().connector.connect(function (err, db) {
@@ -2667,6 +2746,7 @@ module.exports = function (server) {
          { $match: { type:{$in:["General Invoice","Sales Invoice" ]}} },
            { $match: { isUO:true } },
              { $match: { duedate:{$gt:dueDate}}},
+              { $match: { balance:{$gt:0}}},
         {
           $project:
           {
@@ -2695,6 +2775,7 @@ module.exports = function (server) {
         { $match: { compCode: compCode } },
         { $match: { type:"Sales Invoice" } }, 
           { $match: { duedate:{$gt:dueDate}}}, 
+          { $match: { balance:{$gt:0}}},
         {
           $project:
           {
@@ -2748,6 +2829,7 @@ module.exports = function (server) {
          { $match: { type:{$in:["General Invoice","Sales Invoice" ]}} },
            { $match: { isUO:true } },
            { $match: { duedate:{$lt:dueDate}}},
+            { $match: { state:{$ne:"PAID"}}},
         {
           $project:
           {
@@ -2776,6 +2858,7 @@ module.exports = function (server) {
         { $match: { compCode: compCode } },
         { $match: { type:"Sales Invoice" } },
          { $match: { duedate:{$lt:dueDate}}},  
+          { $match: { state:{$ne:"PAID"}}},
         {
           $project:
           {
