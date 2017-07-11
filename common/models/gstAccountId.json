@@ -1,0 +1,32 @@
+{
+  "name": "gstAccountId",
+  "base": "PersistedModel",
+  "strict": false,
+  "idInjection": false,
+  "options": {
+    "validateUpsert": true
+  },
+  "properties": {
+   
+    "accountInfo": {
+      "type": []
+    },
+    
+    "validations": {
+      "type": []
+    },
+    "relations": {
+      "type": {}
+    },
+    "acls": {
+      "type": []
+    },
+    "methods": {
+      "type": {}
+    }
+  },
+  "validations": [],
+  "relations": {},
+  "acls": [],
+  "methods": {}
+}

@@ -272,6 +272,16 @@ module.exports = function (server) {
 
     });
   });
+   "getSupplierList"
+  router.get('/getSupplierList/:compCode', function (req, res) {
+    var compCode = req.params.compCode
+    Accounts.find({ where: {isActive: true,ancestor:"SUNDRY CREDITORS" } }, function (err, instance) {
+      if (instance) {
+        res.send(instance);
+      };
+
+    });
+  });
   "get sales account"
   router.get('/getSaleAccount/:compCode', function (req, res) {
     var compCode = req.params.compCode
@@ -2976,6 +2986,64 @@ module.exports = function (server) {
       var collection = db.collection('voucherTransaction');
       var invoiceType = type;
       if (role == 'O') {
+         var amount = "$transactionData.amount"
+         var balance = "$transactionData.balance"
+         var bal =  { $match: {"transactionData.balance": {$gt:0}} }
+      }
+     
+      if (role == 'UO') {
+        var amount = "$transactionData.adminAmount"
+        var balance = "$transactionData.adminBalance"
+         var bal =  { $match: {"transactionData.adminBalance": {$gt:0}} }
+      }
+
+      var cursor = collection.aggregate(
+        { $match: { compCode: compCode } },
+        { $match: { type: invoiceType } },
+         bal,
+        { $sort : { date : 1 } },
+        {
+          $project:
+          {
+            type: "$type",
+            invoiceNo: "$no",
+            date: "$date",
+            amount: amount,
+            balance: balance,
+            supplier: "$transactionData.supliersId",
+            supplierId: "$transactionData.supliersId",
+            email: "$transactionData.email",
+            compCode: "$compCode",
+            id: "$_id",
+            refNo:"$refNo"
+
+          }
+        }, function (err, result) {
+          assert.equal(err, null);
+          callback(result);
+        });
+    }
+
+  });
+
+
+   "get paid purchase invoice data"
+   router.get('/getPaidInvoiceData/:compCode', function (req, res) {
+    var compCode = req.params.compCode;
+    var role = req.query.role;
+    var type = req.query.type;
+    voucherTransaction.getDataSource().connector.connect(function (err, db) {
+      getData(db, role, type, function (result) {
+        if (result) {
+          res.status(200).send(result);
+        }
+      });
+    });
+
+    var getData = function (db, role, type, callback) {
+      var collection = db.collection('voucherTransaction');
+      var invoiceType = type;
+      if (role == 'O') {
         var amount = "$transactionData.amount"
         var balance = "$transactionData.balance"
       }
@@ -2988,6 +3056,7 @@ module.exports = function (server) {
       var cursor = collection.aggregate(
         { $match: { compCode: compCode } },
         { $match: { type: invoiceType } },
+        { $match: { "transactionData.balance": {$eq:0} } },
         { $sort : { date : 1 } },
         {
           $project:
@@ -3036,6 +3105,7 @@ module.exports = function (server) {
            var cursor = collection.aggregate(
         { $match: { compCode: compCode } },
         { $match: { type: invoiceType} },
+         { $match: { "transactionData.balance": {$gt:0}} },
         {
           $project:
           {
@@ -3061,12 +3131,12 @@ module.exports = function (server) {
       
      
       if (role == 'UO') {
-        var amount = "$transactionData.adminAmount"
-        var balance = "$transactionData.adminBalance"
-        var uoVisible = [true]
+         var amount = "$transactionData.balance"
+         var balance = "$transactionData.balance"
+         var uoVisible = [true]
          var cursor = collection.aggregate(
         { $match: { compCode: compCode } },
-        { $match: { type: invoiceType,5190.73:true}},
+         { $match: { "transactionData.balance": {$gt:0}} },
         {
           $project:
           {
@@ -3076,6 +3146,55 @@ module.exports = function (server) {
             amount: amount,
             balance: balance,
             supplier: "$transactionData.supliersId",
+             supplierId: "$transactionData.supliersId",
+            email: "$transactionData.email",
+            compCode: "$compCode",
+            id: "$_id",
+            refNo:"$refNo"
+
+          }
+        }, function (err, result) {
+          assert.equal(err, null);
+          callback(result);
+        });
+      } 
+    }
+  });
+
+  "get paid expense data"
+  router.get('/getPaidExpense/:compCode', function (req, res) {
+    var compCode = req.params.compCode;
+    var role = req.query.role;
+    var type = req.query.type;
+    voucherTransaction.getDataSource().connector.connect(function (err, db) {
+      getData(db, role, type, function (result) {
+        if (result) {
+          res.status(200).send(result);
+        }
+      });
+    });
+
+    var getData = function (db, role, type, callback) {
+      var collection = db.collection('voucherTransaction');
+      var invoiceType = type;
+      if (role == 'O') {
+        var amount = "$transactionData.amount"
+        var balance = "$transactionData.balance"
+        
+           var cursor = collection.aggregate(
+        { $match: { compCode: compCode } },
+        { $match: { type: invoiceType} },
+         { $match: { "transactionData.balance": {$eq:0}} },
+        {
+          $project:
+          {
+            type: "$type",
+            invoiceNo: "$no",
+            date: "$date",
+            amount: amount,
+            balance: balance,
+            supplier: "$transactionData.supliersId",
+             supplierId: "$transactionData.supliersId",
             email: "$transactionData.email",
             compCode: "$compCode",
             id: "$_id",
@@ -3089,11 +3208,37 @@ module.exports = function (server) {
     }
 
       
+     
+      if (role == 'UO') {
+         var amount = "$transactionData.balance"
+         var balance = "$transactionData.balance"
+         var uoVisible = [true]
+         var cursor = collection.aggregate(
+        { $match: { compCode: compCode } },
+         { $match: { "transactionData.balance": {$eq:0}} },
+        {
+          $project:
+          {
+            type: "$type",
+            invoiceNo: "$no",
+            date: "$date",
+            amount: amount,
+            balance: balance,
+            supplier: "$transactionData.supliersId",
+             supplierId: "$transactionData.supliersId",
+            email: "$transactionData.email",
+            compCode: "$compCode",
+            id: "$_id",
+            refNo:"$refNo"
 
-    
-  }
+          }
+        }, function (err, result) {
+          assert.equal(err, null);
+          callback(result);
+        });
+      } 
+    }
   });
-
 
   "get all transaction of a particular supplier"
   router.get('/getAllTransaction/:supliersId', function (req, res) {

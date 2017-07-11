@@ -1,0 +1,34 @@
+{
+  "name": "stateMaster",
+  "base": "PersistedModel",
+  "strict": false,
+  "idInjection": false,
+  "options": {
+    "validateUpsert": true
+  },
+  "properties": {
+    "code": {
+      "type": "string"
+    },
+    "itemType": {
+      "state": "string"
+    },
+    
+    "validations": {
+      "type": []
+    },
+    "relations": {
+      "type": {}
+    },
+    "acls": {
+      "type": []
+    },
+    "methods": {
+      "type": {}
+    }
+  },
+  "validations": [],
+  "relations": {},
+  "acls": [],
+  "methods": {}
+}

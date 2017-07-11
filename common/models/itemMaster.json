@@ -1,0 +1,46 @@
+{
+  "name": "itemMaster",
+  "base": "PersistedModel",
+  "strict": false,
+  "idInjection": false,
+  "options": {
+    "validateUpsert": true
+  },
+  "properties": {
+    "desc": {
+      "type": "string"
+    },
+    "itemType": {
+      "type": "string"
+    },
+    "hsnCode": {
+      "type": "string"
+    },
+    "skucode": {
+      "type": "string"
+    },
+    
+    "gstRate": {
+      "type": "string"
+    },
+    "uom": {
+      "type": "string"
+    },
+    "validations": {
+      "type": []
+    },
+    "relations": {
+      "type": {}
+    },
+    "acls": {
+      "type": []
+    },
+    "methods": {
+      "type": {}
+    }
+  },
+  "validations": [],
+  "relations": {},
+  "acls": [],
+  "methods": {}
+}

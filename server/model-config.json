@@ -96,6 +96,24 @@
     "public": true,
     "$promise": {},
     "$resolved": true
+  },
+  "itemMaster": {
+    "dataSource": "mongo",
+    "public": true,
+    "$promise": {},
+    "$resolved": true
+  },
+   "gstAccountId": {
+    "dataSource": "mongo",
+    "public": true,
+    "$promise": {},
+    "$resolved": true
+  },
+   "stateMaster": {
+    "dataSource": "mongo",
+    "public": true,
+    "$promise": {},
+    "$resolved": true
   }
   
 }

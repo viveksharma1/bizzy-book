@@ -3,25 +3,21 @@ module.exports = function(server) {
     var router = server.loopback.Router();
     var UserModel = server.models.User;
     var mongo = require('mongodb').MongoClient;
-   // var Transaction = server.models.transaction;
-    var Account = server.models.account;
     var Binary = mongo.Binary;
     server.set('superSecret', "vivek"); 
-    
-   
     var fs = require('fs');
     var bodyParser = require('body-parser');
     var formidable = require('formidable');
     var path = require('path');
-  var azure = require('azure-storage');
-  var uuid = require('node-uuid');
-  var accessKey = 'MUibwEVXc21tA4lTza7EQttRsIh+Jk+CWGBRwVZzex32ybNp7fg7No0ARNVNF9+0mg/j+BWe4kJ+m3MtH0zbMw==';
+    var azure = require('azure-storage');
+    var uuid = require('node-uuid');
+    var accessKey = 'MUibwEVXc21tA4lTza7EQttRsIh+Jk+CWGBRwVZzex32ybNp7fg7No0ARNVNF9+0mg/j+BWe4kJ+m3MtH0zbMw==';
     var storageAccount = 'bizzycrmcdn';
     var containerName = 'bizzy-book';
     form = new formidable.IncomingForm();
     var contexts = [];
 
-// vivek  upload file to server/boot/uploads
+// upload file to server/boot/uploads
     
 router.post('/upload',function (req, res) {   
     //console.log(req);
@@ -43,12 +39,12 @@ router.post('/upload',function (req, res) {
     var file_ext = fileName.substr((Math.max(0, fileName.lastIndexOf(".")) || Infinity) + 1);
     
       var newFileName = uuid.v4()+ '.' + file_ext;
-      //var newFileName = getRandomSalt() + '.' + file_ext;
+     
     blobService.createBlockBlobFromLocalFile(containerName, newFileName, file.path, function (error,result,response) {
                 if (error) {
                       res.send(' Blob create: error ');
                 }else{
-        //console.log(result);
+       
         console.log(response);
         fs.unlinkSync(file.path);
         res.send(result);
@@ -62,27 +58,6 @@ router.post('/upload',function (req, res) {
       console.log('An error has occured: \n' + err);
   });
 
-    //push file path into path array 
-  // form.on('end', function() {    
-        // Transaction.getDataSource().connector.connect(function (err, db) {
-          // var collection = db.collection('transaction');
-            // var path = 'server/boot/uploads/'+ name;
-            // collection.findOne({no:no,path:path},function (err, instance) {
-            // if (instance) {
-                
-                 // return;
-             // }
-             
-         // collection.update({no:no}, {$push:{path:path}},function (err, instance) {
-            // if (err) {
-                 // return;
-             // }
-        // })
-        // })
-           
-    // })
-  //  res.end('success');
-  //})     
  form.parse(req);
  
 });
@@ -90,26 +65,13 @@ router.post('/upload',function (req, res) {
     
 //get file from server/boot/uploads    
  router.get('/getfile',function (req, res) { 
-       var filepath =  req.query.path
-       // var form = new formidable.IncomingForm();  
-       // fs = require('fs');
-       // fs.readFile(filepath, function (err,data) {       
-    // if (err) {
-        // return console.log(err);     
-     // } 
-        // res.send(data);     
-   // });   
+   var filepath =  req.query.path 
    var blobService = azure.createBlobService(storageAccount, accessKey);
    blobService.getBlobToStream(containerName, filepath, res, function(error){
         if(!error){
-      
-            //res.writeHead(200, {'Content-Type': 'application/octet-stream'});
-            //res.end();
         }
         else
         {
-            //console.log('error');
-            console.log(error);
             res.send(error);
         }
     });
@@ -132,50 +94,9 @@ router.post('/upload',function (req, res) {
     
     // account
     
-    router.post('/addammount',function (req, res) {      
-         var credit = req.body.credit;
-         var debit = req.body.debit;      
-         var accountName = req.body.accountName;  
-         console.log(accountName);
-        
-     Account.getDataSource(accountName).connector.connect(function (err, db) {
-        var collection = db.collection('account');
-        if(credit!=''){
-       collection.update({accountName:accountName},{ $inc: { credit: Number(credit)} },
-           function (err, instance) { 
-            if (err) {    
-            console.log(err);
-         } 
-          
-            
-            
-         });
-          }
-         if(debit!=''){
- 
-      collection.update({accountName:accountName},{ $inc: { debit: Number(debit) } },
-           function (err, instance) {        
-           
-             if (err) {    
-            console.log(err);
-         } 
-           
-            
-         });
-       }
-            
-            
-        
-    }) 
-     
-    res.send({"status":"200"});
-               
-     
-});
-   
-     
-//login routes start here
     
+     
+//login routes start here 
     router.post('/login', function (req, res) {
         var res1;
         const userCredentials = {
