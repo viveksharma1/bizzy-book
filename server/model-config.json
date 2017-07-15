@@ -115,5 +115,12 @@
     "$promise": {},
     "$resolved": true
   }
+  ,
+   "gstRate": {
+    "dataSource": "mongo",
+    "public": true,
+    "$promise": {},
+    "$resolved": true
+  }
   
 }

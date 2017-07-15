@@ -18,9 +18,15 @@ module.exports = function (server) {
   var colors = require('colors');
   var test = require('./voucherDelete');
   var utils = require('./utils');
+   var cron = require('node-cron');
   var interestPayble = "59523facfcb0e939d4165108"
   var interestReceivable ="59522f85267e787c4836bf03"
   "rest Api Starts here"
+
+
+       cron.schedule('1,2,4,5 * * * *', function(){
+       console.log('running every minute 1, 2, 4 and 5');
+    });
   router.post('/updateAccount', function (req, res) {
     var id = req.body.id;
     Accounts.getDataSource().connector.connect(function (err, db) {
@@ -4767,6 +4773,51 @@ router.get('/getAllAccount', function (req, res) {
                res.send(instance);
           };
        });
+     });
+  });
+
+   /*
+     change voucher state
+     @param : voucherId
+     @query:  satatus
+     @res: "ok" if updated successfully
+   */
+  router.post('/changeVoucherStatus/:id', function (req, res) {
+    var id  = req.params.id
+    var state = req.query.state
+     voucherTransaction.getDataSource().connector.connect(function (err, db) {
+        var collection = db.collection('voucherTransaction');
+        collection.find({_id: new mongodb.ObjectId(id)}).toArray(function (err, instance) {
+           if(instance[0].stateLog){
+              if(instance[0].stateLog.prev_state){
+               var stateLog = instance[0].stateLog
+               var newStateLog = {
+                 prev_state:stateLog.curr_state,
+                 prev_state_date:stateLog.prev_state_date,
+                 curr_state:state,
+                 curr_state_date:new Date()
+               }
+              }
+           }
+            else{
+              var newStateLog = {
+                 prev_state:state,
+                 prev_state_date:new Date(),
+                 curr_state:state,
+                 curr_state_date:new Date()
+               }
+            }
+               collection.update({_id: new mongodb.ObjectId(id)},{$set:{stateLog:newStateLog}},function (err, instance) {
+                 if (instance) {
+                    if(instance.result.nModified == 1){
+                      res.send("ok");
+                    }else{
+                      res.send("some internal problem");
+                    }         
+               };
+            });
+         
+        });
      });
   });
   server.use(router);
