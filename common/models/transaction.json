@@ -85,7 +85,10 @@
       "type": "string"
     },
     "refNo": {
-      "type": "number"
+      "type": "string"
+    },
+    "vochNo": {
+      "type": "string"
     },
     "customData": {
       "type": "string"

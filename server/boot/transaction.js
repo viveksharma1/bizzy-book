@@ -2572,7 +2572,7 @@ module.exports = function (server) {
             activityLog(data.username,activity,data.vochNo,compCode)
             var ledger = createLedgerJson(data.transactionData, result.id);
             accountEntry(ledger, false, new mongodb.ObjectId(result.id));
-            var billId = result.id
+            var billId = result.id.toHexString();
             var lineItem;
             if (data.role == 'O') {
                visible = true;
@@ -3012,7 +3012,7 @@ module.exports = function (server) {
           $project:
           {
             type: "$type",
-            invoiceNo: "$no",
+            invoiceNo: "$vochNo",
             date: "$date",
             amount: amount,
             balance: balance,
@@ -3068,7 +3068,7 @@ module.exports = function (server) {
           $project:
           {
             type: "$type",
-            invoiceNo: "$no",
+            invoiceNo: "$vochNo",
             date: "$date",
             amount: amount,
             balance: balance,
@@ -3116,7 +3116,7 @@ module.exports = function (server) {
           $project:
           {
             type: "$type",
-            invoiceNo: "$no",
+            invoiceNo: "$vochNo",
             date: "$date",
             amount: amount,
             balance: balance,
@@ -3147,7 +3147,7 @@ module.exports = function (server) {
           $project:
           {
             type: "$type",
-            invoiceNo: "$no",
+            invoiceNo: "$vochNo",
             date: "$date",
             amount: amount,
             balance: balance,
@@ -3195,7 +3195,7 @@ module.exports = function (server) {
           $project:
           {
             type: "$type",
-            invoiceNo: "$no",
+            invoiceNo: "$vochNo",
             date: "$date",
             amount: amount,
             balance: balance,
@@ -3226,7 +3226,7 @@ module.exports = function (server) {
           $project:
           {
             type: "$type",
-            invoiceNo: "$no",
+            invoiceNo: "$vochNo",
             date: "$date",
             amount: amount,
             balance: balance,
