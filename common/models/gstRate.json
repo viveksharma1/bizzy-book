@@ -1,0 +1,44 @@
+{
+  "name": "gstRate",
+  "base": "PersistedModel",
+  "strict": false,
+  "idInjection": false,
+  "options": {
+    "validateUpsert": true
+  },
+  "properties": {
+    "HSN": {
+      "type": "string"
+    },
+    "Description of Goods": {
+      "type": "string"
+    },
+    "SGST": {
+      "type": "string"
+    },
+    "CGST": {
+      "type": "string"
+    },
+    
+    "IGST": {
+      "type": "string"
+    },
+    
+    "validations": {
+      "type": []
+    },
+    "relations": {
+      "type": {}
+    },
+    "acls": {
+      "type": []
+    },
+    "methods": {
+      "type": {}
+    }
+  },
+  "validations": [],
+  "relations": {},
+  "acls": [],
+  "methods": {}
+}
