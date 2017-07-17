@@ -1,9 +1,6 @@
-image: node:4.2.2
+image: node-api
 
-services:
-  - postgres:9.5.0
 
 all_tests:
   script:
-   - npm install
-   - node ./specs/start.js
+   - node .
