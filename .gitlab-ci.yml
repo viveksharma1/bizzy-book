@@ -1,6 +1,8 @@
 image: node-api
 
+before_script:
+  - cd /root/DevOps/test
 
 all_tests:
   script:
-   - node .
+    - node .
